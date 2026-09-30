@@ -1,0 +1,391 @@
+/* Paletas. Cada tema define los mismos tokens. */
+html.bte {
+  --bte-bg: #282828;
+  --bte-bg0: #1d2021;
+  --bte-bg1: #32302f;
+  --bte-bg2: #504945;
+  --bte-fg: #ebdbb2;
+  --bte-fg-strong: #fbf1c7;
+  --bte-dim: #928374;
+  --bte-border: #665c54;
+  --bte-accent: #fabd2f;
+  --bte-accent-fg: #282828;
+  --bte-link: #83a598;
+  --bte-red: #fb4934;
+  --bte-green: #b8bb26;
+  --bte-yellow: #fabd2f;
+  --bte-blue: #83a598;
+  --bte-purple: #d3869b;
+  --bte-aqua: #8ec07c;
+  --bte-orange: #fe8019;
+  --bte-glow: none;
+  --bte-scheme: dark;
+  /* Superficie de tarjetas en los estilos no tui. */
+  --bte-surface: var(--bte-bg1);
+}
+
+html.bte[data-bte-theme="gruvbox-light"] {
+  --bte-bg: #fbf1c7;
+  --bte-bg0: #f9f5d7;
+  --bte-bg1: #f2e5bc;
+  --bte-bg2: #d5c4a1;
+  --bte-fg: #3c3836;
+  --bte-fg-strong: #282828;
+  --bte-dim: #7c6f64;
+  --bte-border: #bdae93;
+  --bte-accent: #af3a03;
+  --bte-accent-fg: #fbf1c7;
+  --bte-link: #076678;
+  --bte-red: #9d0006;
+  --bte-green: #79740e;
+  --bte-yellow: #b57614;
+  --bte-blue: #076678;
+  --bte-purple: #8f3f71;
+  --bte-aqua: #427b58;
+  --bte-orange: #af3a03;
+  --bte-scheme: light;
+  --bte-surface: var(--bte-bg0);
+}
+
+html.bte[data-bte-theme="tokyo"] {
+  --bte-bg: #1a1b26;
+  --bte-bg0: #16161e;
+  --bte-bg1: #1f2335;
+  --bte-bg2: #292e42;
+  --bte-fg: #c0caf5;
+  --bte-fg-strong: #e0e6ff;
+  --bte-dim: #565f89;
+  --bte-border: #3b4261;
+  --bte-accent: #7aa2f7;
+  --bte-accent-fg: #16161e;
+  --bte-link: #7dcfff;
+  --bte-red: #f7768e;
+  --bte-green: #9ece6a;
+  --bte-yellow: #e0af68;
+  --bte-blue: #7aa2f7;
+  --bte-purple: #bb9af7;
+  --bte-aqua: #73daca;
+  --bte-orange: #ff9e64;
+}
+
+html.bte[data-bte-theme="catppuccin"] {
+  --bte-bg: #1e1e2e;
+  --bte-bg0: #181825;
+  --bte-bg1: #24243a;
+  --bte-bg2: #313244;
+  --bte-fg: #cdd6f4;
+  --bte-fg-strong: #eef1ff;
+  --bte-dim: #7f849c;
+  --bte-border: #45475a;
+  --bte-accent: #cba6f7;
+  --bte-accent-fg: #1e1e2e;
+  --bte-link: #89dceb;
+  --bte-red: #f38ba8;
+  --bte-green: #a6e3a1;
+  --bte-yellow: #f9e2af;
+  --bte-blue: #89b4fa;
+  --bte-purple: #cba6f7;
+  --bte-aqua: #94e2d5;
+  --bte-orange: #fab387;
+}
+
+html.bte[data-bte-theme="nord"] {
+  --bte-bg: #2e3440;
+  --bte-bg0: #272c36;
+  --bte-bg1: #3b4252;
+  --bte-bg2: #434c5e;
+  --bte-fg: #d8dee9;
+  --bte-fg-strong: #eceff4;
+  --bte-dim: #7b88a1;
+  --bte-border: #4c566a;
+  --bte-accent: #88c0d0;
+  --bte-accent-fg: #2e3440;
+  --bte-link: #81a1c1;
+  --bte-red: #bf616a;
+  --bte-green: #a3be8c;
+  --bte-yellow: #ebcb8b;
+  --bte-blue: #81a1c1;
+  --bte-purple: #b48ead;
+  --bte-aqua: #8fbcbb;
+  --bte-orange: #d08770;
+}
+
+html.bte[data-bte-theme="phosphor"] {
+  --bte-bg: #0a0f0a;
+  --bte-bg0: #050805;
+  --bte-bg1: #0f170f;
+  --bte-bg2: #163016;
+  --bte-fg: #33ff66;
+  --bte-fg-strong: #9dffb5;
+  --bte-dim: #1f9a3e;
+  --bte-border: #1c5c2c;
+  --bte-accent: #33ff66;
+  --bte-accent-fg: #050805;
+  --bte-link: #9dffb5;
+  --bte-red: #ff5f56;
+  --bte-green: #33ff66;
+  --bte-yellow: #d7ff5f;
+  --bte-blue: #5fffd7;
+  --bte-purple: #afff87;
+  --bte-aqua: #5fffd7;
+  --bte-orange: #d7ff5f;
+  --bte-glow: 0 0 6px rgba(51, 255, 102, 0.35);
+}
+
+html.bte[data-bte-theme="amber"] {
+  --bte-bg: #120b02;
+  --bte-bg0: #0b0701;
+  --bte-bg1: #1b1104;
+  --bte-bg2: #3a2507;
+  --bte-fg: #ffb000;
+  --bte-fg-strong: #ffd479;
+  --bte-dim: #a86f00;
+  --bte-border: #5c3d06;
+  --bte-accent: #ffb000;
+  --bte-accent-fg: #0b0701;
+  --bte-link: #ffd479;
+  --bte-red: #ff6a3d;
+  --bte-green: #ffcf5c;
+  --bte-yellow: #ffd479;
+  --bte-blue: #ffc34d;
+  --bte-purple: #ffcc80;
+  --bte-aqua: #ffd479;
+  --bte-orange: #ff8c1a;
+  --bte-glow: 0 0 6px rgba(255, 176, 0, 0.35);
+}
+
+html.bte[data-bte-theme="paper"] {
+  --bte-bg: #fafaf7;
+  --bte-bg0: #ffffff;
+  --bte-bg1: #f0efe9;
+  --bte-bg2: #dedcd2;
+  --bte-fg: #1b1b1b;
+  --bte-fg-strong: #000000;
+  --bte-dim: #6b6b6b;
+  --bte-border: #1b1b1b;
+  --bte-accent: #1b1b1b;
+  --bte-accent-fg: #fafaf7;
+  --bte-link: #1b1b1b;
+  --bte-red: #c0392b;
+  --bte-green: #2e7d32;
+  --bte-yellow: #9a6b00;
+  --bte-blue: #1b4f9c;
+  --bte-purple: #6a3d9a;
+  --bte-aqua: #1d6b63;
+  --bte-orange: #b35400;
+  --bte-scheme: light;
+  --bte-surface: var(--bte-bg0);
+}
+
+/* ───────────── Temas propios ─────────────
+ * Contraste verificado (WCAG): texto ≥ 10:1, texto secundario y colores de
+ * estado ≥ 4.5:1 sobre el fondo, texto de botón ≥ 4.5:1 sobre el acento.
+ */
+
+/* matcha: papel crema y tinta verde bosque; calma para leer mucho. */
+html.bte[data-bte-theme="matcha"] {
+  --bte-bg: #f4f1e8;
+  --bte-bg0: #fbf9f3;
+  --bte-bg1: #ebe6d8;
+  --bte-bg2: #d9d2bf;
+  --bte-fg: #2b3a2e;
+  --bte-fg-strong: #17231a;
+  --bte-dim: #5a6657;
+  --bte-border: #b9b29c;
+  --bte-accent: #4a7336;
+  --bte-accent-fg: #fbf9f3;
+  --bte-link: #2c5a84;
+  --bte-red: #a93a2a;
+  --bte-green: #3a7229;
+  --bte-yellow: #7d600c;
+  --bte-blue: #2c5a84;
+  --bte-purple: #744a84;
+  --bte-aqua: #2a7066;
+  --bte-orange: #9c4f18;
+  --bte-scheme: light;
+  --bte-surface: var(--bte-bg0);
+}
+
+/* lavanda: lila suave con tinta ciruela. */
+html.bte[data-bte-theme="lavanda"] {
+  --bte-bg: #f3f0f8;
+  --bte-bg0: #faf8fd;
+  --bte-bg1: #e8e3f2;
+  --bte-bg2: #d6cde8;
+  --bte-fg: #332b45;
+  --bte-fg-strong: #1d1730;
+  --bte-dim: #645c79;
+  --bte-border: #bfb4d6;
+  --bte-accent: #6445ad;
+  --bte-accent-fg: #faf8fd;
+  --bte-link: #3a58a6;
+  --bte-red: #ad3249;
+  --bte-green: #347353;
+  --bte-yellow: #81610f;
+  --bte-blue: #3a58a6;
+  --bte-purple: #833a99;
+  --bte-aqua: #2a6f75;
+  --bte-orange: #a25026;
+  --bte-scheme: light;
+  --bte-surface: var(--bte-bg0);
+}
+
+/* sakura: rosa pétalo, acento cereza profundo. */
+html.bte[data-bte-theme="sakura"] {
+  --bte-bg: #fbf1f3;
+  --bte-bg0: #fff8f9;
+  --bte-bg1: #f4e2e6;
+  --bte-bg2: #e8cdd4;
+  --bte-fg: #3d2a30;
+  --bte-fg-strong: #25151a;
+  --bte-dim: #735a62;
+  --bte-border: #d4b3bc;
+  --bte-accent: #b33c61;
+  --bte-accent-fg: #fff8f9;
+  --bte-link: #396393;
+  --bte-red: #aa2d2a;
+  --bte-green: #387049;
+  --bte-yellow: #80600f;
+  --bte-blue: #396393;
+  --bte-purple: #834389;
+  --bte-aqua: #2a6f6d;
+  --bte-orange: #a65026;
+  --bte-scheme: light;
+  --bte-surface: var(--bte-bg0);
+}
+
+/* medianoche: azul tinta con acento ámbar; para estudiar de noche. */
+html.bte[data-bte-theme="medianoche"] {
+  --bte-bg: #0f1526;
+  --bte-bg0: #0a0f1c;
+  --bte-bg1: #161e33;
+  --bte-bg2: #232d48;
+  --bte-fg: #d8dcea;
+  --bte-fg-strong: #f2f4fa;
+  --bte-dim: #8b93b0;
+  --bte-border: #2f3a5a;
+  --bte-accent: #f2b04a;
+  --bte-accent-fg: #0f1526;
+  --bte-link: #8ab4f8;
+  --bte-red: #f07178;
+  --bte-green: #a3d977;
+  --bte-yellow: #f2c96b;
+  --bte-blue: #82aaff;
+  --bte-purple: #c792ea;
+  --bte-aqua: #7fdbca;
+  --bte-orange: #f78c6c;
+}
+
+/* terracota: barro cálido, arena y acento teja. */
+html.bte[data-bte-theme="terracota"] {
+  --bte-bg: #231a16;
+  --bte-bg0: #1a1310;
+  --bte-bg1: #2d221d;
+  --bte-bg2: #3d2f28;
+  --bte-fg: #eadccb;
+  --bte-fg-strong: #f8efe3;
+  --bte-dim: #ad9885;
+  --bte-border: #4d3b31;
+  --bte-accent: #e8845a;
+  --bte-accent-fg: #1a1310;
+  --bte-link: #94bccd;
+  --bte-red: #f0776b;
+  --bte-green: #adc680;
+  --bte-yellow: #e8c06a;
+  --bte-blue: #94bccd;
+  --bte-purple: #cfa0be;
+  --bte-aqua: #8ac6ac;
+  --bte-orange: #f0a060;
+}
+
+/* océano: petróleo profundo y espuma turquesa. */
+html.bte[data-bte-theme="oceano"] {
+  --bte-bg: #0b1f24;
+  --bte-bg0: #07171b;
+  --bte-bg1: #10292f;
+  --bte-bg2: #183a42;
+  --bte-fg: #cfe6e6;
+  --bte-fg-strong: #effafa;
+  --bte-dim: #83a8ab;
+  --bte-border: #22474f;
+  --bte-accent: #4fd1c5;
+  --bte-accent-fg: #07171b;
+  --bte-link: #7cc4ff;
+  --bte-red: #ff7a85;
+  --bte-green: #8ee39b;
+  --bte-yellow: #f5d47a;
+  --bte-blue: #7cc4ff;
+  --bte-purple: #c3a6ff;
+  --bte-aqua: #4fd1c5;
+  --bte-orange: #ffa36b;
+}
+
+/* grafito: gris neutro sin tinte y un solo acento lima; nada distrae. */
+html.bte[data-bte-theme="grafito"] {
+  --bte-bg: #16171a;
+  --bte-bg0: #0f1012;
+  --bte-bg1: #1e2024;
+  --bte-bg2: #2b2e33;
+  --bte-fg: #d6d8dc;
+  --bte-fg-strong: #f5f6f7;
+  --bte-dim: #91969d;
+  --bte-border: #34383e;
+  --bte-accent: #c6f432;
+  --bte-accent-fg: #111214;
+  --bte-link: #7fb3ff;
+  --bte-red: #ff6b6b;
+  --bte-green: #7ee2a8;
+  --bte-yellow: #f5d565;
+  --bte-blue: #7fb3ff;
+  --bte-purple: #c49bff;
+  --bte-aqua: #6fd6d6;
+  --bte-orange: #ffa45c;
+}
+
+/* alto contraste: negro puro, blanco y amarillo; para baja visión o sol
+   directo en la pantalla. */
+html.bte[data-bte-theme="contraste"] {
+  --bte-bg: #000000;
+  --bte-bg0: #000000;
+  --bte-bg1: #111111;
+  --bte-bg2: #262626;
+  --bte-fg: #ffffff;
+  --bte-fg-strong: #ffffff;
+  --bte-dim: #d0d0d0;
+  --bte-border: #ffffff;
+  --bte-accent: #ffe600;
+  --bte-accent-fg: #000000;
+  --bte-link: #66ccff;
+  --bte-red: #ff6b6b;
+  --bte-green: #3dff7a;
+  --bte-yellow: #ffe600;
+  --bte-blue: #66ccff;
+  --bte-purple: #e0a3ff;
+  --bte-aqua: #3dffe0;
+  --bte-orange: #ffa640;
+}
+
+/* daltonismo: estados con la paleta Okabe-Ito (bermellón, verde azulado,
+   azul), distinguibles con deuteranopia y protanopia. */
+html.bte[data-bte-theme="daltonismo"] {
+  --bte-bg: #f7f7f5;
+  --bte-bg0: #ffffff;
+  --bte-bg1: #ececea;
+  --bte-bg2: #dcdcd8;
+  --bte-fg: #1f1f1f;
+  --bte-fg-strong: #000000;
+  --bte-dim: #575757;
+  --bte-border: #b5b5b0;
+  --bte-accent: #0068a3;
+  --bte-accent-fg: #ffffff;
+  --bte-link: #0068a3;
+  --bte-red: #b84f00;
+  --bte-green: #007a59;
+  --bte-yellow: #7a6300;
+  --bte-blue: #0068a3;
+  --bte-purple: #a04f7f;
+  --bte-aqua: #1f6f9c;
+  --bte-orange: #935f00;
+  --bte-scheme: light;
+  --bte-surface: var(--bte-bg0);
+}

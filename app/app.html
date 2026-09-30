@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es" class="bte" data-bte-theme="gruvbox">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>eminus tui</title>
+  <link rel="icon" href="../icons/icon32.png" />
+  <link rel="stylesheet" href="../src/themes.css" />
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand">❯ eminus tui</span>
+    <nav class="views" aria-label="Vistas">
+      <button type="button" data-view="agenda"><kbd>1</kbd> agenda</button>
+      <button type="button" data-view="courses"><kbd>2</kbd> cursos</button>
+      <button type="button" data-view="miyu"><kbd>3</kbd> miyu</button>
+      <button type="button" data-view="grades"><kbd>4</kbd> tareas calificadas</button>
+    </nav>
+    <span class="clock" id="clock"></span>
+  </header>
+
+  <main id="main">
+    <section class="pane dash-pane" id="pane-dash" data-pane="dash" hidden>
+      <h2 class="pane-title">resumen</h2>
+      <div class="pane-body dash" id="dash"></div>
+    </section>
+
+    <section class="pane" id="pane-list" data-pane="list">
+      <h2 class="pane-title" id="list-title">agenda</h2>
+      <div class="pane-body" id="list" role="listbox" tabindex="-1"></div>
+    </section>
+
+    <section class="pane" id="pane-mid" data-pane="mid" hidden>
+      <h2 class="pane-title" id="mid-title">actividades</h2>
+      <div class="pane-body" id="mid" role="listbox" tabindex="-1"></div>
+    </section>
+
+    <section class="pane" id="pane-detail" data-pane="detail">
+      <h2 class="pane-title">detalle</h2>
+      <div class="pane-body detail" id="detail" tabindex="-1"></div>
+    </section>
+
+    <div class="splash" id="splash" hidden></div>
+  </main>
+
+  <footer class="statusline">
+    <button type="button" class="seg back embedded-only" id="back" title="Volver a Eminus (esc)">← eminus</button>
+    <span class="seg mode" id="mode" data-mode="normal" hidden></span>
+    <span class="seg msg" id="msg"></span>
+    <label class="seg filter" id="filter-wrap" hidden>
+      <span>/</span><input id="filter" type="text" spellcheck="false" autocomplete="off" aria-label="Filtrar" />
+    </label>
+    <span class="seg counters" id="counters"></span>
+    <span class="seg hints" id="hints"></span>
+    <span class="seg theme" id="theme"></span>
+  </footer>
+
+  <div class="overlay" id="help" hidden>
+    <div class="window" role="dialog" aria-label="Ayuda">
+      <div class="titlebar"><span>atajos</span><span class="dim">esc cierra</span></div>
+      <div class="help-body">
+        <dl>
+          <dt>1 · 2 · 3 · 4</dt><dd>agenda · cursos · miyu · tareas calificadas</dd>
+          <dt>j / k</dt><dd>bajar / subir</dd>
+          <dt>g g / G</dt><dd>primero / último</dd>
+          <dt>h / l · tab</dt><dd>cambiar de panel</dd>
+          <dt>enter · o</dt><dd>abrir en eminus</dd>
+          <dt>/</dt><dd>filtrar la lista</dd>
+          <dt>a</dt><dd>mostrar entregadas / cursos anteriores</dd>
+          <dt>r</dt><dd>actualizar desde eminus</dd>
+          <dt>c</dt><dd>cambiar tema</dd>
+          <dt>esc · q</dt><dd>limpiar filtro / volver a eminus</dd>
+        </dl>
+        <p class="dim">Se lee de Eminus con tu sesión; nada sale de tu navegador.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../src/prefs.js"></script>
+  <script src="../src/boot.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

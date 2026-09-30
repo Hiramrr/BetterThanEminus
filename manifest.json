@@ -1,0 +1,74 @@
+{
+  "manifest_version": 3,
+  "name": "BetterThanEminus",
+  "description": "Eminus mejorado: reskin con estilos (tui, moderno, enfoque, retro), paleta de comandos, navegación con teclado y vista de pendientes dentro de la misma página.",
+  "version": "1.0.0",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://eminus.uv.mx/*"
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://eminus.uv.mx/eminus4/*",
+        "https://eminus.uv.mx/aplicativoEminus/*"
+      ],
+      "js": [
+        "src/prefs.js",
+        "src/boot.js"
+      ],
+      "css": [
+        "src/themes.css",
+        "src/tui.css",
+        "src/styles.css"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://eminus.uv.mx/eminus4/*",
+        "https://eminus.uv.mx/aplicativoEminus/*"
+      ],
+      "js": [
+        "src/nav.js",
+        "src/palette.js",
+        "src/drafts.js",
+        "src/app.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "action": {
+    "default_title": "BetterThanEminus",
+    "default_popup": "popup/popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "app/app.html",
+        "app/app.css",
+        "app/app.js",
+        "src/prefs.js",
+        "src/boot.js",
+        "src/themes.css",
+        "icons/icon32.png"
+      ],
+      "matches": [
+        "https://eminus.uv.mx/*"
+      ]
+    }
+  ]
+}

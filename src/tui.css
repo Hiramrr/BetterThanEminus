@@ -1,0 +1,2181 @@
+/*
+ * BetterThanEminus: reskin TUI.
+ *
+ * Todo cuelga de `html.bte:not(#bte-z)`: el :not(#id) suma especificidad de ID
+ * para ganarle a las utilidades de Eminus (.bg-white, .g-color-white...) sin
+ * pelear regla por regla. Solo se tocan los contenedores de Eminus (ver
+ * :where(...) abajo); el panel de Miyu --pendientes (#eminus-pending-panel) y
+ * cualquier elemento ep-* viven directo en <body> y quedan fuera.
+ */
+
+/* ───────────────────────── base ───────────────────────── */
+
+/* html y body conservan el tamaño de letra de Eminus: el panel de Miyu hereda
+   de ahí. El tamaño elegido se aplica con zoom sólo a los contenedores de
+   Eminus (y sólo en el marco superior, para no duplicarlo en el iframe). */
+html.bte:not(#bte-z),
+html.bte:not(#bte-z) body {
+  background: var(--bte-bg) !important;
+  color: var(--bte-fg) !important;
+  font-family: var(--bte-font) !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* color-scheme se hereda: ponerlo en <html> cambiaría los controles nativos
+   del panel de Miyu. Sólo va en los contenedores de Eminus y en la UI propia. */
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal, #bte-overlay, #bte-statusline) {
+  color-scheme: var(--bte-scheme, normal);
+}
+
+html.bte.bte-top:not(#bte-z) :where(m-pages, m-auth, body > app-root) {
+  zoom: var(--bte-zoom, 1);
+}
+
+html.bte:not(#bte-z)
+  :where(m-pages, m-auth, app-root, .cdk-overlay-container, .m-splash-screen, .modal, .swal2-container)
+  :where(:not(svg, svg *, img, video, canvas, iframe, input[type="color"])) {
+  background-color: transparent !important;
+  background-image: none !important;
+  color: inherit !important;
+  border-color: var(--bte-border) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-shadow: var(--bte-glow) !important;
+  letter-spacing: normal !important;
+  transition-duration: 0s !important;
+}
+
+/* Tipografía monoespaciada en todo menos en fuentes de iconos. */
+html.bte:not(#bte-z)
+  :where(m-pages, m-auth, app-root, .cdk-overlay-container, .m-splash-screen, .modal, .swal2-container)
+  :where(:not(i[class], mat-icon, .mat-icon, .material-icons, .material-icons-outlined, .material-symbols-outlined, [class*="fa-"], .la, [class*="la-"], .bi, [class*="bi-"], [class*="icon-"], svg, svg *)) {
+  font-family: var(--bte-font) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(h1, h2, h3, h4, h5, h6, b, strong) {
+  font-weight: 700 !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(h1, h2, h3, h4) {
+  color: var(--bte-fg-strong) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(p, span, div, li, td, th, label, a, input, textarea, select, button) {
+  line-height: 1.5;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) a:not(.m-menu__link, .mat-button, .mat-mdc-button, .btn) {
+  color: var(--bte-link) !important;
+  text-decoration: underline dotted !important;
+  text-underline-offset: 3px;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) a:not(.m-menu__link, .mat-button, .mat-mdc-button, .btn):hover {
+  background-color: var(--bte-link) !important;
+  color: var(--bte-bg) !important;
+  text-decoration: none !important;
+}
+
+/* Selección, foco y barras de desplazamiento: sólo en Eminus y en la UI
+   propia. Miyu define los suyos y no deben pisarse. */
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal, #bte-overlay, #bte-statusline) ::selection {
+  background: var(--bte-accent);
+  color: var(--bte-accent-fg);
+}
+
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(a, button, input, select, textarea, summary, [role="button"], [role="tab"], [role="option"], .mat-select, .mat-mdc-select):focus-visible {
+  outline: 1px dashed var(--bte-accent) !important;
+  outline-offset: 2px !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) :where(mat-card, .mat-mdc-card, [tabindex="0"]:not(a, button, input, select, textarea)):focus {
+  outline: 0 !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(hr) {
+  border: 0 !important;
+  border-top: 1px dashed var(--bte-border) !important;
+  opacity: 1 !important;
+  background: none !important;
+}
+
+/* Iconos: mismo color que el texto, sin fondos decorativos. */
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(i[class], mat-icon, .material-icons) {
+  color: inherit !important;
+}
+
+/* Imágenes decorativas en tonos del tema. */
+html.bte:not(#bte-z) :where(m-pages, app-root) img:not(.fr-view img, .fr-view *) {
+  filter: grayscale(1) contrast(1.05);
+  opacity: 0.85;
+}
+
+html.bte:not(#bte-z)::-webkit-scrollbar,
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, #bte-overlay) ::-webkit-scrollbar { width: 10px; height: 10px; }
+html.bte:not(#bte-z)::-webkit-scrollbar-track,
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, #bte-overlay) ::-webkit-scrollbar-track { background: var(--bte-bg0); }
+html.bte:not(#bte-z)::-webkit-scrollbar-thumb,
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, #bte-overlay) ::-webkit-scrollbar-thumb { background: var(--bte-bg2); border: 2px solid var(--bte-bg0); }
+html.bte:not(#bte-z)::-webkit-scrollbar-thumb:hover,
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, #bte-overlay) ::-webkit-scrollbar-thumb:hover { background: var(--bte-dim); }
+
+/* ─────────────────── colores con significado ─────────────────── */
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) :where(.text-danger, .g-color-red, .color-red, .red, .mat-warn, .text-error) {
+  color: var(--bte-red) !important;
+}
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) :where(.text-success, .g-color-green, .color-green, .kt-portlet-status) {
+  color: var(--bte-green) !important;
+}
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) :where(.text-warning, .g-color-orange, .g-color-yellow) {
+  color: var(--bte-yellow) !important;
+}
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) :where(.text-info, .text-primary, .g-color-blue) {
+  color: var(--bte-blue) !important;
+}
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) :where(.text-muted, .GrayContrats, small, .small, .mat-hint, .mat-mdc-form-field-hint) {
+  color: var(--bte-dim) !important;
+}
+
+/* ─────────────────────── encabezado ─────────────────────── */
+
+html.bte:not(#bte-z) m-header {
+  display: block;
+  position: sticky !important;
+  top: 0;
+  z-index: 100;
+}
+
+html.bte:not(#bte-z) m-header header {
+  display: flex !important;
+  align-items: center !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  background-color: var(--bte-bg0) !important;
+  border-bottom: 1px solid var(--bte-border) !important;
+}
+
+html.bte:not(#bte-z) m-header .MainTittleUV {
+  display: none !important;
+}
+
+html.bte:not(#bte-z) m-header :where(.m-container, .m-stack, m-topbar, .m-topbar, .m-brand__tools) {
+  height: 36px !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+html.bte:not(#bte-z) m-header a.m-brand__logo-wrapper {
+  display: inline-flex !important;
+  align-items: center;
+  height: 36px;
+  text-decoration: none !important;
+}
+
+html.bte:not(#bte-z) m-header a.m-brand__logo-wrapper img {
+  display: none !important;
+}
+
+html.bte:not(#bte-z) m-header a.m-brand__logo-wrapper::before {
+  content: " eminus ";
+  white-space: pre;
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 10px;
+  background: var(--bte-accent);
+  color: var(--bte-accent-fg);
+  font-family: var(--bte-font);
+  font-weight: 700;
+}
+
+html.bte:not(#bte-z) m-header a.m-brand__logo-wrapper::after {
+  content: attr(data-bte-path);
+  padding: 0 12px;
+  color: var(--bte-dim);
+  font-family: var(--bte-font);
+  font-size: 0.92em;
+  white-space: nowrap;
+}
+
+html.bte:not(#bte-z) m-header a.m-brand__logo-wrapper:hover::after {
+  color: var(--bte-fg);
+}
+
+/* Accesos a eminus tui junto a la ruta */
+html.bte:not(#bte-z) m-header a.m-brand__logo-wrapper {
+  flex: 0 0 auto;
+}
+
+html.bte:not(#bte-z) m-header a.m-brand__logo-wrapper + #bte-header-links {
+  display: inline-flex;
+  align-items: stretch;
+  height: 36px;
+  margin-left: 4px;
+  border-left: 1px solid var(--bte-border);
+  vertical-align: top;
+}
+
+html:not(.bte) #bte-header-links {
+  display: none !important;
+}
+
+html.bte:not(#bte-z) m-header div:has(> #bte-header-links) {
+  display: flex !important;
+  align-items: center;
+}
+
+
+html.bte:not(#bte-z) #bte-header-links button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 0 !important;
+  background: none;
+  color: var(--bte-fg) !important;
+  font: inherit;
+  font-size: 0.92em;
+  cursor: pointer;
+}
+
+html.bte:not(#bte-z) #bte-header-links button::before {
+  content: "[";
+  margin-right: 4px;
+  color: var(--bte-dim);
+}
+
+html.bte:not(#bte-z) #bte-header-links button::after {
+  content: "]";
+  margin-left: 4px;
+  color: var(--bte-dim);
+}
+
+html.bte:not(#bte-z) #bte-header-links button:hover,
+html.bte:not(#bte-z) #bte-header-links button:focus-visible {
+  background-color: var(--bte-accent) !important;
+  color: var(--bte-accent-fg) !important;
+  outline: none !important;
+}
+
+html.bte:not(#bte-z) #bte-header-links button:hover::before,
+html.bte:not(#bte-z) #bte-header-links button:hover::after {
+  color: inherit;
+}
+
+
+html.bte:not(#bte-z) m-header :where(m-user-profile) .h5 {
+  font-size: 0.9em !important;
+  color: var(--bte-dim) !important;
+  text-transform: lowercase;
+}
+
+html.bte:not(#bte-z) m-header :where(m-user-profile) .h5::before {
+  content: "@";
+  color: var(--bte-accent);
+}
+
+html.bte:not(#bte-z) m-header :where(m-user-profile) img {
+  width: 20px !important;
+  height: 20px !important;
+  outline: 1px solid var(--bte-border);
+}
+
+html.bte:not(#bte-z) m-header m-notification i {
+  font-size: 15px !important;
+  color: var(--bte-dim) !important;
+}
+
+html.bte:not(#bte-z) m-header m-notification i:hover {
+  color: var(--bte-accent) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) .mat-badge-content {
+  background: var(--bte-red) !important;
+  color: var(--bte-bg) !important;
+  font-family: var(--bte-font) !important;
+  font-weight: 700 !important;
+}
+
+/* ─────────────────────── menú lateral ─────────────────────── */
+
+html.bte:not(#bte-z) m-aside-left,
+html.bte:not(#bte-z) .m-aside-left {
+  background-color: var(--bte-bg0) !important;
+  border-right: 1px solid var(--bte-border) !important;
+}
+
+/* Barra lateral fija de 180px con etiquetas, siempre visible en escritorio.
+   Eminus la deja minimizada (60px, sólo iconos) y fija bajo su encabezado de
+   70px; aquí va en el flujo del flex de <main>. En pantallas estrechas queda
+   un riel numerado. */
+@media (min-width: 900px) {
+  html.bte:not(#bte-z) main.layout-main > m-aside-left.m-aside-left {
+    position: sticky !important;
+    top: 36px !important;
+    align-self: flex-start;
+    flex: 0 0 180px;
+    width: 180px !important;
+    height: calc(100vh - 60px) !important;
+    overflow-y: auto;
+    left: auto !important;
+  }
+
+  html.bte:not(#bte-z) main.layout-main > .ContentFromMain {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto !important;
+  }
+
+  html.bte:not(#bte-z) #m_ver_menu {
+    width: 100% !important;
+  }
+
+  html.bte:not(#bte-z) #m_ver_menu .m-menu__link-text {
+    display: block !important;
+  }
+
+  html.bte:not(#bte-z) m-header #m_aside_left_minimize_toggle {
+    display: none !important;
+  }
+}
+
+/* Angosto: riel de iconos (o números en tui) dentro del flujo, así no tapa
+   el contenido como hace Eminus con su barra fija. */
+@media (max-width: 899px) {
+  html.bte:not(#bte-z) main.layout-main > m-aside-left.m-aside-left {
+    position: sticky !important;
+    top: var(--bte-header-h) !important;
+    left: auto !important;
+    align-self: flex-start;
+    flex: 0 0 52px;
+    width: 52px !important;
+    height: calc(100vh - var(--bte-header-h) - 24px) !important;
+    overflow-y: auto;
+  }
+
+  html.bte:not(#bte-z) main.layout-main > .ContentFromMain {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto !important;
+  }
+
+  html.bte:not(#bte-z) #m_ver_menu {
+    width: 100% !important;
+  }
+
+  html.bte:not(#bte-z) #m_ver_menu .m-menu__link {
+    justify-content: center !important;
+    padding: 8px 0 !important;
+  }
+
+  html.bte:not(#bte-z) #m_ver_menu .m-menu__link-text {
+    display: none !important;
+  }
+
+  html.bte:not(#bte-z) #m_ver_menu :where(.m-menu__item, .m-menu__link) {
+    width: auto !important;
+  }
+
+  /* Buscador de la cabecera del curso a todo lo ancho */
+  html.bte:not(#bte-z) .EMINUSPleca .input-group {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin-top: 10px;
+  }
+
+  html.bte:not(#bte-z) .EMINUSPleca :where(.col-lg-7, .col-6) {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  html.bte:not(#bte-z) .EMINUSPleca .PlecaOverlayChange {
+    flex-wrap: wrap;
+  }
+
+  /* Filas de Bootstrap con márgenes negativos y adjuntos anchos: dentro del
+     panel, sin desbordar a la derecha. */
+  html.bte:not(#bte-z) :where(m-pages, app-root) :where(.kt-portlet__body, .m-kt-portlet-resource) .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  html.bte:not(#bte-z) :where(m-pages, app-root) :where(.m-kt-portlet-resource, .cardInContent, .kt-portlet__body-files, .kt-widget4, .kt-widget4__item) {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: clip;
+  }
+
+  html.bte:not(#bte-z) #m_ver_menu .m-menu__nav::before {
+    display: none !important;
+  }
+
+  /* Módulos: el título arriba y los datos debajo, no en columnas apretadas */
+  html.bte:not(#bte-z) .m-kt-portlet-unit .m-alert__text {
+    grid-template-columns: 1fr !important;
+    gap: 2px !important;
+  }
+
+  html.bte:not(#bte-z) .m-kt-portlet-unit .m-alert__text > * {
+    white-space: normal !important;
+  }
+}
+
+/* El riel siempre está visible: el botón de Eminus para plegarlo sobra. */
+html.bte:not(#bte-z) m-header :where(#m_aside_left_minimize_toggle, #m_aside_left_offcanvas_toggle) {
+  display: none !important;
+}
+
+html.bte:not(#bte-z) m-header #m_aside_left_minimize_toggle,
+html.bte:not(#bte-z) m-header .m-brand__toggler {
+  width: 36px !important;
+  height: 36px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+html.bte:not(#bte-z) m-header .m-brand__toggler span,
+html.bte:not(#bte-z) m-header .m-brand__toggler span::before,
+html.bte:not(#bte-z) m-header .m-brand__toggler span::after {
+  background: var(--bte-fg) !important;
+}
+
+html.bte:not(#bte-z) #m_ver_menu .m-menu__nav {
+  counter-reset: bte-menu;
+  padding: 8px 0 !important;
+}
+
+html.bte:not(#bte-z) #m_ver_menu .m-menu__nav::before {
+  content: "── secciones ──";
+  display: block;
+  padding: 0 12px 6px;
+  color: var(--bte-dim);
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+html.bte:not(#bte-z) #m_ver_menu .m-menu__item {
+  counter-increment: bte-menu;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+html.bte:not(#bte-z) #m_ver_menu .m-menu__link {
+  display: flex !important;
+  align-items: center;
+  min-height: 0 !important;
+  height: auto !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  margin: 0 !important;
+  padding: 3px 12px !important;
+  cursor: pointer;
+  text-decoration: none !important;
+}
+
+html.bte:not(#bte-z) #m_ver_menu .m-menu__link::before {
+  content: counter(bte-menu) " ";
+  color: var(--bte-dim);
+  flex: 0 0 3ch;
+  font-family: var(--bte-font);
+}
+
+html.bte:not(#bte-z) #m_ver_menu .m-menu__link-icon {
+  display: none !important;
+}
+
+html.bte:not(#bte-z) #m_ver_menu .m-menu__link-text {
+  font-size: 0.95em !important;
+  font-weight: 400 !important;
+  text-transform: lowercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 !important;
+}
+
+html.bte:not(#bte-z) #m_ver_menu .m-menu__item:hover > .m-menu__link {
+  background-color: var(--bte-bg2) !important;
+}
+
+html.bte:not(#bte-z) #m_ver_menu .m-menu__item--active > .m-menu__link {
+  background-color: var(--bte-accent) !important;
+  color: var(--bte-accent-fg) !important;
+}
+
+html.bte:not(#bte-z) #m_ver_menu .m-menu__item--active > .m-menu__link::before {
+  color: var(--bte-accent-fg);
+  content: "▶ ";
+}
+
+/* ─────────────── cabecera de curso (la "pleca") ─────────────── */
+
+html.bte:not(#bte-z) .EMINUSPleca {
+  min-height: 0 !important;
+  height: auto !important;
+  margin: 0 !important;
+  border-bottom: 1px solid var(--bte-border) !important;
+  background-color: var(--bte-bg1) !important;
+}
+
+html.bte:not(#bte-z) .EMINUSPleca :where(.PlecaOverlay, .PlecaOverlayChange) {
+  padding: 10px 20px !important;
+  min-height: 0 !important;
+}
+
+html.bte:not(#bte-z) .EMINUSPleca .g-font-size-18 {
+  font-size: 1.05em !important;
+  font-weight: 700 !important;
+  color: var(--bte-fg-strong) !important;
+  padding-left: 0 !important;
+}
+
+html.bte:not(#bte-z) .EMINUSPleca .g-font-size-18::before {
+  content: "❯ ";
+  color: var(--bte-accent);
+}
+
+html.bte:not(#bte-z) .EMINUSPleca .TittlePleca {
+  color: var(--bte-dim) !important;
+  font-size: 0.9em !important;
+}
+
+/* ──────────────────── contenedores genéricos ──────────────────── */
+
+html.bte:not(#bte-z) main.layout-main,
+html.bte:not(#bte-z) .ContentFromMain {
+  background-color: var(--bte-bg) !important;
+}
+
+/* El encabezado original es fijo de 70px; el nuestro ocupa su sitio en el flujo. */
+html.bte:not(#bte-z) main.layout-main {
+  margin-top: 0 !important;
+}
+
+/* En pantallas angostas Eminus da altura fija a <main> y a la lista de
+   cursos y los hace desplazarse por dentro: quedan dos barras de scroll
+   anidadas. Se deja que la página sea la única que se desplaza. */
+html.bte:not(#bte-z) main.layout-main,
+html.bte:not(#bte-z) m-course-list .container_courses {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Alto del encabezado según el estilo (lo usa la barra lateral angosta). */
+html.bte {
+  --bte-header-h: 36px;
+}
+
+/* Encabezado en pantallas medianas y angostas: primero se va la ruta,
+   luego el nombre del usuario; los accesos y los iconos siempre caben. */
+html.bte:not(#bte-z) m-header .m-brand__tools {
+  min-width: 0;
+  gap: 8px;
+}
+
+html.bte:not(#bte-z) m-header .m-brand__tools > div:first-child {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 1100px) {
+  html.bte:not(#bte-z) m-header a.m-brand__logo-wrapper::after {
+    display: none;
+  }
+
+  /* Adjuntos del contenido: debajo del texto en vez de una columna
+     estrechísima a la derecha. */
+  html.bte:not(#bte-z) :where(m-pages, app-root) .kt-portlet__body > .row {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  html.bte:not(#bte-z) :where(m-pages, app-root) .kt-portlet__body-files {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 760px) {
+  html.bte:not(#bte-z) m-header :where(m-user-profile) .h5 {
+    display: none !important;
+  }
+
+  html.bte:not(#bte-z) #bte-header-links button {
+    padding: 0 8px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  html.bte:not(#bte-z) #bte-header-links button {
+    padding: 0 6px !important;
+  }
+
+  html.bte:not(#bte-z) #bte-header-links button::before,
+  html.bte:not(#bte-z) #bte-header-links button::after {
+    content: none !important;
+  }
+
+  html.bte[data-bte-style="tui"]:not(#bte-z) m-header a.m-brand__logo-wrapper::before {
+    content: " e ";
+    padding: 0 12px;
+  }
+
+  html.bte:not(#bte-z) m-header m-notification i {
+    margin: 0 4px !important;
+  }
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) .d-brd-separator {
+  border-bottom: 1px dashed var(--bte-border) !important;
+  padding-bottom: 4px !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) .d-brd-separator :where(h3, h4, h5, h6) {
+  font-size: 1em !important;
+  text-transform: lowercase;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) .d-brd-separator :where(h3, h4)::before,
+html.bte:not(#bte-z) m-course-list .container_courses > div > span.h4::before {
+  content: "## ";
+  color: var(--bte-accent);
+}
+
+/* Tarjetas, portlets y avisos: cajas de 1px. */
+html.bte:not(#bte-z) :where(m-pages, app-root, .modal) :where(mat-card, .mat-card, .mat-mdc-card, .card, .m-portlet, .kt-portlet, .m-alert, .alert, .cardInContent, .list-group-item, .mat-expansion-panel) {
+  border: 1px solid var(--bte-border) !important;
+  background-color: var(--bte-bg) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) :where(mat-card, .mat-card, .mat-mdc-card, .m-kt-portlet, .cardInContent, .card):hover {
+  border-color: var(--bte-dim) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) :where(.card-header, .card-footer, .kt-portlet__head, .modal-header, .modal-footer) {
+  border-color: var(--bte-border) !important;
+  background-color: var(--bte-bg1) !important;
+}
+
+/* ─────────────────────── lista de cursos ─────────────────────── */
+
+html.bte:not(#bte-z) m-course-list .container {
+  max-width: 1280px !important;
+}
+
+html.bte:not(#bte-z) m-course-list .SEARCH_BAR_BOX .input-group {
+  border: 1px solid var(--bte-border) !important;
+  background-color: var(--bte-bg0) !important;
+  align-items: center;
+}
+
+html.bte:not(#bte-z) m-course-list .SEARCH_BAR_BOX .input-group::before {
+  content: "❯";
+  padding: 0 4px 0 12px;
+  color: var(--bte-accent);
+  font-weight: 700;
+}
+
+html.bte:not(#bte-z) m-course-list .SEARCH_BAR_BOX .input-group:focus-within {
+  border-color: var(--bte-accent) !important;
+}
+
+html.bte:not(#bte-z) m-course-list .SEARCH_BAR {
+  border: 0 !important;
+  height: 34px !important;
+}
+
+/* Portada: rótulo y atajos sobre la búsqueda. */
+html.bte:not(#bte-z) m-course-list > .container > div::before {
+  content: "┌─ ~/cursos ─────────────────────────────\A│ ñ  buscar curso     j/k  moverse\A│ :  comandos         enter abrir\A└─ h  ayuda           c    cambiar tema";
+  white-space: pre;
+  align-self: stretch;
+  margin: 8px 0 16px;
+  color: var(--bte-dim);
+  font-family: var(--bte-font);
+  font-size: 0.85em;
+  line-height: 1.45;
+}
+
+html.bte:not(#bte-z) m-course-list .BTN_SEARCH {
+  padding: 0 12px !important;
+}
+
+html.bte:not(#bte-z) m-course-list .FILTER_BOX > div {
+  border: 1px solid var(--bte-border) !important;
+}
+
+html.bte:not(#bte-z) m-course-list .container_courses {
+  border-top: 1px dashed var(--bte-border) !important;
+}
+
+html.bte:not(#bte-z) m-course-list .container_courses > div > span.h4 {
+  font-size: 1em !important;
+  text-transform: lowercase;
+  padding: 16px 8px 8px !important;
+  color: var(--bte-fg-strong) !important;
+}
+
+html.bte:not(#bte-z) mat-card.CourseCard {
+  margin-bottom: 16px !important;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+html.bte:not(#bte-z) mat-card.CourseCard .CardHeader {
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 0 !important;
+  background-color: var(--bte-bg1) !important;
+  border-bottom: 1px solid var(--bte-border) !important;
+}
+
+html.bte:not(#bte-z) mat-card.CourseCard .CardHeaderContainer {
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 6px 10px !important;
+  display: block !important;
+}
+
+html.bte:not(#bte-z) mat-card.CourseCard .CardHeaderContainer b {
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.95em !important;
+  line-height: 1.4 !important;
+  color: var(--bte-fg-strong) !important;
+  min-height: 2.8em;
+}
+
+html.bte:not(#bte-z) mat-card.CourseCard .CardBody {
+  padding: 8px 10px !important;
+  min-height: 0 !important;
+  height: auto !important;
+  border-bottom: 1px dashed var(--bte-border) !important;
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-start !important;
+  gap: 2px;
+}
+
+html.bte:not(#bte-z) mat-card.CourseCard .CardBody > span {
+  font-size: 0.85em !important;
+  color: var(--bte-dim) !important;
+}
+
+html.bte:not(#bte-z) mat-card.CourseCard .CardBody > span b::before {
+  content: "prog ";
+  font-weight: 400;
+}
+
+html.bte:not(#bte-z) mat-card.CourseCard .CardBodyCircle {
+  display: none !important;
+}
+
+html.bte:not(#bte-z) mat-card.CourseCard .CardBody > div.d-flex {
+  width: 100%;
+  margin-top: 4px !important;
+}
+
+html.bte:not(#bte-z) mat-card.CourseCard .CardBodyimgbadges {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+html.bte:not(#bte-z) mat-card.CourseCard .CardFooter {
+  padding: 4px 10px !important;
+  min-height: 0 !important;
+  height: auto !important;
+  display: flex !important;
+}
+
+html.bte:not(#bte-z) mat-card.CourseCard .CardFooter i {
+  font-size: 14px !important;
+  color: var(--bte-dim) !important;
+}
+
+html.bte:not(#bte-z) mat-card.CourseCard .CardFooter i:hover,
+html.bte:not(#bte-z) mat-card.CourseCard .hiddebutton:hover mat-icon {
+  color: var(--bte-accent) !important;
+}
+
+html.bte:not(#bte-z) mat-card.CourseCard .hiddebutton mat-icon {
+  font-size: 18px !important;
+}
+
+html.bte:not(#bte-z) mat-card.CourseCard:hover .CardHeader {
+  background-color: var(--bte-bg2) !important;
+}
+
+html.bte:not(#bte-z) .button_arrow_down,
+html.bte:not(#bte-z) m-scroll-top {
+  display: none !important;
+}
+
+/* ─────────────────── contenido del curso ─────────────────── */
+
+html.bte:not(#bte-z) .m-kt-portlet-unit {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px;
+  padding: 8px 12px !important;
+  margin-bottom: 6px !important;
+  cursor: pointer;
+}
+
+html.bte:not(#bte-z) .m-kt-portlet-unit .m-alert__icon {
+  display: none !important;
+}
+
+html.bte:not(#bte-z) .m-kt-portlet-unit .m-alert__text {
+  display: grid !important;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: 0 16px;
+  width: 100%;
+  padding: 0 !important;
+}
+
+html.bte:not(#bte-z) .m-kt-portlet-unit .kt-portlet__head-title {
+  font-size: 1em !important;
+  color: var(--bte-fg-strong) !important;
+}
+
+html.bte:not(#bte-z) .m-kt-portlet-unit .kt-portlet__head-title::before {
+  content: "▸ ";
+  color: var(--bte-accent);
+}
+
+html.bte:not(#bte-z) .m-kt-portlet-unit p {
+  font-size: 0.85em !important;
+  color: var(--bte-dim) !important;
+  margin: 0 !important;
+  white-space: nowrap;
+}
+
+html.bte:not(#bte-z) .m-kt-portlet-unit .kt-portlet-status i {
+  font-size: 14px !important;
+  vertical-align: middle;
+  color: var(--bte-green) !important;
+}
+
+html.bte:not(#bte-z) .m-kt-portlet-unit:hover {
+  background-color: var(--bte-bg1) !important;
+}
+
+html.bte:not(#bte-z) .m-kt-portlet-resource,
+html.bte:not(#bte-z) .cardInContent {
+  padding: 12px 16px !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) .kt-portlet__head-title {
+  font-size: 1em !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) .kt-widget4__item {
+  border-bottom: 1px dashed var(--bte-border) !important;
+  padding: 4px 0 !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) :where(.icon-scroll-units, .scroll-units) {
+  display: none !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) :where(.mIV-bg-Comments, .mIV-content-insert-comment) {
+  background-color: var(--bte-bg1) !important;
+}
+
+/* Contenido escrito por docentes (Froala). */
+html.bte:not(#bte-z) :where(m-pages, app-root) .fr-view :where(table, td, th) {
+  border: 1px solid var(--bte-border) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) .fr-view img {
+  filter: none;
+  opacity: 1;
+}
+
+/* ───────────────── formularios y botones ───────────────── */
+
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]), textarea, select, .form-control) {
+  background-color: var(--bte-bg0) !important;
+  color: var(--bte-fg-strong) !important;
+  caret-color: var(--bte-accent);
+  font-family: var(--bte-font) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(input, textarea)::placeholder {
+  color: var(--bte-dim) !important;
+  opacity: 1;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) :where(.form-control, textarea, select) {
+  border: 1px solid var(--bte-border) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) :where(.form-control, textarea, select):focus {
+  border-color: var(--bte-accent) !important;
+  outline: none !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(input[type="checkbox"], input[type="radio"]) {
+  accent-color: var(--bte-accent);
+}
+
+/* Botones: texto entre corchetes, inverso al pasar. */
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-button, .mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .mat-mdc-outlined-button, .mdc-button, .btn, .input-group-text.btn-success) {
+  border: 1px solid var(--bte-border) !important;
+  color: var(--bte-fg) !important;
+  font-weight: 500 !important;
+  text-transform: lowercase !important;
+  white-space: nowrap !important;
+  min-height: 0 !important;
+}
+
+/* Botones sin envoltorio interno (aplicativoEminus usa <button> con la clase
+   de Material pero sin .mat-button-wrapper). */
+html.bte.bte-brackets:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container)
+  button:where(.mat-stroked-button, .mat-flat-button, .mat-raised-button):not(:has(> .mat-button-wrapper))::before {
+  content: "[ ";
+  opacity: 0.7;
+}
+
+html.bte.bte-brackets:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container)
+  button:where(.mat-stroked-button, .mat-flat-button, .mat-raised-button):not(:has(> .mat-button-wrapper))::after {
+  content: " ]";
+  opacity: 0.7;
+}
+
+html.bte:not(#bte-z) app-root .activity-card .actions-container > [class*="col-md-10"] {
+  flex: 1 1 0 !important;
+  max-width: none !important;
+}
+
+html.bte:not(#bte-z) app-root .activity-card .actions-container > [class*="col-md-2"] {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  max-width: none !important;
+}
+
+html.bte:not(#bte-z) app-root button.mat-stroked-button {
+  padding: 4px 10px !important;
+  cursor: pointer;
+}
+
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .mat-mdc-outlined-button, .btn, .input-group-text.btn-success):hover,
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-button, .mat-mdc-button):hover {
+  background-color: var(--bte-accent) !important;
+  border-color: var(--bte-accent) !important;
+  color: var(--bte-accent-fg) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(.mat-button, .mat-mdc-button):not(:hover) {
+  border-color: transparent !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(.btn-success, .btn-primary, .mat-stroked-button-green, .mat-primary.mat-flat-button, .mat-mdc-unelevated-button.mat-primary) {
+  border-color: var(--bte-accent) !important;
+  color: var(--bte-accent) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(.btn-danger, .mat-warn) {
+  border-color: var(--bte-red) !important;
+  color: var(--bte-red) !important;
+}
+
+html.bte.bte-brackets:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-button) > .mat-button-wrapper::before,
+html.bte.bte-brackets:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .mat-mdc-outlined-button) > .mdc-button__label::before {
+  content: "[ ";
+  opacity: 0.7;
+}
+
+html.bte.bte-brackets:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-button) > .mat-button-wrapper::after,
+html.bte.bte-brackets:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .mat-mdc-outlined-button) > .mdc-button__label::after {
+  content: " ]";
+  opacity: 0.7;
+}
+
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container) :where(.mat-button-focus-overlay, .mat-ripple-element, .mdc-button__ripple, .mat-mdc-button-persistent-ripple, .mat-mdc-focus-indicator::before, .mdc-tab__ripple) {
+  display: none !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container) :where(.mat-icon-button, .mat-mdc-icon-button) {
+  border: 0 !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container) :where(.mat-icon-button, .mat-mdc-icon-button):hover {
+  color: var(--bte-accent) !important;
+}
+
+/* Material form-field (legacy y MDC): subrayado en vez de caja. */
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container) :where(.mat-form-field-underline, .mdc-line-ripple::before) {
+  background-color: var(--bte-border) !important;
+  border-bottom-color: var(--bte-border) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container) :where(.mat-form-field-ripple, .mdc-line-ripple::after) {
+  background-color: var(--bte-accent) !important;
+  border-bottom-color: var(--bte-accent) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container) :where(.mat-form-field-label, .mdc-floating-label, .mat-mdc-floating-label) {
+  color: var(--bte-dim) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container) :where(.mat-focused .mat-form-field-label, .mdc-text-field--focused .mdc-floating-label) {
+  color: var(--bte-accent) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, m-auth, app-root) :where(.mat-form-field-infix input, .mat-mdc-form-field-infix input, .mat-input-element) {
+  background-color: transparent !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) :where(.mdc-text-field--filled, .mdc-text-field--outlined, .mat-mdc-text-field-wrapper) {
+  background-color: var(--bte-bg0) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) :where(.mdc-notched-outline__leading, .mdc-notched-outline__notch, .mdc-notched-outline__trailing) {
+  border-color: var(--bte-border) !important;
+}
+
+/* Selects */
+html.bte:not(#bte-z) :where(m-pages, app-root) :where(.mat-select-value, .mat-mdc-select-value, .mat-select-arrow, .mat-mdc-select-arrow) {
+  color: var(--bte-fg-strong) !important;
+}
+
+/* La flecha es un triángulo hecho con bordes: los laterales deben seguir
+   transparentes (la regla general les pone color). */
+html.bte:not(#bte-z):not(#bte-y) :where(m-pages, app-root) :where(.mat-select-arrow, .mat-mdc-select-arrow) {
+  border-top-color: var(--bte-accent) !important;
+  border-left-color: transparent !important;
+  border-right-color: transparent !important;
+  border-bottom-color: transparent !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) :where(.mat-mdc-select-arrow svg) {
+  fill: var(--bte-accent) !important;
+}
+
+/* ───────────────────────── pestañas ───────────────────────── */
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container) :where(.mat-tab-header, .mat-mdc-tab-header) {
+  border-bottom: 1px solid var(--bte-border) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container) :where(.mat-tab-label, .mat-mdc-tab, .nav-tabs .nav-link) {
+  opacity: 1 !important;
+  min-width: 0 !important;
+  height: 32px !important;
+  padding: 0 14px !important;
+  color: var(--bte-dim) !important;
+  border: 0 !important;
+  text-transform: lowercase;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container) :where(.mat-tab-label, .mat-mdc-tab, .nav-tabs .nav-link):hover {
+  color: var(--bte-fg) !important;
+  background-color: var(--bte-bg1) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container) :where(.mat-tab-label-active, .mdc-tab--active, .nav-tabs .nav-link.active) {
+  background-color: var(--bte-accent) !important;
+  color: var(--bte-accent-fg) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container) :where(.mdc-tab--active .mdc-tab__text-label, .mat-tab-label-active .mat-tab-label-content) {
+  color: var(--bte-accent-fg) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container) :where(.mdc-tab__text-label) {
+  color: inherit !important;
+  font-family: var(--bte-font) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container) :where(.mat-ink-bar, .mdc-tab-indicator) {
+  display: none !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container) :where(.mat-mdc-tab-header-pagination-chevron, .mat-tab-header-pagination-chevron) {
+  border-color: var(--bte-fg) !important;
+}
+
+/* ─────────────────── tablas y paginador ─────────────────── */
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) :where(table, .mat-table, .mat-mdc-table) {
+  border-collapse: collapse !important;
+  width: 100%;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) :where(th, .mat-header-cell, .mat-mdc-header-cell) {
+  color: var(--bte-accent) !important;
+  font-weight: 700 !important;
+  text-transform: lowercase;
+  border-bottom: 1px solid var(--bte-border) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) :where(td, .mat-cell, .mat-mdc-cell, .mat-row, .mat-mdc-row, .mat-header-row) {
+  border-bottom: 1px dashed var(--bte-border) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) :where(tbody tr, .mat-row, .mat-mdc-row):hover {
+  background-color: var(--bte-bg1) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) :where(.mat-paginator, .mat-mdc-paginator) {
+  border-top: 1px dashed var(--bte-border) !important;
+  color: var(--bte-dim) !important;
+  font-size: 0.85em !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) :where(.mat-paginator-icon, .mat-mdc-paginator-icon) {
+  fill: var(--bte-fg) !important;
+}
+
+/* ─────────────── menús, diálogos y tooltips ─────────────── */
+
+html.bte:not(#bte-z) .cdk-overlay-container :where(.mat-menu-panel, .mat-mdc-menu-panel, .mat-select-panel, .mat-mdc-select-panel, .mat-autocomplete-panel, .mat-mdc-autocomplete-panel, .mat-datepicker-content, .mdc-menu-surface),
+html.bte:not(#bte-z) :where(m-pages, app-root) .dropdown-menu {
+  background-color: var(--bte-bg1) !important;
+  border: 1px solid var(--bte-fg) !important;
+  padding: 2px 0 !important;
+  min-width: 180px;
+}
+
+html.bte:not(#bte-z) .cdk-overlay-container :where(.mat-menu-item, .mat-mdc-menu-item, .mat-option, .mat-mdc-option),
+html.bte:not(#bte-z) :where(m-pages, app-root) .dropdown-item {
+  height: auto !important;
+  min-height: 0 !important;
+  line-height: 1.6 !important;
+  padding: 3px 14px !important;
+  font-size: 0.95em !important;
+  color: var(--bte-fg) !important;
+}
+
+html.bte:not(#bte-z) .cdk-overlay-container :where(.mat-menu-item, .mat-mdc-menu-item, .mat-option, .mat-mdc-option):hover,
+html.bte:not(#bte-z) .cdk-overlay-container :where(.mat-option.mat-active, .mat-mdc-option.mat-mdc-option-active, .mat-option.mat-selected, .mat-mdc-option.mdc-list-item--selected),
+html.bte:not(#bte-z) :where(m-pages, app-root) .dropdown-item:hover {
+  background-color: var(--bte-accent) !important;
+  color: var(--bte-accent-fg) !important;
+}
+
+html.bte:not(#bte-z) .cdk-overlay-container :where(.mat-option-text, .mdc-list-item__primary-text, .mat-menu-item span) {
+  color: inherit !important;
+}
+
+html.bte:not(#bte-z) .cdk-overlay-container :where(.mat-pseudo-checkbox, .mat-mdc-option .mat-pseudo-checkbox) {
+  display: none !important;
+}
+
+html.bte:not(#bte-z) .cdk-overlay-container :where(.mat-dialog-container, .mat-mdc-dialog-surface, .mdc-dialog__surface),
+html.bte:not(#bte-z) .modal .modal-content,
+html.bte:not(#bte-z) .swal2-container .swal2-popup {
+  background-color: var(--bte-bg) !important;
+  border: 1px solid var(--bte-fg) !important;
+  color: var(--bte-fg) !important;
+}
+
+html.bte:not(#bte-z) .cdk-overlay-container :where(.mat-dialog-title, .mdc-dialog__title, .mat-mdc-dialog-title) {
+  background-color: var(--bte-bg1) !important;
+  border-bottom: 1px solid var(--bte-border) !important;
+  font-size: 1em !important;
+  margin: 0 !important;
+  color: var(--bte-fg-strong) !important;
+}
+
+html.bte:not(#bte-z) .cdk-overlay-container :where(.mdc-dialog__content, .mat-mdc-dialog-content, .mat-dialog-content) {
+  color: var(--bte-fg) !important;
+}
+
+html.bte:not(#bte-z) .cdk-overlay-container .cdk-overlay-dark-backdrop,
+html.bte:not(#bte-z) .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+}
+
+html.bte:not(#bte-z) .cdk-overlay-container :where(.mat-tooltip, .mdc-tooltip__surface, .mat-mdc-tooltip .mdc-tooltip__surface) {
+  background-color: var(--bte-fg) !important;
+  color: var(--bte-bg) !important;
+  font-family: var(--bte-font) !important;
+  font-size: 12px !important;
+  padding: 2px 8px !important;
+}
+
+html.bte:not(#bte-z) .cdk-overlay-container :where(.mat-snack-bar-container, .mat-mdc-snack-bar-container .mdc-snackbar__surface, .mdc-snackbar__surface) {
+  background-color: var(--bte-bg1) !important;
+  color: var(--bte-fg) !important;
+  border: 1px solid var(--bte-accent) !important;
+}
+
+/* ─────────────────── progreso y carga ─────────────────── */
+
+html.bte:not(#bte-z) :where(.m-splash-screen, m-pages, app-root, .cdk-overlay-container) :where(.mat-progress-spinner circle, .mat-mdc-progress-spinner circle, .mdc-circular-progress__indeterminate-circle-graphic) {
+  stroke: var(--bte-accent) !important;
+}
+
+html.bte:not(#bte-z) .m-splash-screen {
+  background-color: var(--bte-bg) !important;
+}
+
+html.bte:not(#bte-z) .m-splash-screen img {
+  display: none !important;
+}
+
+html.bte:not(#bte-z) .m-splash-screen::before {
+  content: "cargando eminus…";
+  display: block;
+  margin-bottom: 16px;
+  color: var(--bte-dim);
+  font-family: var(--bte-font);
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) :where(.mat-progress-bar-fill::after, .mdc-linear-progress__bar-inner) {
+  background-color: var(--bte-accent) !important;
+  border-color: var(--bte-accent) !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) :where(.badge, .mat-chip, .mat-mdc-chip, .mdc-evolution-chip) {
+  border: 1px solid currentColor !important;
+  font-weight: 500 !important;
+}
+
+/* ─────────────────────── pie de página ─────────────────────── */
+
+html.bte:not(#bte-z) m-pages > footer {
+  position: static !important;
+  padding: 8px 20px !important;
+  font-size: 0.8em !important;
+  color: var(--bte-dim) !important;
+  border-top: 1px dashed var(--bte-border) !important;
+  background-color: var(--bte-bg) !important;
+  margin-bottom: 24px;
+}
+
+/* ────────────────── iframe de actividades ────────────────── */
+
+html.bte:not(#bte-z) iframe.app-b-frame {
+  background-color: var(--bte-bg) !important;
+  color-scheme: normal;
+}
+
+/* Actividades: Eminus da al iframe el 100vh aunque empieza debajo del
+   banner del curso, y dentro tiene su propio scroll; la lista queda cortada
+   y la rueda salta entre los dos. app.js ajusta el alto del iframe al hueco
+   visible y aquí se evita que el scroll de dentro arrastre a la página. */
+html.bte:not(.bte-top),
+html.bte:not(.bte-top) :is(body, app-root > *) {
+  overscroll-behavior-y: contain;
+}
+
+/* Un segundo scroll de 4px dentro de las pestañas que atrapa la rueda. */
+html.bte:not(#bte-z):not(.bte-top) .mat-mdc-tab-body-content {
+  overflow-y: visible !important;
+}
+
+html.bte:not(#bte-z) app-root .principal-card {
+  border: 0 !important;
+}
+
+html.bte:not(#bte-z) app-root .px-5.py-4 {
+  padding: 8px 12px !important;
+}
+
+html.bte:not(#bte-z) app-root .activity-card {
+  margin-top: 10px !important;
+  padding: 0 !important;
+}
+
+html.bte:not(#bte-z) app-root .activity-card .mat-mdc-card-content {
+  padding: 10px 14px !important;
+}
+
+html.bte:not(#bte-z) app-root .activity-card :where(h1, h2, h3, h4, h5, h6, .activity-title) {
+  font-size: 1em !important;
+}
+
+html.bte:not(#bte-z) app-root .activity-card :where(h1, h2, h3, h4, h5)::before {
+  content: "▸ ";
+  color: var(--bte-accent);
+}
+
+html.bte:not(#bte-z) app-root .activity-card hr {
+  margin: 8px 0 !important;
+}
+
+html.bte:not(#bte-z) app-root .activity-time,
+html.bte:not(#bte-z) app-root .activity-time strong {
+  font-size: 0.85em !important;
+  color: var(--bte-dim) !important;
+  margin: 0 !important;
+}
+
+/* Estado de la actividad: Eminus lo pinta con estilos en línea (borde de la
+   tarjeta, marcador y leyenda). Se traducen a la paleta del tema. */
+html.bte:not(#bte-z) app-root {
+  --bte-st-prev: var(--bte-dim);
+  --bte-st-next: var(--bte-purple);
+  --bte-st-now: var(--bte-aqua);
+  --bte-st-ext: var(--bte-orange);
+}
+
+html.bte:not(#bte-z) app-root :where(i, hr, mat-card)[style*="757575"],
+html.bte:not(#bte-z) app-root :where(i, hr, mat-card)[style*="117, 117, 117"] { --bte-st: var(--bte-st-prev); }
+html.bte:not(#bte-z) app-root :where(i, hr, mat-card)[style*="5E35B1" i],
+html.bte:not(#bte-z) app-root :where(i, hr, mat-card)[style*="94, 53, 177"] { --bte-st: var(--bte-st-next); }
+html.bte:not(#bte-z) app-root :where(i, hr, mat-card)[style*="0097A7" i],
+html.bte:not(#bte-z) app-root :where(i, hr, mat-card)[style*="0, 151, 167"] { --bte-st: var(--bte-st-now); }
+html.bte:not(#bte-z) app-root :where(i, hr, mat-card)[style*="BF360C" i],
+html.bte:not(#bte-z) app-root :where(i, hr, mat-card)[style*="191, 54, 12"] { --bte-st: var(--bte-st-ext); }
+
+html.bte:not(#bte-z) app-root i[style*="color"] {
+  color: var(--bte-st, currentColor) !important;
+}
+
+html.bte:not(#bte-z) app-root .bi-square-fill {
+  font-size: 12px !important;
+  margin-top: 0 !important;
+}
+
+html.bte:not(#bte-z) app-root .activity-card[style*="border-color"] {
+  border-left: 4px solid var(--bte-st, var(--bte-border)) !important;
+}
+
+html.bte:not(#bte-z) app-root .activity-card .flag-icon {
+  font-size: 18px !important;
+}
+
+html.bte:not(#bte-z) app-root .activity-card hr[style] {
+  background-color: transparent !important;
+}
+
+html.bte:not(#bte-z) app-root .activity-card .detail-row {
+  padding: 2px 16px 2px 0 !important;
+  font-size: 0.9em;
+}
+
+html.bte:not(#bte-z) app-root .activity-card .detail-label strong {
+  color: var(--bte-dim) !important;
+  font-weight: 400 !important;
+}
+
+html.bte:not(#bte-z) app-root .activity-card .card-text {
+  margin: 0 !important;
+  font-size: 0.9em;
+}
+
+html.bte:not(#bte-z) app-root .activity-card .card-text strong {
+  color: var(--bte-green) !important;
+}
+
+html.bte:not(#bte-z) app-root .activity-card:focus-within,
+html.bte:not(#bte-z) app-root .activity-card:hover {
+  background-color: var(--bte-bg1) !important;
+}
+
+html.bte:not(#bte-z) app-root .FILTER_BOX .row {
+  border: 1px solid var(--bte-border) !important;
+  margin: 0 !important;
+}
+
+/* ─────────────────────────── login ─────────────────────────── */
+
+/* Estructura común a todos los estilos. La caja de Eminus es un flex
+   horizontal de alto completo: se vuelve un bloque que abraza su contenido,
+   centrado en la pantalla. */
+html.bte:not(#bte-z):not(#bte-y) m-auth .m-login__body {
+  display: block !important;
+  flex: none !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: hidden;
+}
+
+html.bte:not(#bte-z):not(#bte-y) m-auth m-login {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+html.bte:not(#bte-z):not(#bte-y) m-auth :where(.m-login__form, .m-login__form > div, form) {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Campos: sin fondo propio; la línea inferior marca el campo y la
+   etiqueta flotante queda visible. */
+html.bte:not(#bte-z):not(#bte-y) m-auth :where(.mat-form-field-infix input, .mat-input-element) {
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 2px 0 !important;
+}
+
+html.bte:not(#bte-z):not(#bte-y) m-auth .mat-form-field {
+  display: block;
+  width: 100%;
+}
+
+html.bte:not(#bte-z):not(#bte-y) m-auth .mat-form-field-wrapper {
+  padding-bottom: 12px;
+}
+
+html.bte:not(#bte-z) m-auth .mat-form-field-suffix mat-icon {
+  color: var(--bte-dim) !important;
+  cursor: pointer;
+}
+
+html.bte:not(#bte-z) m-auth .row {
+  margin: 0 !important;
+}
+
+html.bte:not(#bte-z) m-auth .mat-button {
+  padding: 0 !important;
+}
+
+html.bte:not(#bte-z) m-auth .m-login__wrapper {
+  box-sizing: border-box;
+}
+
+/* Autocompletado de Chrome: pinta su propio fondo (gris en modo oscuro)
+   sobre usuario y contraseña. Se retrasa indefinidamente la transición de
+   ese fondo y se usa el color de texto del tema. */
+html.bte:not(#bte-z):not(#bte-y) :where(m-pages, m-auth, app-root) input:is(:-webkit-autofill, :-webkit-autofill:hover, :-webkit-autofill:focus) {
+  -webkit-text-fill-color: var(--bte-fg-strong) !important;
+  caret-color: var(--bte-accent) !important;
+  box-shadow: 0 0 0 1000px var(--bte-field-bg, var(--bte-bg0)) inset !important;
+  transition: background-color 600000s 0s, color 600000s 0s !important;
+  transition-duration: 600000s !important;
+}
+
+/* Material reserva el espacio de la etiqueta flotante con un borde superior
+   transparente; la regla general de color de bordes lo volvía una barra
+   gris sobre cada campo. */
+html.bte:not(#bte-z):not(#bte-y) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(.mat-form-field-infix, .mat-mdc-form-field-infix) {
+  border-top-color: transparent !important;
+}
+
+/* Color de fondo de la caja de login, para tapar el autocompletado. */
+html.bte m-auth {
+  --bte-field-bg: var(--bte-bg0);
+}
+
+/* Nota de ayuda bajo el formulario (la sesión dura 2 horas). */
+html.bte:not(#bte-z) m-auth m-login::after {
+  content: "la sesión de eminus dura 2 horas · betterthaneminus te avisa antes y guarda lo que escribes";
+  display: block;
+  margin-top: 18px;
+  color: var(--bte-dim);
+  font-size: 0.8em;
+  line-height: 1.5;
+  text-align: center;
+}
+
+html.bte:not(#bte-z) m-auth .m-login__aside {
+  display: none !important;
+}
+
+html.bte:not(#bte-z) m-auth .m-login__wrapper {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px 16px !important;
+}
+
+html.bte:not(#bte-z) m-auth .m-login__head {
+  display: none !important;
+}
+
+html.bte:not(#bte-z) m-auth .m-login__body {
+  width: min(440px, 100%) !important;
+  max-width: 100% !important;
+  border: 1px solid var(--bte-fg) !important;
+  background-color: var(--bte-bg0) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+html.bte:not(#bte-z) m-auth .m-login__body::before {
+  content: "● ● ●   login@eminus.uv.mx";
+  white-space: pre;
+  display: block;
+  padding: 5px 12px;
+  background: var(--bte-accent);
+  color: var(--bte-accent-fg);
+  font-weight: 700;
+  font-family: var(--bte-font);
+}
+
+html.bte:not(#bte-z) m-auth m-login {
+  display: block;
+  padding: 26px 28px 22px !important;
+}
+
+html.bte:not(#bte-z) m-auth .m-login__title_system img {
+  display: none !important;
+}
+
+html.bte:not(#bte-z) m-auth .m-login__title_system::before {
+  content: "┏━╸┏┳┓╻┏┓╻╻ ╻┏━┓\A┣╸ ┃┃┃┃┃┗┫┃ ┃┗━┓\A┗━╸╹ ╹╹╹ ╹┗━┛┗━┛";
+  white-space: pre;
+  display: block;
+  color: var(--bte-accent);
+  font-family: var(--bte-font);
+  line-height: 1.15;
+  font-size: 18px;
+  text-align: left;
+  margin-bottom: 12px;
+}
+
+html.bte:not(#bte-z) m-auth .m-login__title h1 {
+  font-size: 0.95em !important;
+  font-weight: 400 !important;
+  color: var(--bte-dim) !important;
+  text-align: left;
+  margin: 0 0 12px !important;
+}
+
+html.bte:not(#bte-z) m-auth .m-login__title h1::before {
+  content: "$ ";
+  color: var(--bte-green);
+}
+
+html.bte:not(#bte-z) m-auth .m-login__title h1::after {
+  content: "_";
+  animation: bte-blink 1s steps(1) infinite;
+  color: var(--bte-accent);
+}
+
+html.bte:not(#bte-z) m-auth .form-group {
+  margin-bottom: 4px !important;
+}
+
+html.bte:not(#bte-z) m-auth .mat-stroked-button {
+  width: 100%;
+  margin-top: 8px;
+}
+
+html.bte[data-bte-style="tui"]:not(#bte-z) m-auth .mat-stroked-button {
+  padding: 6px !important;
+  border-color: var(--bte-accent) !important;
+  color: var(--bte-accent) !important;
+}
+
+/* «¿Problemas para ingresar?» es un enlace, no un botón con caja. */
+html.bte:not(#bte-z):not(#bte-y) m-auth .mat-button {
+  border-color: transparent !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+}
+
+html.bte:not(#bte-z) m-auth .helpImageBackground {
+  display: none !important;
+}
+
+html.bte:not(#bte-z) m-auth .bottom_banner_login {
+  margin-top: 16px;
+  font-size: 0.75em !important;
+  color: var(--bte-dim) !important;
+  text-align: center;
+}
+
+html.bte:not(#bte-z) m-auth .m-alert {
+  border-color: var(--bte-green) !important;
+}
+
+/* ──────────────── cursor de navegación j/k ──────────────── */
+
+html.bte:not(#bte-z) .bte-cursor {
+  outline: 1px solid var(--bte-accent) !important;
+  outline-offset: 2px !important;
+  background-color: var(--bte-bg1) !important;
+  scroll-margin: 80px 0 60px;
+}
+
+html.bte:not(#bte-z) #m_ver_menu .m-menu__item.bte-cursor {
+  outline-offset: -1px !important;
+}
+
+@keyframes bte-blink {
+  50% { opacity: 0; }
+}
+
+/* ───────── sesión, borradores y modo lectura ───────── */
+
+#bte-statusline .bte-session {
+  font-weight: 700;
+  color: var(--bte-dim);
+}
+
+#bte-statusline .bte-session[data-level="warn"] {
+  background: var(--bte-yellow);
+  color: var(--bte-bg);
+}
+
+#bte-statusline .bte-session[data-level="crit"],
+#bte-statusline .bte-session[data-level="expired"] {
+  background: var(--bte-red);
+  color: var(--bte-bg);
+  animation: bte-blink 1.2s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #bte-statusline .bte-session { animation: none !important; }
+}
+
+#bte-draft-chip {
+  position: fixed;
+  z-index: 2147482200;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(460px, calc(100vw - 16px));
+  padding: 6px 8px 6px 12px;
+  background: var(--bte-bg1, #fff);
+  color: var(--bte-fg, #111);
+  border: 1px solid var(--bte-accent, #333);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  font: 12.5px/1.4 var(--bte-font, system-ui, sans-serif);
+}
+
+#bte-draft-chip[hidden],
+html:not(.bte) #bte-draft-chip {
+  display: none;
+}
+
+#bte-draft-chip .bte-draft-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#bte-draft-chip button {
+  flex: none;
+  padding: 3px 9px;
+  border: 1px solid var(--bte-border, #999);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+#bte-draft-chip button[data-act="restore"] {
+  background: var(--bte-accent, #333);
+  border-color: var(--bte-accent, #333);
+  color: var(--bte-accent-fg, #fff);
+  font-weight: 700;
+}
+
+#bte-draft-chip button:focus-visible {
+  outline: 2px solid var(--bte-accent);
+  outline-offset: 2px;
+}
+
+/* Modo lectura: sin menú ni pie; el contenido en una columna cómoda. */
+html.bte.bte-reading:not(#bte-z):not(#bte-y) main.layout-main > m-aside-left,
+html.bte.bte-reading:not(#bte-z):not(#bte-y) m-pages > footer,
+html.bte.bte-reading:not(#bte-z):not(#bte-y) .EMINUSPleca :where(.col-lg-7, .input-group),
+html.bte.bte-reading:not(#bte-z):not(#bte-y) :where(.kt-portlet__body-rating, .kt-portlet__body-comment, .scroll-units) {
+  display: none !important;
+}
+
+html.bte.bte-reading:not(#bte-z):not(#bte-y) main.layout-main > .ContentFromMain {
+  margin: 0 auto !important;
+  max-width: 820px;
+}
+
+html.bte.bte-reading:not(#bte-z):not(#bte-y) .ContentFromMain .container {
+  max-width: 760px !important;
+}
+
+html.bte.bte-reading:not(#bte-z):not(#bte-y) :where(m-pages, app-root) .fr-view {
+  max-width: 68ch;
+  font-size: 1.15em;
+  line-height: 1.8;
+}
+
+/* ───────── temas accesibles: refuerzos de UX ───────── */
+
+/* Foco visible grueso y enlaces siempre subrayados: no depender del color. */
+html.bte:is([data-bte-theme="contraste"], [data-bte-theme="daltonismo"]):not(#bte-z)
+  :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(a, button, input, select, textarea, [role="button"], [role="tab"], .mat-select, .mat-mdc-select):focus-visible {
+  outline: 3px solid var(--bte-accent) !important;
+  outline-offset: 2px !important;
+}
+
+html.bte:is([data-bte-theme="contraste"], [data-bte-theme="daltonismo"]):not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) a:not(.m-menu__link, .m-brand__logo-wrapper, .mat-button, .mat-mdc-button, .btn) {
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+}
+
+html.bte[data-bte-theme="contraste"]:not(#bte-z) .bte-cursor {
+  outline-width: 3px !important;
+}
+
+/* En alto contraste los textos atenuados no se vuelven translúcidos. */
+html.bte[data-bte-theme="contraste"]:not(#bte-z) :where(m-pages, app-root) :where(.bte-brackets *, button)::before,
+html.bte[data-bte-theme="contraste"]:not(#bte-z) :where(m-pages, app-root) :where(.bte-brackets *, button)::after {
+  opacity: 1 !important;
+}
+
+/* Daltonismo: la barra de estado de cada actividad también cambia de
+   patrón, no sólo de color (vencida/prórroga rayada, por iniciar punteada). */
+html.bte[data-bte-theme="daltonismo"]:not(#bte-z) app-root .activity-card[style*="BF360C" i],
+html.bte[data-bte-theme="daltonismo"]:not(#bte-z) app-root .activity-card[style*="191, 54, 12"] {
+  border-left-style: double !important;
+  border-left-width: 6px !important;
+}
+
+html.bte[data-bte-theme="daltonismo"]:not(#bte-z) app-root .activity-card[style*="5E35B1" i],
+html.bte[data-bte-theme="daltonismo"]:not(#bte-z) app-root .activity-card[style*="94, 53, 177"] {
+  border-left-style: dashed !important;
+}
+
+/* ───────── vista tui dentro de Eminus ───────── */
+
+#bte-app-host {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 36px;
+  bottom: 0;
+  z-index: 2147482050;
+  background: var(--bte-bg);
+  border-top: 1px solid var(--bte-border);
+  animation: bte-app-in 120ms ease-out both;
+}
+
+#bte-app-host[hidden],
+html:not(.bte) #bte-app-host {
+  display: none !important;
+}
+
+#bte-app-host iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--bte-bg);
+  color-scheme: normal;
+}
+
+html.bte-app-open body {
+  overflow: hidden !important;
+}
+
+@keyframes bte-app-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #bte-app-host { animation: none; }
+}
+
+html.bte:not(#bte-z) #bte-header-links button[aria-pressed="true"] {
+  background-color: var(--bte-accent) !important;
+  color: var(--bte-accent-fg) !important;
+}
+
+html.bte:not(#bte-z) #bte-header-links button[aria-pressed="true"]::before,
+html.bte:not(#bte-z) #bte-header-links button[aria-pressed="true"]::after {
+  color: inherit;
+}
+
+/* ───────── scanlines opcionales (solo marco superior) ───────── */
+
+html.bte.bte-scanlines::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2147483000;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0.14) 3px
+  );
+}
+
+/* ═══════════════ UI propia: statusline, paleta, ayuda ═══════════════ */
+
+html.bte.bte-top body {
+  padding-bottom: 24px !important;
+}
+
+#bte-statusline,
+#bte-overlay,
+#bte-toast {
+  font-family: var(--bte-font);
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--bte-fg);
+  box-sizing: border-box;
+}
+
+#bte-statusline *,
+#bte-overlay *,
+#bte-toast * {
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+html:not(.bte) #bte-statusline,
+html:not(.bte) #bte-overlay,
+html:not(.bte) #bte-toast {
+  display: none !important;
+}
+
+#bte-statusline {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 24px;
+  z-index: 2147482000;
+  display: flex;
+  align-items: stretch;
+  background: var(--bte-bg0);
+  border-top: 1px solid var(--bte-border);
+  white-space: nowrap;
+  overflow: hidden;
+  user-select: none;
+  text-shadow: var(--bte-glow);
+}
+
+#bte-statusline.bte-miyu-btn {
+  padding-right: 220px;
+}
+
+#bte-statusline .bte-seg {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+#bte-statusline .bte-mode {
+  background: var(--bte-accent);
+  color: var(--bte-accent-fg);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+#bte-statusline .bte-mode[data-mode="cmd"] { background: var(--bte-purple); }
+#bte-statusline .bte-mode[data-mode="nav"] { background: var(--bte-aqua); }
+#bte-statusline .bte-mode[data-mode="g"] { background: var(--bte-orange); }
+
+
+
+#bte-statusline .bte-msg {
+  flex: 1 1 auto;
+  flex-shrink: 1;
+  color: var(--bte-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#bte-statusline .bte-msg.bte-msg-live { color: var(--bte-fg); }
+
+#bte-statusline .bte-hint {
+  color: var(--bte-dim);
+  gap: 12px;
+}
+
+#bte-statusline kbd,
+#bte-overlay kbd {
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--bte-accent);
+  background: none;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+  font-weight: 700;
+}
+
+#bte-statusline .bte-clickable { cursor: pointer; }
+#bte-statusline .bte-clickable:hover { color: var(--bte-fg-strong); background: var(--bte-bg1); }
+
+#bte-statusline .bte-miyu {
+  color: var(--bte-dim);
+  border-left: 1px solid var(--bte-border);
+}
+
+#bte-statusline .bte-clock {
+  background: var(--bte-bg1);
+  color: var(--bte-fg);
+  border-left: 1px solid var(--bte-border);
+}
+
+#bte-statusline .bte-theme {
+  background: var(--bte-bg2);
+  color: var(--bte-fg-strong);
+}
+
+/* Capa para paleta y ayuda. */
+#bte-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483600;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12vh 16px 16px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+#bte-overlay[hidden] { display: none; }
+
+.bte-window {
+  width: min(680px, 100%);
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bte-bg);
+  border: 1px solid var(--bte-fg);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.35);
+  text-shadow: var(--bte-glow);
+  animation: bte-pop 90ms steps(3) both;
+}
+
+@keyframes bte-pop {
+  from { transform: translateY(-6px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+.bte-titlebar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 10px;
+  background: var(--bte-fg);
+  color: var(--bte-bg);
+  font-weight: 700;
+  text-shadow: none;
+}
+
+.bte-titlebar .bte-title-dim { font-weight: 400; opacity: 0.75; }
+
+.bte-prompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--bte-border);
+  background: var(--bte-bg0);
+}
+
+.bte-prompt-sigil {
+  color: var(--bte-accent);
+  font-weight: 700;
+}
+
+.bte-prompt input:focus-visible {
+  outline: 0 !important;
+}
+
+.bte-prompt input {
+  flex: 1;
+  min-width: 0;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  color: var(--bte-fg-strong) !important;
+  font: inherit !important;
+  font-size: 14px !important;
+  caret-color: var(--bte-accent);
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.bte-prompt input::placeholder { color: var(--bte-dim); }
+
+.bte-count { color: var(--bte-dim); font-size: 12px; }
+
+.bte-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+.bte-group {
+  padding: 6px 12px 2px;
+  color: var(--bte-dim);
+  font-size: 11.5px;
+  text-transform: lowercase;
+}
+
+.bte-group::before { content: "── "; }
+.bte-group::after { content: " ──"; }
+
+.bte-item {
+  display: grid;
+  grid-template-columns: 2ch 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.bte-item .bte-item-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bte-item .bte-item-meta {
+  color: var(--bte-dim);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 28ch;
+}
+
+.bte-item .bte-item-mark { color: var(--bte-dim); }
+
+.bte-item mark {
+  background: none;
+  color: var(--bte-accent);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.bte-item:hover { background: var(--bte-bg1); }
+
+.bte-item[aria-selected="true"] {
+  background: var(--bte-accent);
+  color: var(--bte-accent-fg);
+  text-shadow: none;
+}
+
+.bte-item[aria-selected="true"] .bte-item-meta,
+.bte-item[aria-selected="true"] .bte-item-mark,
+.bte-item[aria-selected="true"] mark {
+  color: var(--bte-accent-fg);
+}
+
+.bte-empty {
+  padding: 16px 12px;
+  color: var(--bte-dim);
+}
+
+.bte-footer {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 4px 12px;
+  border-top: 1px solid var(--bte-border);
+  color: var(--bte-dim);
+  font-size: 11.5px;
+  background: var(--bte-bg0);
+}
+
+/* Ayuda */
+.bte-help {
+  overflow-y: auto;
+  padding: 12px 16px 16px;
+}
+
+.bte-help pre {
+  margin: 0 0 12px;
+  color: var(--bte-accent);
+  font: inherit;
+  line-height: 1.15;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.bte-help-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 4px 24px;
+}
+
+.bte-help h4 {
+  margin: 12px 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--bte-dim);
+  text-transform: lowercase;
+  font-family: inherit;
+}
+
+.bte-help h4::before { content: "## "; color: var(--bte-accent); }
+
+.bte-help dl {
+  display: grid;
+  grid-template-columns: 11ch 1fr;
+  gap: 2px 8px;
+  margin: 0;
+}
+
+.bte-help dt { color: var(--bte-accent); font-weight: 700; margin: 0; }
+.bte-help dd { margin: 0; color: var(--bte-fg); }
+
+.bte-help .bte-help-note {
+  margin-top: 14px;
+  color: var(--bte-dim);
+  font-size: 12px;
+}
+
+/* Aviso breve arriba a la derecha (sin chocar con Miyu, que usa la derecha
+   bajo el encabezado: este vive en la esquina inferior izquierda). */
+#bte-toast {
+  position: fixed;
+  left: 12px;
+  bottom: 34px;
+  z-index: 2147482100;
+  max-width: min(420px, calc(100vw - 24px));
+  padding: 6px 10px;
+  background: var(--bte-bg1);
+  border: 1px solid var(--bte-accent);
+  color: var(--bte-fg);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
+  animation: bte-pop 90ms steps(3) both;
+}
+
+#bte-toast[hidden] { display: none; }
+
+@media (max-width: 1000px) {
+  #bte-statusline .bte-hint { display: none; }
+}
+
+@media (max-width: 700px) {
+  #bte-statusline .bte-hint,
+  #bte-statusline .bte-theme,
+  #bte-statusline .bte-miyu { display: none; }
+  .bte-item .bte-item-meta { max-width: 14ch; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bte-window, #bte-toast { animation: none; }
+  html.bte m-auth .m-login__title h1::after { animation: none; }
+}

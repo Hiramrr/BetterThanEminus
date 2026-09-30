@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es" class="bte bte-popup" data-bte-theme="gruvbox">
+<head>
+  <meta charset="utf-8" />
+  <title>BetterThanEminus</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" />
+  <link rel="stylesheet" href="../src/themes.css" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header class="bar">
+    <span class="brand">❯ betterthaneminus</span>
+    <span class="ver" id="version"></span>
+  </header>
+
+  <main>
+    <section>
+      <button type="button" class="open-app" id="open-app">❯ ver pendientes</button>
+    </section>
+
+    <section>
+      <label class="row toggle" for="enabled">
+        <input type="checkbox" id="enabled" />
+        <span class="box" aria-hidden="true"></span>
+        <span>reskin activo</span>
+        <kbd>alt ⇧ b</kbd>
+      </label>
+    </section>
+
+    <section>
+      <h2>estilo</h2>
+      <ul class="themes styles" id="styles" role="listbox" aria-label="Estilo"></ul>
+    </section>
+
+    <section>
+      <h2>tema <span class="note" id="theme-note"></span></h2>
+      <ul class="themes" id="themes" role="listbox" aria-label="Tema de color"></ul>
+    </section>
+
+    <section>
+      <h2>fuente</h2>
+      <div class="row">
+        <select id="font" aria-label="Fuente"></select>
+      </div>
+      <div class="row zoom">
+        <span>zoom</span>
+        <button type="button" id="zoom-out" aria-label="Reducir">[ - ]</button>
+        <output id="zoom-value">100%</output>
+        <button type="button" id="zoom-in" aria-label="Aumentar">[ + ]</button>
+        <button type="button" id="zoom-reset" class="dim">[ 100% ]</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>detalles</h2>
+      <label class="row toggle" for="brackets">
+        <input type="checkbox" id="brackets" />
+        <span class="box" aria-hidden="true"></span>
+        <span>[ corchetes ] en botones</span>
+      </label>
+      <label class="row toggle" for="scanlines">
+        <input type="checkbox" id="scanlines" />
+        <span class="box" aria-hidden="true"></span>
+        <span>scanlines crt</span>
+      </label>
+    </section>
+
+    <section class="keys">
+      <h2>en eminus</h2>
+      <dl>
+        <dt>:</dt><dd>paleta de comandos</dd>
+        <dt>ñ · ;</dt><dd>buscar curso · actividad</dd>
+        <dt>A</dt><dd>agenda de pendientes</dd>
+        <dt>h</dt><dd>todos los atajos</dd>
+      </dl>
+    </section>
+  </main>
+
+  <script src="../src/prefs.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

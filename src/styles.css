@@ -1,0 +1,3205 @@
+/*
+ * Estilos alternativos al TUI: nube, enfoque y retro 95.
+ *
+ * tui.css pone la base (colores del tema, bordes, alcance a los contenedores
+ * de Eminus). Aquí se cambia la forma. Cada bloque usa
+ * html.bte[data-bte-style="…"]:not(#bte-z), que suma un atributo a la
+ * especificidad de tui.css y por eso gana sin pelear regla por regla.
+ * Igual que tui.css, nada de esto toca el panel de Miyu (vive fuera de los
+ * contenedores de Eminus).
+ */
+
+/* ═══════════ común a todo lo que no es tui: quitar adornos de terminal ═══════════ */
+
+html.bte:not([data-bte-style="tui"]):not(#bte-z) :where(m-pages, app-root) img:not(.fr-view img, .fr-view *) {
+  filter: none;
+  opacity: 1;
+}
+
+html.bte:not([data-bte-style="tui"]):not(#bte-z) m-header :where(m-user-profile) .h5 {
+  text-transform: none;
+}
+
+html.bte:not([data-bte-style="tui"]):not(#bte-z) m-header :where(m-user-profile) .h5::before,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) #m_ver_menu .m-menu__nav::before,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) #m_ver_menu .m-menu__link::before,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) #m_ver_menu .m-menu__item--active > .m-menu__link::before,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) .EMINUSPleca .g-font-size-18::before,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) :where(m-pages, app-root) .d-brd-separator :where(h3, h4)::before,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) m-course-list .container_courses > div > span.h4::before,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) m-course-list .SEARCH_BAR_BOX .input-group::before,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) mat-card.CourseCard .CardBody > span b::before,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) .m-kt-portlet-unit .kt-portlet__head-title::before,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) app-root .activity-card :where(h1, h2, h3, h4, h5)::before,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) m-auth .m-login__title h1::before,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) m-auth .m-login__title h1::after,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) m-auth .m-login__title_system::before,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) .m-splash-screen::before {
+  content: none !important;
+}
+
+html.bte:not([data-bte-style="tui"]):not(#bte-z) #m_ver_menu .m-menu__link-text,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) :where(m-pages, app-root) .d-brd-separator :where(h3, h4, h5, h6),
+html.bte:not([data-bte-style="tui"]):not(#bte-z) m-course-list .container_courses > div > span.h4,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-button, .mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .mat-mdc-outlined-button, .mdc-button, .btn, .mat-tab-label, .mat-mdc-tab, .nav-link, th, .mat-header-cell, .mat-mdc-header-cell) {
+  text-transform: none !important;
+}
+
+/* Líneas punteadas → continuas */
+html.bte:not([data-bte-style="tui"]):not(#bte-z) :where(m-pages, app-root)
+  :where(.d-brd-separator, .CardBody, .kt-widget4__item, td, .mat-cell, .mat-mdc-cell, .mat-row, .mat-mdc-row) {
+  border-bottom-style: solid !important;
+}
+
+html.bte:not([data-bte-style="tui"]):not(#bte-z) :where(m-pages, app-root) :where(hr, .container_courses, .mat-paginator, .mat-mdc-paginator),
+html.bte:not([data-bte-style="tui"]):not(#bte-z) m-pages > footer {
+  border-top-style: solid !important;
+}
+
+/* Logos originales de vuelta en login y carga */
+html.bte:not([data-bte-style="tui"]):not(#bte-z) m-auth .m-login__title_system img,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) .m-splash-screen img {
+  display: inline-block !important;
+  max-width: 220px;
+  height: auto;
+}
+
+html.bte:not([data-bte-style="tui"]):not(#bte-z) m-auth .m-login__body::before {
+  content: none;
+}
+
+html.bte:not([data-bte-style="tui"]):not(#bte-z) m-auth .m-login__title h1 {
+  font-size: 1.5em !important;
+  font-weight: 700 !important;
+  color: var(--bte-fg-strong) !important;
+  text-align: center;
+}
+
+/* Iconos del menú lateral visibles fuera del tui */
+html.bte:not([data-bte-style="tui"]):not(#bte-z) #m_ver_menu .m-menu__link-icon {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 24px;
+  margin-right: 12px;
+  padding: 0 !important;
+  line-height: 24px !important;
+  font-size: 20px !important;
+  color: var(--bte-dim) !important;
+}
+
+@media (max-width: 899px) {
+  html.bte:not([data-bte-style="tui"]):not(#bte-z) #m_ver_menu .m-menu__link-icon {
+    margin-right: 0;
+  }
+}
+
+html.bte:not([data-bte-style="tui"]):not(#bte-z) #m_ver_menu .m-menu__item--active .m-menu__link-icon {
+  color: inherit !important;
+}
+
+/* Portada: título en vez del rótulo ASCII */
+html.bte:not([data-bte-style="tui"]):not(#bte-z) m-course-list > .container > div::before {
+  content: "Tus cursos";
+  white-space: normal;
+  margin: 24px 0 16px;
+  font-family: var(--bte-font);
+  font-size: 1.9em;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--bte-fg-strong);
+}
+
+/* UI propia */
+html.bte:not([data-bte-style="tui"]):not(#bte-z) #bte-header-links button::before,
+html.bte:not([data-bte-style="tui"]):not(#bte-z) #bte-header-links button::after {
+  content: none;
+}
+
+html.bte:not([data-bte-style="tui"]) .bte-group::before,
+html.bte:not([data-bte-style="tui"]) .bte-group::after,
+html.bte:not([data-bte-style="tui"]) .bte-help h4::before {
+  content: none;
+}
+
+html.bte:not([data-bte-style="tui"]) .bte-group,
+html.bte:not([data-bte-style="tui"]) .bte-help h4 {
+  text-transform: none;
+  font-weight: 600;
+}
+
+html.bte:not([data-bte-style="tui"]) #bte-statusline .bte-mode {
+  letter-spacing: 0.06em;
+  font-size: 11px;
+}
+
+/* ═══════════════════════════════ NUBE ═══════════════════════════════
+ * Inspirado en cap.so: página gris claro, paneles grandes con cielo pálido,
+ * títulos en Instrument Sans de peso normal y tracking cerrado, texto en
+ * Source Serif ligera, botón principal azul "vidrio" y controles
+ * segmentados en cápsula. Trae su propia paleta clara.
+ */
+
+html.bte[data-bte-style="nube"] {
+  --bte-bg: #f2f2f2;
+  --bte-bg0: #ffffff;
+  --bte-bg1: #edf1f6;
+  --bte-bg2: #e3eaf2;
+  --bte-surface: #ffffff;
+  --bte-fg: #111111;
+  --bte-fg-strong: #111111;
+  --bte-dim: #7a7f87;
+  --bte-border: #dde4eb;
+  --bte-accent: #3f7fcd;
+  --bte-accent-fg: #ffffff;
+  --bte-link: #2f6fbf;
+  --bte-red: #d2452f;
+  --bte-green: #2f8a57;
+  --bte-yellow: #b7791f;
+  --bte-blue: #3f7fcd;
+  --bte-purple: #7c5cd6;
+  --bte-aqua: #2b8a8a;
+  --bte-orange: #d0661e;
+  --bte-glow: none;
+  --bte-scheme: light;
+
+  --n-ink-2: rgba(17, 17, 17, 0.78);
+  --n-ink-3: rgba(17, 17, 17, 0.5);
+  --n-line: #dde4eb;
+  --n-line-2: #d3dce6;
+  --n-ring: 0 0 0 1px rgba(17, 17, 17, 0.045);
+  --n-serif: "Source Serif 4", Georgia, serif;
+  --n-sky: radial-gradient(40% 60% at 72% 0%, rgba(255, 224, 192, 0.75) 0%, rgba(255, 224, 192, 0) 70%),
+    linear-gradient(180deg, #cfe0f5 0%, #e3edf8 45%, #edf1f6 100%);
+  --n-btn: linear-gradient(180deg, #f5fafe 0%, #e3effb 52%, #cfe2f6 100%);
+  --n-btn-shadow: inset 0 0 0 1px rgba(63, 127, 205, 0.65), inset 0 2px 3px -1px rgba(255, 255, 255, 0.8),
+    inset 0 -1px 1px rgba(61, 119, 194, 0.2), 0 1px 2px rgba(61, 119, 194, 0.2), 0 10px 24px -10px rgba(120, 178, 240, 0.55);
+  --n-float: 0 1px 2px rgba(17, 17, 17, 0.12), 0 10px 24px -14px rgba(17, 17, 17, 0.6);
+  --n-focus: 0 0 0 3px rgba(63, 127, 205, 0.25);
+  --n-header: 60px;
+  --bte-header-h: 60px;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, m-auth, app-root) {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #111 !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(:not(svg, svg *, img, video, canvas, iframe)) {
+  border-color: var(--n-line) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) :where(h1, h2, h3, h4) {
+  font-weight: 400 !important;
+  letter-spacing: -0.03em !important;
+  color: #111 !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) :where(b, strong) {
+  font-weight: 600 !important;
+}
+
+/* Texto largo en serif ligera */
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) :where(.fr-view, .kt-portlet__body-editor, .fr-view *, .kt-portlet__body-editor *) {
+  font-family: var(--n-serif) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) .fr-view {
+  max-width: 68ch;
+  font-size: 1.07em;
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--n-ink-2) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) :where(.text-muted, .GrayContrats, small, .small, .TittlePleca, .kt-portlet_header-subtitle, .kt-portlet_header-element, .activity-time, .detail-label strong) {
+  color: var(--n-ink-3) !important;
+}
+
+/* ── Encabezado ── */
+html.bte[data-bte-style="nube"]:not(#bte-z) m-header header,
+html.bte[data-bte-style="nube"]:not(#bte-z) m-header :where(.m-container, .m-stack, m-topbar, .m-topbar, .m-brand__tools),
+html.bte[data-bte-style="nube"]:not(#bte-z) m-header a.m-brand__logo-wrapper,
+html.bte[data-bte-style="nube"]:not(#bte-z) m-header a.m-brand__logo-wrapper + #bte-header-links {
+  height: var(--n-header) !important;
+  min-height: var(--n-header) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-header header {
+  background-color: #f2f2f2 !important;
+  border-bottom: 0 !important;
+}
+
+/* Marca: aro azul + "Eminus" */
+html.bte[data-bte-style="nube"]:not(#bte-z) m-header a.m-brand__logo-wrapper::before {
+  content: "Eminus";
+  height: 32px;
+  margin-left: 20px;
+  padding: 0 0 0 40px;
+  background: radial-gradient(circle at 15px 50%, transparent 7px, #4f86d6 7.5px, #8db4ec 10.5px, transparent 11px);
+  color: #111;
+  font-size: 1.45em;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-header a.m-brand__logo-wrapper::after {
+  color: var(--n-ink-3);
+  font-weight: 400;
+}
+
+/* Accesos en control segmentado */
+html.bte[data-bte-style="nube"]:not(#bte-z) m-header a.m-brand__logo-wrapper + #bte-header-links {
+  height: 42px !important;
+  min-height: 0 !important;
+  align-self: center;
+  margin-left: 8px;
+  padding: 4px;
+  gap: 2px;
+  border: 1px solid var(--n-line) !important;
+  border-radius: 9999px !important;
+  background-color: rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 0 1px 2px rgba(17, 17, 17, 0.04);
+}
+
+
+html.bte[data-bte-style="nube"]:not(#bte-z) #bte-header-links button {
+  padding: 0 16px;
+  border-radius: 9999px !important;
+  color: var(--n-ink-3) !important;
+  font-size: 0.95em;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) #bte-header-links button:hover {
+  background-color: transparent !important;
+  color: #111 !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) #bte-header-links button[aria-pressed="true"] {
+  background-color: #fff !important;
+  color: #111 !important;
+  box-shadow: 0 1px 2px rgba(17, 17, 17, 0.1), 0 0 0 1px rgba(17, 17, 17, 0.05);
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-header :where(m-user-profile) .h5 {
+  color: var(--n-ink-3) !important;
+  font-size: 0.9em !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-header :where(m-user-profile) img {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  outline: 0;
+  box-shadow: 0 0 0 1px var(--n-line);
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-header m-notification i {
+  color: var(--n-ink-3) !important;
+}
+
+/* ── Barra lateral ── */
+@media (min-width: 900px) {
+  html.bte[data-bte-style="nube"]:not(#bte-z) main.layout-main > m-aside-left.m-aside-left {
+    top: var(--n-header) !important;
+    flex-basis: 224px;
+    width: 224px !important;
+    height: calc(100vh - var(--n-header) - 24px) !important;
+    padding: 8px 12px !important;
+    background-color: #f2f2f2 !important;
+    border-right: 0 !important;
+  }
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) #m_ver_menu .m-menu__link {
+  padding: 9px 12px !important;
+  margin: 1px 0 !important;
+  border-radius: 12px !important;
+  color: var(--n-ink-3) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) #m_ver_menu .m-menu__link-icon {
+  color: inherit !important;
+  font-size: 19px !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) #m_ver_menu .m-menu__link-text {
+  font-size: 0.97em !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) #m_ver_menu .m-menu__item:hover > .m-menu__link {
+  background-color: rgba(255, 255, 255, 0.6) !important;
+  color: #111 !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) #m_ver_menu .m-menu__item--active > .m-menu__link {
+  background-color: #fff !important;
+  color: #111 !important;
+  box-shadow: 0 1px 2px rgba(17, 17, 17, 0.08), 0 0 0 1px rgba(17, 17, 17, 0.05) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) #m_ver_menu .m-menu__item--active .m-menu__link-icon {
+  color: #3f7fcd !important;
+}
+
+/* ── Panel principal: la "tarjeta grande" con cielo arriba ── */
+html.bte[data-bte-style="nube"]:not(#bte-z),
+html.bte[data-bte-style="nube"]:not(#bte-z) body,
+html.bte[data-bte-style="nube"]:not(#bte-z) main.layout-main {
+  background-color: #f2f2f2 !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) main.layout-main > .ContentFromMain {
+  margin: 0 12px 12px 0;
+  border-radius: 24px 24px 28px 28px !important;
+  background-color: #edf1f6 !important;
+  background-image: var(--n-sky) !important;
+  background-size: 100% 420px !important;
+  background-repeat: no-repeat !important;
+  box-shadow: var(--n-ring) !important;
+  overflow: hidden;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-pages > footer {
+  background-color: #f2f2f2 !important;
+  border-top: 0 !important;
+  color: var(--n-ink-3) !important;
+}
+
+/* Cabecera de curso centrada, como un hero */
+html.bte[data-bte-style="nube"]:not(#bte-z) .EMINUSPleca {
+  background-color: transparent !important;
+  border-bottom: 0 !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) .EMINUSPleca :where(.PlecaOverlay, .PlecaOverlayChange) {
+  padding: 40px 32px 16px !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) .EMINUSPleca .g-font-size-18 {
+  font-size: 2.3em !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.1 !important;
+  color: #111 !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) .EMINUSPleca .TittlePleca {
+  font-family: var(--n-serif) !important;
+  font-weight: 300 !important;
+  font-size: 1.05em !important;
+}
+
+/* ── Portada ── */
+html.bte[data-bte-style="nube"]:not(#bte-z) m-course-list > .container > div::before {
+  content: "Tus cursos";
+  align-self: center;
+  margin: 48px 0 28px;
+  font-size: 3em;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  color: #111;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-course-list .SEARCH_BAR_BOX .input-group {
+  height: 52px;
+  border: 1px solid var(--n-line-2) !important;
+  border-radius: 14px !important;
+  background-color: #fff !important;
+  box-shadow: 0 1px 2px rgba(17, 17, 17, 0.04) !important;
+  overflow: hidden;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-course-list .SEARCH_BAR_BOX .input-group:focus-within {
+  border-color: rgba(63, 127, 205, 0.65) !important;
+  box-shadow: var(--n-focus) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-course-list .SEARCH_BAR {
+  height: 50px !important;
+  padding-left: 18px !important;
+  background-color: #fff !important;
+  font-size: 1.02em !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-course-list .FILTER_BOX > div {
+  border: 1px solid var(--n-line) !important;
+  border-radius: 9999px !important;
+  background-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-course-list .container_courses {
+  border-top: 0 !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-course-list .container_courses > div > span.h4 {
+  font-size: 0.95em !important;
+  color: var(--n-ink-3) !important;
+}
+
+/* Tarjetas de curso: tarjeta blanca dentro de un marco tintado */
+html.bte[data-bte-style="nube"]:not(#bte-z) mat-card.CourseCard {
+  --n-tint: 120, 178, 240;
+  margin: 8px 12px 28px !important;
+  border: 0 !important;
+  border-radius: 18px !important;
+  background-color: #fff !important;
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.05), 0 0 0 7px rgba(var(--n-tint), 0.22), 0 0 0 8px rgba(var(--n-tint), 0.3) !important;
+  transition: box-shadow 0.2s ease !important;
+  transition-duration: 0.2s !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-course-list .container_courses > .d-flex > div:nth-of-type(4n + 2) mat-card.CourseCard { --n-tint: 156, 128, 230; }
+html.bte[data-bte-style="nube"]:not(#bte-z) m-course-list .container_courses > .d-flex > div:nth-of-type(4n + 3) mat-card.CourseCard { --n-tint: 240, 170, 120; }
+html.bte[data-bte-style="nube"]:not(#bte-z) m-course-list .container_courses > .d-flex > div:nth-of-type(4n + 4) mat-card.CourseCard { --n-tint: 110, 190, 160; }
+
+html.bte[data-bte-style="nube"]:not(#bte-z) mat-card.CourseCard:hover {
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.06), 0 0 0 7px rgba(var(--n-tint), 0.35), 0 0 0 8px rgba(var(--n-tint), 0.45), 0 18px 30px -18px rgba(17, 17, 17, 0.35) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) mat-card.CourseCard .CardHeader,
+html.bte[data-bte-style="nube"]:not(#bte-z) mat-card.CourseCard:hover .CardHeader {
+  background-color: transparent !important;
+  border: 0 !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) mat-card.CourseCard .CardHeaderContainer {
+  padding: 18px 20px 4px !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) mat-card.CourseCard .CardHeaderContainer b {
+  min-height: 2.5em;
+  font-size: 1.18em !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.25 !important;
+  color: #111 !important;
+  text-transform: capitalize;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) mat-card.CourseCard .CardBody {
+  padding: 4px 20px 14px !important;
+  border: 0 !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) mat-card.CourseCard .CardBody > span {
+  font-family: var(--n-serif) !important;
+  font-weight: 300 !important;
+  font-size: 0.92em !important;
+  color: var(--n-ink-2) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) mat-card.CourseCard .CardBody > span b {
+  font-family: var(--bte-font) !important;
+  font-weight: 500 !important;
+  font-size: 0.85em;
+  display: inline-block;
+  padding: 1px 9px;
+  border-radius: 9999px !important;
+  background-color: #111 !important;
+  color: #fff !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) mat-card.CourseCard .CardFooter {
+  padding: 10px 20px 14px !important;
+  border-top: 1px solid var(--n-line) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) mat-card.CourseCard .CardFooter i,
+html.bte[data-bte-style="nube"]:not(#bte-z) mat-card.CourseCard .hiddebutton mat-icon {
+  color: var(--n-ink-3) !important;
+}
+
+/* ── Superficies generales ── */
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root, .modal) :where(mat-card, .mat-card, .mat-mdc-card, .card, .m-portlet, .kt-portlet, .m-alert, .alert, .cardInContent, .list-group-item, .mat-expansion-panel) {
+  border: 0 !important;
+  border-radius: 20px !important;
+  background-color: #fff !important;
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.05), 0 1px 2px rgba(17, 17, 17, 0.04) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) .d-brd-separator {
+  border-bottom: 0 !important;
+  margin-top: 24px !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) .d-brd-separator :where(h3, h4) {
+  font-size: 1.6em !important;
+}
+
+/* Módulos con mosaico de icono tintado */
+html.bte[data-bte-style="nube"]:not(#bte-z) .m-kt-portlet-unit {
+  padding: 16px 20px !important;
+  margin-bottom: 12px !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) .m-kt-portlet-unit .m-alert__icon {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px !important;
+  background-color: #eae4fb !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) .m-kt-portlet-unit .m-alert__icon i {
+  color: #7c5cd6 !important;
+  font-size: 20px !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) .m-kt-portlet-unit .kt-portlet__head-title {
+  font-size: 1.15em !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.02em;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) .m-kt-portlet-unit:hover {
+  background-color: #fff !important;
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.06), 0 0 0 6px rgba(120, 178, 240, 0.22) !important;
+}
+
+/* ── Botones ── */
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .mat-mdc-outlined-button, .btn) {
+  min-height: 40px !important;
+  padding: 0 18px !important;
+  border: 1px solid var(--n-line-2) !important;
+  border-radius: 10px !important;
+  background-color: #fff !important;
+  color: #111 !important;
+  font-weight: 400 !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .mat-mdc-outlined-button, .btn, .mat-button, .mat-mdc-button):hover {
+  background-color: #f7f9fb !important;
+  border-color: #c3cfdc !important;
+  color: #111 !important;
+}
+
+/* Principal: azul "vidrio" */
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.btn-success, .btn-primary, .mat-stroked-button-green, .mat-primary.mat-flat-button, .mat-mdc-unelevated-button.mat-primary, .input-group-text.btn-success) {
+  border: 0 !important;
+  border-radius: 12px !important;
+  background-image: var(--n-btn) !important;
+  color: #111 !important;
+  font-weight: 500 !important;
+  box-shadow: var(--n-btn-shadow) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.btn-success, .btn-primary, .mat-stroked-button-green, .input-group-text.btn-success):hover {
+  background-image: var(--n-btn) !important;
+  filter: brightness(1.03);
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, m-auth, app-root) .input-group-text.btn-success i {
+  color: #3f7fcd !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(.mat-button, .mat-mdc-button) {
+  border-radius: 10px !important;
+}
+
+/* ── Campos ── */
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) :where(.form-control, textarea, select) {
+  border: 1px solid var(--n-line-2) !important;
+  border-radius: 10px !important;
+  background-color: #fff !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) :where(.form-control, textarea, select):focus {
+  border-color: rgba(63, 127, 205, 0.65) !important;
+  box-shadow: var(--n-focus) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(a, button, input, select, textarea, [role="tab"], [role="button"]):focus-visible {
+  outline: 0 !important;
+  box-shadow: var(--n-focus) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) a:not(.m-menu__link, .mat-button, .mat-mdc-button, .btn) {
+  color: #111 !important;
+  text-decoration: underline !important;
+  text-decoration-color: #c9d3de !important;
+  text-underline-offset: 4px;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) a:not(.m-menu__link, .mat-button, .mat-mdc-button, .btn):hover {
+  background-color: transparent !important;
+  color: #3f7fcd !important;
+  text-decoration-color: currentColor !important;
+}
+
+/* ── Pestañas: control segmentado ── */
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-header, .mat-mdc-tab-header) {
+  border-bottom: 0 !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-labels, .mat-mdc-tab-labels) {
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--n-line) !important;
+  border-radius: 9999px !important;
+  background-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-label, .mat-mdc-tab) {
+  height: 34px !important;
+  border-radius: 9999px !important;
+  color: var(--n-ink-3) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-label-active, .mdc-tab--active) {
+  background-color: #fff !important;
+  color: #111 !important;
+  box-shadow: 0 1px 2px rgba(17, 17, 17, 0.1), 0 0 0 1px rgba(17, 17, 17, 0.05) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) :where(.mdc-tab--active .mdc-tab__text-label, .mat-tab-label-active .mat-tab-label-content) {
+  color: #111 !important;
+}
+
+/* ── Actividades: marco del color de su estado ── */
+html.bte[data-bte-style="nube"]:not(#bte-z) app-root .principal-card {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) app-root .activity-card[style*="border-color"] {
+  margin: 18px 8px 0 !important;
+  border: 0 !important;
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.05), 0 0 0 6px color-mix(in srgb, var(--bte-st, #9aa4b0) 20%, transparent) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) app-root .activity-card .mat-mdc-card-content {
+  padding: 16px 20px !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) app-root .activity-card .card-title {
+  font-size: 1.2em !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.02em;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) app-root .activity-card .flag-icon {
+  font-size: 15px !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) app-root .activity-card .card-text strong {
+  color: #2f8a57 !important;
+  font-weight: 500 !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) app-root .FILTER_BOX .row {
+  border: 1px solid var(--n-line) !important;
+  border-radius: 14px !important;
+  background-color: #fff !important;
+}
+
+/* ── Menús, diálogos, avisos ── */
+html.bte[data-bte-style="nube"]:not(#bte-z) .cdk-overlay-container :where(.mat-menu-panel, .mat-mdc-menu-panel, .mat-select-panel, .mat-mdc-select-panel, .mat-autocomplete-panel, .mdc-menu-surface, .mat-datepicker-content),
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) .dropdown-menu {
+  padding: 6px !important;
+  border: 1px solid var(--n-line) !important;
+  border-radius: 14px !important;
+  background-color: #fff !important;
+  box-shadow: var(--n-float) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) .cdk-overlay-container :where(.mat-menu-item, .mat-mdc-menu-item, .mat-option, .mat-mdc-option) {
+  border-radius: 9px !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) .cdk-overlay-container :where(.mat-menu-item, .mat-mdc-menu-item, .mat-option, .mat-mdc-option):hover,
+html.bte[data-bte-style="nube"]:not(#bte-z) .cdk-overlay-container :where(.mat-option.mat-active, .mat-mdc-option.mat-mdc-option-active, .mat-option.mat-selected, .mat-mdc-option.mdc-list-item--selected) {
+  background-color: #edf1f6 !important;
+  color: #111 !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) .cdk-overlay-container :where(.mat-dialog-container, .mat-mdc-dialog-surface, .mdc-dialog__surface),
+html.bte[data-bte-style="nube"]:not(#bte-z) .modal .modal-content {
+  border: 0 !important;
+  border-radius: 24px !important;
+  background-color: #fff !important;
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.05), 0 24px 60px -20px rgba(17, 17, 17, 0.45) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) .cdk-overlay-container :where(.mat-dialog-title, .mdc-dialog__title, .mat-mdc-dialog-title) {
+  background-color: transparent !important;
+  border-bottom: 0 !important;
+  font-size: 1.4em !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.02em;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) .cdk-overlay-container :where(.mat-tooltip, .mdc-tooltip__surface) {
+  border-radius: 9999px !important;
+  background-color: #111 !important;
+  color: #fff !important;
+  padding: 3px 10px !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) .mat-badge-content {
+  background: #111 !important;
+  color: #fff !important;
+}
+
+/* ── Login: tarjeta blanca sobre el cielo ── */
+html.bte[data-bte-style="nube"] m-auth,
+html.bte[data-bte-style="neo"] m-auth,
+html.bte[data-bte-style="retro"] m-auth {
+  --bte-field-bg: #ffffff;
+}
+
+html.bte[data-bte-style="enfoque"] m-auth {
+  --bte-field-bg: var(--bte-bg);
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-auth .m-login__wrapper {
+  background-color: #edf1f6 !important;
+  background-image: var(--n-sky) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-auth .m-login__body {
+  border: 0 !important;
+  border-radius: 24px !important;
+  background-color: #fff !important;
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.05), 0 0 0 8px rgba(120, 178, 240, 0.22), 0 30px 60px -30px rgba(17, 17, 17, 0.4) !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-auth m-login {
+  padding: 36px 36px 24px !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-auth .m-login__title h1 {
+  font-size: 2.2em !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.03em;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-auth .mat-stroked-button {
+  min-height: 48px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background-image: var(--n-btn) !important;
+  color: #111 !important;
+  font-weight: 500 !important;
+  box-shadow: var(--n-btn-shadow) !important;
+}
+
+/* ── UI propia ── */
+html.bte[data-bte-style="nube"] .bte-window {
+  border: 0;
+  border-radius: 20px !important;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.06), 0 30px 70px -24px rgba(17, 17, 17, 0.5);
+}
+
+html.bte[data-bte-style="nube"] .bte-titlebar {
+  padding: 12px 18px 0;
+  background: transparent;
+  color: var(--n-ink-3);
+  font-weight: 400;
+}
+
+html.bte[data-bte-style="nube"] .bte-prompt {
+  margin: 10px 12px;
+  border: 1px solid var(--n-line-2);
+  border-radius: 12px !important;
+  background: #fff;
+}
+
+html.bte[data-bte-style="nube"] .bte-prompt-sigil {
+  color: #3f7fcd;
+}
+
+html.bte[data-bte-style="nube"] .bte-item {
+  margin: 1px 8px;
+  border-radius: 10px !important;
+}
+
+html.bte[data-bte-style="nube"] .bte-item[aria-selected="true"] {
+  background: var(--n-btn);
+  color: #111;
+  box-shadow: inset 0 0 0 1px rgba(63, 127, 205, 0.5);
+}
+
+html.bte[data-bte-style="nube"] .bte-item[aria-selected="true"] :is(.bte-item-meta, .bte-item-mark, mark) {
+  color: #2f6fbf;
+}
+
+html.bte[data-bte-style="nube"] .bte-footer {
+  background: transparent;
+  border-top: 1px solid var(--n-line);
+}
+
+html.bte[data-bte-style="nube"] .bte-help {
+  font-family: var(--n-serif);
+  font-weight: 300;
+}
+
+html.bte[data-bte-style="nube"] .bte-help pre {
+  color: #3f7fcd;
+}
+
+html.bte[data-bte-style="nube"] #bte-overlay {
+  background: rgba(237, 241, 246, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+html.bte[data-bte-style="nube"] #bte-statusline {
+  background: #f2f2f2;
+  border-top: 0;
+  color: var(--n-ink-3);
+}
+
+html.bte[data-bte-style="nube"] #bte-statusline .bte-mode {
+  margin: 3px 6px;
+  padding: 0 9px;
+  border-radius: 9999px !important;
+  background: #111;
+  color: #fff;
+  font-size: 10.5px;
+}
+
+html.bte[data-bte-style="nube"] #bte-statusline :is(.bte-theme, .bte-clock) {
+  background: transparent;
+  border: 0;
+  color: var(--n-ink-3);
+}
+
+html.bte[data-bte-style="nube"] #bte-statusline kbd {
+  color: #111;
+}
+
+html.bte[data-bte-style="nube"] #bte-toast {
+  border: 0;
+  border-radius: 9999px !important;
+  background: #111;
+  color: #fff;
+  padding: 7px 14px;
+  box-shadow: var(--n-float);
+}
+
+html.bte[data-bte-style="nube"] #bte-app-host {
+  border-top: 0;
+}
+
+/* ── nube en pantallas medianas y angostas ── */
+html.bte[data-bte-style="nube"]:not(#bte-z) m-course-list > .container {
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+html.bte[data-bte-style="nube"]:not(#bte-z) m-course-list > .container > div::before {
+  font-size: clamp(2.1em, 6vw, 3em);
+}
+
+@media (max-width: 899px) {
+  html.bte[data-bte-style="nube"]:not(#bte-z) main.layout-main > .ContentFromMain {
+    margin: 0 8px 8px 0;
+    border-radius: 20px !important;
+  }
+
+  html.bte[data-bte-style="nube"]:not(#bte-z) main.layout-main > m-aside-left.m-aside-left {
+    padding: 4px !important;
+    background-color: #f2f2f2 !important;
+    border-right: 0 !important;
+  }
+
+  html.bte[data-bte-style="nube"]:not(#bte-z) #m_ver_menu .m-menu__link {
+    padding: 9px 0 !important;
+  }
+
+  html.bte[data-bte-style="nube"]:not(#bte-z) .EMINUSPleca :where(.PlecaOverlay, .PlecaOverlayChange) {
+    padding: 24px 16px 12px !important;
+  }
+
+  html.bte[data-bte-style="nube"]:not(#bte-z) .EMINUSPleca .g-font-size-18 {
+    font-size: 1.7em !important;
+  }
+
+  html.bte[data-bte-style="nube"]:not(#bte-z) mat-card.CourseCard {
+    margin: 8px 8px 22px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  html.bte[data-bte-style="nube"] {
+    --n-header: 54px;
+    --bte-header-h: 54px;
+  }
+
+  /* Sólo el aro como marca */
+  html.bte[data-bte-style="nube"]:not(#bte-z) m-header a.m-brand__logo-wrapper::before {
+    content: "";
+    width: 30px;
+    margin-left: 12px;
+    padding: 0;
+  }
+
+  html.bte[data-bte-style="nube"]:not(#bte-z) m-header a.m-brand__logo-wrapper + #bte-header-links {
+    height: 38px !important;
+    margin-left: 4px;
+    padding: 3px;
+  }
+
+  html.bte[data-bte-style="nube"]:not(#bte-z) #bte-header-links button {
+    padding: 0 10px !important;
+    font-size: 0.9em;
+  }
+
+  html.bte[data-bte-style="nube"]:not(#bte-z) m-course-list .FILTER_BOX > div {
+    border-radius: 14px !important;
+  }
+}
+
+/* ═══════════════════════════════ ENFOQUE ═══════════════════════════════ */
+
+html.bte[data-bte-style="enfoque"] {
+  --f-serif: "Source Serif 4", "Source Serif Pro", Georgia, "Times New Roman", serif;
+  --f-line: color-mix(in srgb, var(--bte-border) 60%, transparent);
+  --f-header: 52px;
+  --bte-header-h: 52px;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) :where(m-pages, m-auth, app-root) {
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(:not(svg, svg *, img, video, canvas, iframe)) {
+  border-color: var(--f-line) !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) :where(m-pages, app-root) :where(h1, h2, h3, h4) {
+  font-family: var(--f-serif) !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* Encabezado */
+html.bte[data-bte-style="enfoque"]:not(#bte-z) m-header header,
+html.bte[data-bte-style="enfoque"]:not(#bte-z) m-header :where(.m-container, .m-stack, m-topbar, .m-topbar, .m-brand__tools),
+html.bte[data-bte-style="enfoque"]:not(#bte-z) m-header a.m-brand__logo-wrapper,
+html.bte[data-bte-style="enfoque"]:not(#bte-z) m-header a.m-brand__logo-wrapper + #bte-header-links {
+  height: var(--f-header) !important;
+  min-height: var(--f-header) !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) m-header header {
+  background-color: var(--bte-bg) !important;
+  border-bottom: 1px solid var(--f-line) !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) m-header a.m-brand__logo-wrapper::before {
+  content: "eminus";
+  height: auto;
+  padding: 0 8px 0 24px;
+  background: none;
+  color: var(--bte-fg-strong);
+  font-family: var(--f-serif);
+  font-size: 1.35em;
+  font-weight: 700;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) m-header a.m-brand__logo-wrapper::after {
+  font-family: var(--bte-font);
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) #bte-header-links {
+  border-left: 1px solid var(--f-line) !important;
+  align-items: center !important;
+}
+
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) #bte-header-links button {
+  color: var(--bte-dim) !important;
+  text-decoration: underline transparent;
+  text-underline-offset: 5px;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) #bte-header-links button:hover {
+  background-color: transparent !important;
+  color: var(--bte-fg-strong) !important;
+  text-decoration-color: var(--bte-accent);
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) #bte-header-links button[aria-pressed="true"] {
+  background-color: transparent !important;
+  color: var(--bte-fg-strong) !important;
+  text-decoration-color: var(--bte-accent);
+  font-weight: 700;
+}
+
+/* Barra lateral mínima */
+@media (min-width: 900px) {
+  html.bte[data-bte-style="enfoque"]:not(#bte-z) main.layout-main > m-aside-left.m-aside-left {
+    top: var(--f-header) !important;
+    flex-basis: 210px;
+    width: 210px !important;
+    height: calc(100vh - var(--f-header) - 24px) !important;
+    padding: 20px 8px !important;
+    background-color: var(--bte-bg) !important;
+    border-right: 1px solid var(--f-line) !important;
+  }
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) #m_ver_menu .m-menu__link-icon {
+  display: none !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) #m_ver_menu .m-menu__link {
+  padding: 6px 14px !important;
+  border-left: 2px solid transparent !important;
+  color: var(--bte-dim) !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) #m_ver_menu .m-menu__item:hover > .m-menu__link {
+  background-color: transparent !important;
+  color: var(--bte-fg-strong) !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) #m_ver_menu .m-menu__item--active > .m-menu__link {
+  background-color: transparent !important;
+  color: var(--bte-fg-strong) !important;
+  border-left-color: var(--bte-accent) !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) #m_ver_menu .m-menu__item--active .m-menu__link-text {
+  font-weight: 700 !important;
+}
+
+/* Columna de lectura */
+html.bte[data-bte-style="enfoque"]:not(#bte-z) .ContentFromMain :where(.m-content-sub > .container, m-course-list > .container, .EMINUSPleca .container) {
+  max-width: 880px !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) .EMINUSPleca {
+  background-color: transparent !important;
+  border-bottom: 0 !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) .EMINUSPleca :where(.PlecaOverlay, .PlecaOverlayChange) {
+  padding: 40px 32px 8px !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) .EMINUSPleca .g-font-size-18 {
+  font-family: var(--f-serif) !important;
+  font-size: 2.1em !important;
+  line-height: 1.15;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) m-course-list > .container > div::before {
+  content: "Cursos";
+  font-family: var(--f-serif);
+  font-size: 2.4em;
+  margin-top: 40px;
+}
+
+/* Sin cajas: separación con aire y líneas finas */
+html.bte[data-bte-style="enfoque"]:not(#bte-z) :where(m-pages, app-root, .modal) :where(mat-card, .mat-card, .mat-mdc-card, .card, .m-portlet, .kt-portlet, .m-alert, .alert, .cardInContent, .list-group-item) {
+  background-color: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--f-line) !important;
+  box-shadow: none !important;
+}
+
+/* Cursos en lista de una columna */
+html.bte[data-bte-style="enfoque"]:not(#bte-z) m-course-list .container_courses > .d-flex > div[class*="col-"] {
+  flex: 0 0 100% !important;
+  max-width: 100% !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) mat-card.CourseCard {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 16px;
+  margin: 0 !important;
+  padding: 14px 4px !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) mat-card.CourseCard:hover {
+  background-color: var(--bte-bg1) !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) mat-card.CourseCard .CardHeader,
+html.bte[data-bte-style="enfoque"]:not(#bte-z) mat-card.CourseCard:hover .CardHeader {
+  background-color: transparent !important;
+  border: 0 !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) mat-card.CourseCard .CardHeaderContainer {
+  padding: 0 8px !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) mat-card.CourseCard .CardHeaderContainer b {
+  min-height: 0;
+  font-family: var(--f-serif) !important;
+  font-size: 1.2em !important;
+  font-weight: 600 !important;
+  text-transform: capitalize;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) mat-card.CourseCard .CardBody {
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 16px;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) mat-card.CourseCard .CardBody > div.d-flex {
+  width: auto;
+  margin: 0 !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) mat-card.CourseCard .CardFooter {
+  padding: 0 8px !important;
+  border: 0 !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) m-course-list .SEARCH_BAR_BOX .input-group {
+  border: 0 !important;
+  border-bottom: 1px solid var(--f-line) !important;
+  background-color: transparent !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) m-course-list .SEARCH_BAR {
+  background-color: transparent !important;
+  font-size: 1.1em !important;
+  height: 44px !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) m-course-list .FILTER_BOX > div {
+  border: 0 !important;
+}
+
+/* Módulos como índice */
+html.bte[data-bte-style="enfoque"]:not(#bte-z) .m-kt-portlet-unit {
+  padding: 14px 4px !important;
+  margin: 0 !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) .m-kt-portlet-unit .kt-portlet__head-title {
+  font-family: var(--f-serif) !important;
+  font-size: 1.2em !important;
+  font-weight: 600 !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) :where(m-pages, app-root) .d-brd-separator {
+  margin-top: 28px !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) :where(m-pages, app-root) .d-brd-separator :where(h3, h4) {
+  font-size: 1.5em !important;
+}
+
+/* Lectura cómoda del contenido docente */
+html.bte[data-bte-style="enfoque"]:not(#bte-z) :where(m-pages, app-root) .fr-view {
+  max-width: 70ch;
+  font-size: 1.05em;
+  line-height: 1.8;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) :where(m-pages, app-root) .fr-view :where(p, li) {
+  margin-bottom: 0.7em;
+}
+
+/* Botones discretos */
+html.bte[data-bte-style="enfoque"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .mat-mdc-outlined-button, .btn, .input-group-text.btn-success) {
+  border-radius: 6px !important;
+  padding: 5px 14px !important;
+  font-weight: 600 !important;
+}
+
+/* Pestañas subrayadas */
+html.bte[data-bte-style="enfoque"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-label-active, .mdc-tab--active) {
+  background-color: transparent !important;
+  color: var(--bte-fg-strong) !important;
+  box-shadow: inset 0 -2px 0 var(--bte-accent) !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) :where(m-pages, app-root) :where(.mdc-tab--active .mdc-tab__text-label, .mat-tab-label-active .mat-tab-label-content) {
+  color: var(--bte-fg-strong) !important;
+  font-weight: 700;
+}
+
+/* Actividades: filas con barra de estado */
+html.bte[data-bte-style="enfoque"]:not(#bte-z) app-root .activity-card[style*="border-color"] {
+  border-left: 3px solid var(--bte-st, var(--f-line)) !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) app-root .activity-card .card-title {
+  font-family: var(--f-serif) !important;
+  font-size: 1.2em !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) app-root .activity-card .flag-icon {
+  display: none;
+}
+
+/* Diálogos y menús */
+html.bte[data-bte-style="enfoque"]:not(#bte-z) .cdk-overlay-container :where(.mat-menu-panel, .mat-mdc-menu-panel, .mat-select-panel, .mat-mdc-select-panel, .mdc-menu-surface, .mat-dialog-container, .mat-mdc-dialog-surface),
+html.bte[data-bte-style="enfoque"]:not(#bte-z) .modal .modal-content {
+  border: 1px solid var(--f-line) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Login */
+html.bte[data-bte-style="enfoque"]:not(#bte-z) m-auth .m-login__body {
+  border: 0 !important;
+  background-color: transparent !important;
+}
+
+html.bte[data-bte-style="enfoque"]:not(#bte-z) m-auth .m-login__title h1 {
+  font-family: var(--f-serif) !important;
+  font-size: 2em !important;
+}
+
+/* UI propia */
+html.bte[data-bte-style="enfoque"] .bte-window {
+  border: 1px solid color-mix(in srgb, var(--bte-border) 60%, transparent);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+html.bte[data-bte-style="enfoque"] .bte-titlebar {
+  background: transparent;
+  color: var(--bte-dim);
+  font-weight: 600;
+  border-bottom: 1px solid color-mix(in srgb, var(--bte-border) 60%, transparent);
+}
+
+html.bte[data-bte-style="enfoque"] .bte-prompt input {
+  font-size: 16px !important;
+}
+
+html.bte[data-bte-style="enfoque"] #bte-statusline {
+  background: var(--bte-bg);
+}
+
+html.bte[data-bte-style="enfoque"] #bte-statusline :is(.bte-mode, .bte-theme, .bte-clock) {
+  background: transparent;
+  color: var(--bte-dim);
+}
+
+html.bte[data-bte-style="enfoque"] #bte-statusline .bte-mode {
+  color: var(--bte-accent);
+}
+
+/* ═══════════════════════════════ RETRO 95 ═══════════════════════════════ */
+
+/* Paleta propia: el tema elegido no aplica en este estilo. */
+html.bte[data-bte-style="retro"] {
+  --bte-bg: #008080;
+  --bte-bg0: #ffffff;
+  --bte-bg1: #c0c0c0;
+  --bte-bg2: #000080;
+  --bte-surface: #c0c0c0;
+  --bte-fg: #000000;
+  --bte-fg-strong: #000000;
+  --bte-dim: #404040;
+  --bte-border: #808080;
+  --bte-accent: #000080;
+  --bte-accent-fg: #ffffff;
+  --bte-link: #0000ee;
+  --bte-red: #c00000;
+  --bte-green: #007000;
+  --bte-yellow: #806000;
+  --bte-blue: #000080;
+  --bte-purple: #800080;
+  --bte-aqua: #006d6d;
+  --bte-orange: #b04000;
+  --bte-glow: none;
+  --bte-scheme: light;
+  --r-raised: inset -1px -1px #0a0a0a, inset 1px 1px #ffffff, inset -2px -2px #808080, inset 2px 2px #dfdfdf;
+  --r-sunken: inset -1px -1px #ffffff, inset 1px 1px #808080, inset -2px -2px #dfdfdf, inset 2px 2px #0a0a0a;
+  --r-title: linear-gradient(90deg, #000080, #1084d0);
+  --bte-header-h: 40px;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) {
+  font-size: 13px;
+  -webkit-font-smoothing: none;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(:not(svg, svg *, img, video, canvas, iframe)) {
+  border-color: #808080 !important;
+}
+
+/* Escritorio verde azulado; el contenido va en ventanas grises */
+html.bte[data-bte-style="retro"]:not(#bte-z) main.layout-main,
+html.bte[data-bte-style="retro"]:not(#bte-z) .ContentFromMain,
+html.bte[data-bte-style="retro"]:not(#bte-z) body {
+  background-color: #008080 !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-course-list > .container, .m-content-sub > .container, #activity-content > div) {
+  margin-top: 12px !important;
+  margin-bottom: 16px !important;
+  padding: 12px 16px !important;
+  background-color: #c0c0c0 !important;
+  box-shadow: var(--r-raised) !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) app-root,
+html.bte[data-bte-style="retro"]:not(#bte-z) iframe.app-b-frame {
+  background-color: #c0c0c0 !important;
+}
+
+/* Barra de tareas arriba */
+html.bte[data-bte-style="retro"]:not(#bte-z) m-header header {
+  height: 40px !important;
+  background-color: #c0c0c0 !important;
+  border-bottom: 0 !important;
+  box-shadow: inset 0 1px #dfdfdf, inset 0 -1px #0a0a0a, inset 0 -2px #808080 !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) m-header :where(.m-container, .m-stack, m-topbar, .m-topbar, .m-brand__tools),
+html.bte[data-bte-style="retro"]:not(#bte-z) m-header a.m-brand__logo-wrapper,
+html.bte[data-bte-style="retro"]:not(#bte-z) m-header a.m-brand__logo-wrapper + #bte-header-links {
+  height: 40px !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) m-header a.m-brand__logo-wrapper::before {
+  content: "⊞ Inicio";
+  height: 30px;
+  margin-left: 4px;
+  padding: 0 12px;
+  background: #c0c0c0;
+  color: #000;
+  font-weight: 700;
+  box-shadow: var(--r-raised);
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) m-header a.m-brand__logo-wrapper:active::before {
+  box-shadow: var(--r-sunken);
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) m-header a.m-brand__logo-wrapper::after {
+  color: #000;
+  font-weight: 700;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) #bte-header-links {
+  gap: 4px;
+  align-items: center !important;
+  padding-left: 6px;
+  border-left: 1px solid #808080 !important;
+  box-shadow: inset 1px 0 #ffffff;
+}
+
+
+html.bte[data-bte-style="retro"]:not(#bte-z) #bte-header-links button {
+  height: 28px;
+  min-width: 70px;
+  justify-content: center;
+  background-color: #c0c0c0 !important;
+  color: #000 !important;
+  box-shadow: var(--r-raised);
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) #bte-header-links button:hover {
+  background-color: #c0c0c0 !important;
+  color: #000 !important;
+  outline: 1px dotted #000 !important;
+  outline-offset: -5px !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) #bte-header-links button[aria-pressed="true"] {
+  background-color: #dfdfdf !important;
+  color: #000 !important;
+  font-weight: 700;
+  box-shadow: var(--r-sunken);
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) #bte-header-links button:active {
+  box-shadow: var(--r-sunken);
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) m-header :where(m-user-profile) .h5,
+html.bte[data-bte-style="retro"]:not(#bte-z) m-header m-notification i {
+  color: #000 !important;
+}
+
+/* Menú lateral como panel */
+@media (min-width: 900px) {
+  html.bte[data-bte-style="retro"]:not(#bte-z) main.layout-main > m-aside-left.m-aside-left {
+    top: 40px !important;
+    height: calc(100vh - 64px) !important;
+    flex-basis: 200px;
+    width: 200px !important;
+    padding: 4px !important;
+    background-color: #c0c0c0 !important;
+    border-right: 0 !important;
+    box-shadow: var(--r-raised) !important;
+  }
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) #m_ver_menu .m-menu__link {
+  padding: 4px 8px !important;
+  color: #000 !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) #m_ver_menu .m-menu__link-icon {
+  color: #000 !important;
+  font-size: 18px !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) #m_ver_menu .m-menu__item:hover > .m-menu__link,
+html.bte[data-bte-style="retro"]:not(#bte-z) #m_ver_menu .m-menu__item--active > .m-menu__link {
+  background-color: #000080 !important;
+  color: #fff !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) #m_ver_menu .m-menu__item:hover .m-menu__link-icon,
+html.bte[data-bte-style="retro"]:not(#bte-z) #m_ver_menu .m-menu__item--active .m-menu__link-icon {
+  color: #fff !important;
+}
+
+/* Cabecera de curso = barra de título */
+html.bte[data-bte-style="retro"]:not(#bte-z) .EMINUSPleca {
+  margin: 12px 16px 0 !important;
+  background-color: transparent !important;
+  background-image: var(--r-title) !important;
+  border: 0 !important;
+  box-shadow: 0 0 0 3px #c0c0c0, 0 0 0 4px #0a0a0a;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) .EMINUSPleca :where(.PlecaOverlay, .PlecaOverlayChange) {
+  padding: 4px 10px !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) .EMINUSPleca :where(.g-font-size-18, .TittlePleca, span, div, i) {
+  color: #fff !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) .EMINUSPleca .g-font-size-18 {
+  font-size: 1em !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) .EMINUSPleca input {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+
+/* Tarjetas = ventanas */
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, app-root, .modal) :where(mat-card, .mat-card, .mat-mdc-card, .card, .m-portlet, .kt-portlet, .m-alert, .alert, .cardInContent, .list-group-item, .mat-expansion-panel) {
+  padding: 3px !important;
+  background-color: #c0c0c0 !important;
+  border: 0 !important;
+  box-shadow: var(--r-raised) !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) mat-card.CourseCard .CardHeader,
+html.bte[data-bte-style="retro"]:not(#bte-z) mat-card.CourseCard:hover .CardHeader {
+  background-color: transparent !important;
+  background-image: var(--r-title) !important;
+  border: 0 !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) mat-card.CourseCard .CardHeaderContainer {
+  padding: 3px 6px !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) mat-card.CourseCard .CardHeaderContainer b {
+  color: #fff !important;
+  font-size: 0.95em !important;
+  min-height: 0;
+  -webkit-line-clamp: 1;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) mat-card.CourseCard .CardBody {
+  margin: 4px;
+  padding: 8px !important;
+  background-color: #fff !important;
+  border: 0 !important;
+  box-shadow: var(--r-sunken);
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) mat-card.CourseCard .CardBody > span {
+  color: #000 !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) mat-card.CourseCard .CardFooter i,
+html.bte[data-bte-style="retro"]:not(#bte-z) mat-card.CourseCard .hiddebutton mat-icon {
+  color: #000 !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) .m-kt-portlet-unit {
+  padding: 8px 12px !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) .m-kt-portlet-unit:hover {
+  background-color: #c0c0c0 !important;
+  outline: 1px dotted #000;
+  outline-offset: -5px;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) .m-kt-portlet-unit .m-alert__icon {
+  display: flex !important;
+  color: #000080 !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, app-root) .d-brd-separator :where(h3, h4) {
+  font-size: 1em !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, app-root) :where(.fr-view, .kt-portlet__body-editor) {
+  padding: 8px;
+  background-color: #fff !important;
+  box-shadow: var(--r-sunken);
+}
+
+/* Botones con bisel */
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-button, .mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .mat-mdc-outlined-button, .btn, .input-group-text.btn-success) {
+  min-width: 75px;
+  padding: 4px 12px !important;
+  border: 0 !important;
+  background-color: #c0c0c0 !important;
+  color: #000 !important;
+  font-weight: 400 !important;
+  box-shadow: var(--r-raised) !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-button, .mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .mat-mdc-outlined-button, .btn, .input-group-text.btn-success):hover {
+  background-color: #c0c0c0 !important;
+  color: #000 !important;
+  outline: 1px dotted #000 !important;
+  outline-offset: -5px !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-button, .mat-mdc-button, .btn):active {
+  box-shadow: var(--r-sunken) !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, m-auth, app-root) :where(.btn-success, .mat-stroked-button-green) {
+  font-weight: 700 !important;
+}
+
+/* Campos hundidos */
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]), textarea, select, .form-control) {
+  background-color: #fff !important;
+  color: #000 !important;
+  border: 0 !important;
+  box-shadow: var(--r-sunken) !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) m-course-list .SEARCH_BAR_BOX .input-group,
+html.bte[data-bte-style="retro"]:not(#bte-z) m-course-list .FILTER_BOX > div {
+  border: 0 !important;
+  background-color: #c0c0c0 !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, m-auth, app-root) :where(.mat-form-field-infix input, .mat-mdc-form-field-infix input, .mat-input-element) {
+  box-shadow: none !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, m-auth, app-root) :where(.mat-form-field-flex, .mat-mdc-text-field-wrapper, .mat-select, .mat-mdc-select) {
+  padding: 2px 6px !important;
+  background-color: #fff !important;
+  box-shadow: var(--r-sunken) !important;
+}
+
+/* Pestañas clásicas */
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-header, .mat-mdc-tab-header) {
+  border-bottom: 0 !important;
+  box-shadow: inset 0 -1px #ffffff;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-label, .mat-mdc-tab) {
+  margin-right: 2px;
+  background-color: #c0c0c0 !important;
+  color: #000 !important;
+  box-shadow: inset 1px 1px #ffffff, inset -1px 0 #0a0a0a, inset -2px 0 #808080 !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-label-active, .mdc-tab--active) {
+  font-weight: 700;
+  transform: translateY(-2px);
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, app-root) :where(.mdc-tab--active .mdc-tab__text-label, .mat-tab-label-active .mat-tab-label-content) {
+  color: #000 !important;
+}
+
+/* Actividades */
+html.bte[data-bte-style="retro"]:not(#bte-z) app-root .principal-card {
+  box-shadow: none !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) app-root .activity-card[style*="border-color"] {
+  border: 0 !important;
+  box-shadow: inset 6px 0 var(--bte-st, #808080), var(--r-raised) !important;
+  padding-left: 8px !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) app-root .activity-card :where(.detail-label strong, .activity-time, .activity-time strong) {
+  color: #404040 !important;
+}
+
+/* Menús, diálogos, tooltips */
+html.bte[data-bte-style="retro"]:not(#bte-z) .cdk-overlay-container :where(.mat-menu-panel, .mat-mdc-menu-panel, .mat-select-panel, .mat-mdc-select-panel, .mdc-menu-surface, .mat-autocomplete-panel),
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, app-root) .dropdown-menu {
+  padding: 3px !important;
+  border: 0 !important;
+  background-color: #c0c0c0 !important;
+  box-shadow: var(--r-raised), 2px 2px 0 rgba(0, 0, 0, 0.5) !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) .cdk-overlay-container :where(.mat-menu-item, .mat-mdc-menu-item, .mat-option, .mat-mdc-option):hover,
+html.bte[data-bte-style="retro"]:not(#bte-z) .cdk-overlay-container :where(.mat-option.mat-active, .mat-mdc-option.mat-mdc-option-active) {
+  background-color: #000080 !important;
+  color: #fff !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) .cdk-overlay-container :where(.mat-dialog-container, .mat-mdc-dialog-surface, .mdc-dialog__surface),
+html.bte[data-bte-style="retro"]:not(#bte-z) .modal .modal-content {
+  padding: 3px !important;
+  border: 0 !important;
+  background-color: #c0c0c0 !important;
+  box-shadow: var(--r-raised), 4px 4px 0 rgba(0, 0, 0, 0.5) !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) .cdk-overlay-container :where(.mat-dialog-title, .mdc-dialog__title, .mat-mdc-dialog-title),
+html.bte[data-bte-style="retro"]:not(#bte-z) .modal .modal-header {
+  padding: 3px 8px !important;
+  background-color: transparent !important;
+  background-image: var(--r-title) !important;
+  color: #fff !important;
+  font-size: 1em !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) .cdk-overlay-container :where(.mat-tooltip, .mdc-tooltip__surface) {
+  background-color: #ffffe1 !important;
+  color: #000 !important;
+  border: 1px solid #000 !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) m-pages > footer {
+  background-color: #008080 !important;
+  color: #fff !important;
+  border-top: 0 !important;
+}
+
+/* Login como cuadro de diálogo */
+html.bte[data-bte-style="retro"]:not(#bte-z) m-auth,
+html.bte[data-bte-style="retro"]:not(#bte-z) m-auth .m-login__wrapper {
+  background-color: #008080 !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) m-auth .m-login__body {
+  padding: 3px !important;
+  border: 0 !important;
+  background-color: #c0c0c0 !important;
+  box-shadow: var(--r-raised), 4px 4px 0 rgba(0, 0, 0, 0.5) !important;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) m-auth .m-login__body::before {
+  content: "Iniciar sesión en Eminus";
+  display: block;
+  padding: 3px 8px;
+  background-image: var(--r-title);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Scrollbars clásicas */
+html.bte[data-bte-style="retro"]:not(#bte-z)::-webkit-scrollbar-track,
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, app-root, #bte-overlay) ::-webkit-scrollbar-track {
+  background: #dfdfdf;
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z)::-webkit-scrollbar-thumb,
+html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, app-root, #bte-overlay) ::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border: 0;
+  box-shadow: var(--r-raised);
+}
+
+html.bte[data-bte-style="retro"]:not(#bte-z) .bte-cursor {
+  outline: 1px dotted #000 !important;
+  outline-offset: -4px !important;
+  background-color: #c0c0c0 !important;
+}
+
+/* UI propia: paleta como ventana, statusline como barra de tareas */
+html.bte[data-bte-style="retro"] .bte-window {
+  padding: 3px;
+  border: 0;
+  background: #c0c0c0;
+  box-shadow: var(--r-raised), 4px 4px 0 rgba(0, 0, 0, 0.5);
+  color: #000;
+}
+
+html.bte[data-bte-style="retro"] .bte-titlebar {
+  background: var(--r-title);
+  color: #fff;
+  padding: 3px 6px;
+}
+
+html.bte[data-bte-style="retro"] .bte-prompt {
+  margin: 6px;
+  border: 0;
+  background: #fff;
+  box-shadow: var(--r-sunken);
+}
+
+html.bte[data-bte-style="retro"] .bte-list,
+html.bte[data-bte-style="retro"] .bte-help {
+  margin: 0 6px 6px;
+  background: #fff;
+  box-shadow: var(--r-sunken);
+}
+
+html.bte[data-bte-style="retro"] .bte-footer {
+  border: 0;
+  background: transparent;
+  color: #000;
+}
+
+html.bte[data-bte-style="retro"] #bte-overlay {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+html.bte[data-bte-style="retro"] #bte-statusline {
+  height: 28px;
+  padding: 2px;
+  gap: 4px;
+  background: #c0c0c0;
+  border-top: 0;
+  box-shadow: inset 0 1px #dfdfdf, inset 0 2px #ffffff;
+  color: #000;
+}
+
+html.bte[data-bte-style="retro"] #bte-statusline .bte-mode {
+  background: #c0c0c0;
+  color: #000;
+  box-shadow: var(--r-raised);
+}
+
+html.bte[data-bte-style="retro"] #bte-statusline .bte-theme {
+  background: #c0c0c0;
+  color: #000;
+  box-shadow: var(--r-raised);
+}
+
+html.bte[data-bte-style="retro"] #bte-statusline .bte-msg,
+html.bte[data-bte-style="retro"] #bte-statusline .bte-hint,
+html.bte[data-bte-style="retro"] #bte-statusline .bte-miyu {
+  color: #000;
+  border: 0;
+}
+
+html.bte[data-bte-style="retro"] #bte-statusline kbd {
+  color: #000080;
+}
+
+html.bte[data-bte-style="retro"] #bte-statusline .bte-clock {
+  background: #c0c0c0;
+  border: 0;
+  box-shadow: var(--r-sunken);
+}
+
+html.bte[data-bte-style="retro"] #bte-toast {
+  background: #ffffe1;
+  border: 1px solid #000;
+  color: #000;
+}
+
+html.bte.bte-top[data-bte-style="retro"] body {
+  padding-bottom: 28px !important;
+}
+
+/* ═══════════════════════════════ COMPACTO ═══════════════════════════════
+ * Densidad: más información por pantalla. Fuente del sistema a 13px,
+ * espacios cortos, cursos en retícula apretada y filas de 30px. Usa los
+ * colores del tema.
+ */
+
+html.bte[data-bte-style="compacto"] {
+  --c-r: 6px;
+  --c-line: color-mix(in srgb, var(--bte-border) 70%, transparent);
+  --bte-header-h: 40px;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) :where(m-pages, m-auth, app-root) {
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(:not(svg, svg *, img, video, canvas, iframe)) {
+  border-color: var(--c-line) !important;
+}
+
+/* Fuera los márgenes generosos de Eminus */
+html.bte[data-bte-style="compacto"]:not(#bte-z) :where(m-pages, app-root) :where(.mt-5, .mt-4, .g-mt-10, .m--margin-bottom-30, .mb-5, .cont-margin-40, .unit-padding-top) {
+  margin-top: 8px !important;
+  margin-bottom: 8px !important;
+  padding-top: 0 !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) :where(m-pages, app-root) :where(h1, h2, h3, h4) {
+  font-weight: 650 !important;
+}
+
+/* Encabezado */
+html.bte[data-bte-style="compacto"]:not(#bte-z) m-header header,
+html.bte[data-bte-style="compacto"]:not(#bte-z) m-header :where(.m-container, .m-stack, m-topbar, .m-topbar, .m-brand__tools),
+html.bte[data-bte-style="compacto"]:not(#bte-z) m-header a.m-brand__logo-wrapper,
+html.bte[data-bte-style="compacto"]:not(#bte-z) m-header a.m-brand__logo-wrapper + #bte-header-links {
+  height: 40px !important;
+  min-height: 40px !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) m-header header {
+  background-color: var(--bte-bg0) !important;
+  border-bottom: 1px solid var(--c-line) !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) m-header a.m-brand__logo-wrapper::before {
+  content: "eminus";
+  height: 24px;
+  margin-left: 10px;
+  padding: 0 8px;
+  border-radius: var(--c-r);
+  font-weight: 700;
+}
+
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) #bte-header-links {
+  gap: 2px;
+  align-items: center !important;
+  border-left: 1px solid var(--c-line) !important;
+  padding-left: 6px;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) #bte-header-links button {
+  height: 26px;
+  padding: 0 10px !important;
+  border-radius: var(--c-r) !important;
+  font-weight: 500;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) #bte-header-links button[aria-pressed="true"] {
+  background-color: var(--bte-bg2) !important;
+  color: var(--bte-fg-strong) !important;
+}
+
+/* Barra lateral densa */
+@media (min-width: 900px) {
+  html.bte[data-bte-style="compacto"]:not(#bte-z) main.layout-main > m-aside-left.m-aside-left {
+    flex-basis: 184px;
+    width: 184px !important;
+    padding: 6px !important;
+  }
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) #m_ver_menu .m-menu__link {
+  min-height: 28px !important;
+  padding: 4px 8px !important;
+  border-radius: var(--c-r) !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) #m_ver_menu .m-menu__link-icon {
+  font-size: 16px !important;
+  margin-right: 8px;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) #m_ver_menu .m-menu__item--active > .m-menu__link {
+  background-color: var(--bte-bg2) !important;
+  color: var(--bte-fg-strong) !important;
+  box-shadow: inset 3px 0 0 var(--bte-accent) !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) #m_ver_menu .m-menu__item--active .m-menu__link-icon {
+  color: var(--bte-accent) !important;
+}
+
+/* Cabecera de curso en una línea */
+html.bte[data-bte-style="compacto"]:not(#bte-z) .EMINUSPleca :where(.PlecaOverlay, .PlecaOverlayChange) {
+  padding: 8px 16px !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) .EMINUSPleca .g-font-size-18 {
+  font-size: 1.2em !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) m-course-list > .container > div::before {
+  content: "Cursos";
+  align-self: flex-start;
+  margin: 12px 0 8px;
+  font-size: 1.35em;
+}
+
+/* Cursos en retícula apretada */
+html.bte[data-bte-style="compacto"]:not(#bte-z) m-course-list .container {
+  max-width: 1600px !important;
+  padding: 0 12px !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) m-course-list .container_courses > .d-flex {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) m-course-list .container_courses > .d-flex > span.h4 {
+  grid-column: 1 / -1;
+  padding: 8px 0 0 !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) m-course-list .container_courses > .d-flex > div[class*="col-"] {
+  flex: none !important;
+  max-width: none !important;
+  width: auto !important;
+  padding: 0 !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) mat-card.CourseCard {
+  margin: 0 !important;
+  border: 1px solid var(--c-line) !important;
+  border-radius: var(--c-r) !important;
+  background-color: var(--bte-surface) !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) mat-card.CourseCard:hover {
+  border-color: var(--bte-accent) !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) mat-card.CourseCard .CardHeader,
+html.bte[data-bte-style="compacto"]:not(#bte-z) mat-card.CourseCard:hover .CardHeader {
+  background-color: transparent !important;
+  border: 0 !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) mat-card.CourseCard .CardHeaderContainer {
+  padding: 8px 10px 2px !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) mat-card.CourseCard .CardHeaderContainer b {
+  min-height: 0;
+  font-size: 1em !important;
+  font-weight: 650 !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) mat-card.CourseCard .CardBody {
+  padding: 2px 10px 6px !important;
+  border: 0 !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) mat-card.CourseCard .CardBody > div.d-flex {
+  margin-top: 2px !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) mat-card.CourseCard .CardFooter {
+  display: none !important;
+}
+
+/* Filas de 30px con cebra */
+html.bte[data-bte-style="compacto"]:not(#bte-z) :where(m-pages, app-root, .modal) :where(mat-card, .mat-card, .mat-mdc-card, .card, .m-portlet, .kt-portlet, .m-alert, .alert, .cardInContent, .list-group-item) {
+  border-radius: var(--c-r) !important;
+  background-color: var(--bte-surface) !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) .m-kt-portlet-unit {
+  min-height: 30px;
+  padding: 5px 10px !important;
+  margin: 0 0 2px !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) .m-kt-portlet-unit:nth-of-type(even) {
+  background-color: var(--bte-bg1) !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) .m-kt-portlet-unit .kt-portlet__head-title {
+  font-size: 1em !important;
+  font-weight: 600 !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) :where(m-pages, app-root) .d-brd-separator :where(h3, h4) {
+  font-size: 1.1em !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) :where(.m-kt-portlet-resource, .cardInContent) {
+  padding: 8px 12px !important;
+}
+
+/* Actividades en una sola línea de datos */
+html.bte[data-bte-style="compacto"]:not(#bte-z) app-root .px-5.py-4 {
+  padding: 4px 8px !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) app-root .activity-card {
+  margin-top: 4px !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) app-root .activity-card[style*="border-color"] {
+  border-left: 3px solid var(--bte-st, var(--c-line)) !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) app-root .activity-card .mat-mdc-card-content {
+  padding: 6px 10px !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) app-root .activity-card .mat-mdc-card-content > .row:first-child {
+  flex-wrap: nowrap;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) app-root .activity-card .flag-icon {
+  font-size: 12px !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) app-root .activity-card .card-title {
+  margin: 0 !important;
+  font-size: 1em !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) app-root .activity-card .d-flex.flex-wrap {
+  display: inline-flex !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) app-root .activity-card .detail-row {
+  padding: 0 12px 0 0 !important;
+  font-size: 0.92em;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) app-root .activity-card hr {
+  margin: 4px 0 !important;
+}
+
+/* Controles pequeños */
+html.bte[data-bte-style="compacto"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .mat-mdc-outlined-button, .btn, .input-group-text.btn-success) {
+  min-height: 26px !important;
+  line-height: 24px !important;
+  padding: 0 10px !important;
+  border-radius: var(--c-r) !important;
+  font-weight: 500 !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) :where(.form-control, textarea, select) {
+  border-radius: var(--c-r) !important;
+  padding: 3px 8px !important;
+  min-height: 28px;
+  height: auto !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) m-course-list .SEARCH_BAR_BOX .input-group {
+  border-radius: var(--c-r) !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) m-course-list .SEARCH_BAR {
+  height: 32px !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-label, .mat-mdc-tab) {
+  height: 28px !important;
+  padding: 0 12px !important;
+  border-radius: var(--c-r) var(--c-r) 0 0 !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(a, button, input, select, textarea, [role="tab"], [role="button"]):focus-visible {
+  outline: 2px solid var(--bte-accent) !important;
+  outline-offset: 1px !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) .cdk-overlay-container :where(.mat-menu-panel, .mat-mdc-menu-panel, .mat-select-panel, .mat-mdc-select-panel, .mdc-menu-surface, .mat-dialog-container, .mat-mdc-dialog-surface) {
+  border-radius: 8px !important;
+  border: 1px solid var(--c-line) !important;
+}
+
+html.bte[data-bte-style="compacto"]:not(#bte-z) .cdk-overlay-container :where(.mat-menu-item, .mat-mdc-menu-item, .mat-option, .mat-mdc-option) {
+  min-height: 26px !important;
+  padding: 2px 10px !important;
+}
+
+html.bte[data-bte-style="compacto"] .bte-window {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+html.bte[data-bte-style="compacto"] .bte-titlebar {
+  background: var(--bte-bg2);
+  color: var(--bte-fg-strong);
+}
+
+html.bte[data-bte-style="compacto"] .bte-item {
+  padding: 2px 12px;
+}
+
+/* ═══════════════════════════════ EDITORIAL ═══════════════════════════════
+ * Periódico / revista: titulares en serif (Newsreader), etiquetas en
+ * Libre Franklin, doble filete bajo la cabecera, módulos numerados en
+ * romanos y capitular en el contenido docente. Usa los colores del tema.
+ */
+
+html.bte[data-bte-style="editorial"] {
+  --e-serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --e-line: color-mix(in srgb, var(--bte-fg) 30%, transparent);
+  --e-header: 58px;
+  --bte-header-h: 58px;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, m-auth, app-root) {
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(:not(svg, svg *, img, video, canvas, iframe)) {
+  border-color: var(--e-line) !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root) :where(h1, h2, h3, h4) {
+  font-family: var(--e-serif) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* Etiquetas: versalitas */
+html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root)
+  :where(.TittlePleca, .kt-portlet_header-subtitle, .kt-portlet_header-element, .detail-label, .activity-time, th, .mat-header-cell, .mat-mdc-header-cell) {
+  font-variant: all-small-caps;
+  letter-spacing: 0.06em !important;
+  font-weight: 600 !important;
+}
+
+/* Las versalitas rompen las ligaduras de las fuentes de iconos
+   ("thumb_up" saldría como texto). */
+html.bte[data-bte-style="editorial"]:not(#bte-z):not(#bte-y) :where(m-pages, app-root, .cdk-overlay-container) :where(i, mat-icon, .material-icons, .mat-icon, [class*="fa-"], .bi) {
+  font-variant: normal !important;
+  letter-spacing: normal !important;
+}
+
+/* Cabecera tipo mancheta */
+html.bte[data-bte-style="editorial"]:not(#bte-z) m-header header,
+html.bte[data-bte-style="editorial"]:not(#bte-z) m-header :where(.m-container, .m-stack, m-topbar, .m-topbar, .m-brand__tools),
+html.bte[data-bte-style="editorial"]:not(#bte-z) m-header a.m-brand__logo-wrapper,
+html.bte[data-bte-style="editorial"]:not(#bte-z) m-header a.m-brand__logo-wrapper + #bte-header-links {
+  height: var(--e-header) !important;
+  min-height: var(--e-header) !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) m-header header {
+  background-color: var(--bte-bg) !important;
+  border-bottom: 4px double var(--bte-fg-strong) !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) m-header a.m-brand__logo-wrapper::before {
+  content: "Eminus";
+  height: auto;
+  padding: 0 16px 0 22px;
+  background: none;
+  color: var(--bte-fg-strong);
+  font-family: var(--e-serif);
+  font-style: italic;
+  font-size: 1.85em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) m-header a.m-brand__logo-wrapper::after {
+  padding-left: 14px;
+  border-left: 1px solid var(--e-line);
+  font-variant: all-small-caps;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) #bte-header-links {
+  border-left: 1px solid var(--e-line) !important;
+  align-items: center !important;
+}
+
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) #bte-header-links button {
+  font-variant: all-small-caps;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  font-size: 1em;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) #bte-header-links button:hover,
+html.bte[data-bte-style="editorial"]:not(#bte-z) #bte-header-links button[aria-pressed="true"] {
+  background-color: transparent !important;
+  color: var(--bte-accent) !important;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+/* Índice lateral en versalitas */
+@media (min-width: 900px) {
+  html.bte[data-bte-style="editorial"]:not(#bte-z) main.layout-main > m-aside-left.m-aside-left {
+    top: var(--e-header) !important;
+    height: calc(100vh - var(--e-header) - 24px) !important;
+    flex-basis: 200px;
+    width: 200px !important;
+    padding: 20px 0 !important;
+    background-color: var(--bte-bg) !important;
+    border-right: 1px solid var(--e-line) !important;
+  }
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) #m_ver_menu .m-menu__link-icon {
+  display: none !important;
+}
+
+@media (max-width: 899px) {
+  html.bte[data-bte-style="editorial"]:not(#bte-z) #m_ver_menu .m-menu__link-icon {
+    display: inline-flex !important;
+  }
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) #m_ver_menu .m-menu__link {
+  padding: 5px 20px !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) #m_ver_menu .m-menu__link-text {
+  font-variant: all-small-caps;
+  letter-spacing: 0.07em;
+  font-weight: 600 !important;
+  font-size: 1.02em !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) #m_ver_menu .m-menu__item:hover > .m-menu__link,
+html.bte[data-bte-style="editorial"]:not(#bte-z) #m_ver_menu .m-menu__item--active > .m-menu__link {
+  background-color: transparent !important;
+  color: var(--bte-accent) !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) #m_ver_menu .m-menu__item--active .m-menu__link-text {
+  font-family: var(--e-serif) !important;
+  font-variant: normal;
+  font-style: italic;
+  font-size: 1.15em !important;
+  letter-spacing: 0;
+}
+
+/* Cabecera de curso: titular centrado entre filetes */
+html.bte[data-bte-style="editorial"]:not(#bte-z) .EMINUSPleca {
+  background-color: transparent !important;
+  border-bottom: 1px solid var(--e-line) !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) .EMINUSPleca :where(.PlecaOverlay, .PlecaOverlayChange) {
+  padding: 32px 32px 14px !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) .EMINUSPleca .g-font-size-18 {
+  font-family: var(--e-serif) !important;
+  font-size: 2.6em !important;
+  font-weight: 700 !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.02em !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) m-course-list > .container > div::before {
+  content: "Cursos del periodo";
+  align-self: stretch;
+  margin: 32px 0 20px;
+  padding: 10px 0;
+  border-top: 4px double var(--bte-fg-strong);
+  border-bottom: 1px solid var(--e-line);
+  font-family: var(--e-serif);
+  font-size: 2.6em;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.1;
+}
+
+/* Cursos como columnas de periódico */
+html.bte[data-bte-style="editorial"]:not(#bte-z) mat-card.CourseCard {
+  margin: 0 !important;
+  padding: 4px 18px 18px !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  border-right: 1px solid var(--e-line) !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) m-course-list .container_courses > .d-flex > div:last-child mat-card.CourseCard {
+  border-right: 0 !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) mat-card.CourseCard .CardHeader,
+html.bte[data-bte-style="editorial"]:not(#bte-z) mat-card.CourseCard:hover .CardHeader {
+  background-color: transparent !important;
+  border: 0 !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) mat-card.CourseCard .CardHeaderContainer {
+  padding: 0 !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) mat-card.CourseCard .CardHeaderContainer b {
+  font-family: var(--e-serif) !important;
+  font-size: 1.35em !important;
+  font-weight: 700 !important;
+  line-height: 1.15 !important;
+  text-transform: capitalize;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) mat-card.CourseCard:hover .CardHeaderContainer b {
+  color: var(--bte-accent) !important;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) mat-card.CourseCard .CardBody {
+  padding: 8px 0 0 !important;
+  border: 0 !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) mat-card.CourseCard .CardBody > span {
+  font-variant: all-small-caps;
+  letter-spacing: 0.06em;
+  font-weight: 600 !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) mat-card.CourseCard .CardFooter {
+  padding: 6px 0 0 !important;
+  border: 0 !important;
+}
+
+/* Superficies sin caja */
+html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root, .modal) :where(mat-card, .mat-card, .mat-mdc-card, .card, .m-portlet, .kt-portlet, .m-alert, .alert, .cardInContent, .list-group-item) {
+  background-color: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--e-line) !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root) .d-brd-separator {
+  margin-top: 28px !important;
+  border-bottom: 4px double var(--bte-fg-strong) !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root) .d-brd-separator :where(h3, h4) {
+  font-size: 1.7em !important;
+}
+
+/* Módulos numerados en romanos */
+html.bte[data-bte-style="editorial"]:not(#bte-z) m-unit-list > div {
+  counter-reset: bte-unit;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) .m-kt-portlet-unit {
+  counter-increment: bte-unit;
+  padding: 14px 0 !important;
+  margin: 0 !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) .m-kt-portlet-unit::before {
+  content: counter(bte-unit, upper-roman) ".";
+  flex: 0 0 3.2em;
+  align-self: baseline;
+  color: var(--bte-accent);
+  font-family: var(--e-serif);
+  font-size: 1.25em;
+  font-weight: 600;
+  font-style: italic;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) .m-kt-portlet-unit .kt-portlet__head-title {
+  font-family: var(--e-serif) !important;
+  font-size: 1.35em !important;
+  font-weight: 600 !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) .m-kt-portlet-unit:hover .kt-portlet__head-title {
+  color: var(--bte-accent) !important;
+}
+
+/* Contenido docente: columna de lectura con capitular */
+html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root) .fr-view {
+  max-width: 66ch;
+  font-family: var(--e-serif) !important;
+  font-size: 1.12em;
+  line-height: 1.7;
+  hyphens: auto;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root) .fr-view * {
+  font-family: var(--e-serif) !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root) .fr-view > p:first-of-type::first-letter {
+  float: left;
+  margin: 0.08em 0.1em 0 0;
+  color: var(--bte-accent);
+  font-size: 3.4em;
+  font-weight: 700;
+  line-height: 0.85;
+}
+
+/* Botones: versalitas; el principal invertido */
+html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .mat-mdc-outlined-button, .btn, .input-group-text.btn-success) {
+  border: 1px solid var(--bte-fg-strong) !important;
+  font-variant: all-small-caps;
+  letter-spacing: 0.08em;
+  font-weight: 700 !important;
+  padding: 3px 14px !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.btn-success, .btn-primary, .mat-stroked-button-green, .input-group-text.btn-success) {
+  background-color: var(--bte-fg-strong) !important;
+  color: var(--bte-bg) !important;
+  border-color: var(--bte-fg-strong) !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(a, button, input, select, textarea, [role="tab"], [role="button"]):focus-visible {
+  outline: 2px solid var(--bte-accent) !important;
+  outline-offset: 2px !important;
+}
+
+/* Pestañas subrayadas en versalitas */
+html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-header, .mat-mdc-tab-header) {
+  border-bottom: 1px solid var(--e-line) !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-label, .mat-mdc-tab) {
+  font-variant: all-small-caps;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-label-active, .mdc-tab--active) {
+  background-color: transparent !important;
+  box-shadow: inset 0 -3px 0 var(--bte-accent) !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root) :where(.mdc-tab--active .mdc-tab__text-label, .mat-tab-label-active .mat-tab-label-content) {
+  color: var(--bte-fg-strong) !important;
+}
+
+/* Actividades como notas breves */
+html.bte[data-bte-style="editorial"]:not(#bte-z) app-root .activity-card[style*="border-color"] {
+  border-left: 3px solid var(--bte-st, var(--e-line)) !important;
+  padding-left: 6px !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) app-root .activity-card .card-title {
+  font-family: var(--e-serif) !important;
+  font-size: 1.35em !important;
+  font-weight: 600 !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) app-root .activity-card .flag-icon {
+  display: none;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) app-root .principal-card {
+  border: 0 !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) .cdk-overlay-container :where(.mat-menu-panel, .mat-mdc-menu-panel, .mat-select-panel, .mat-mdc-select-panel, .mdc-menu-surface, .mat-dialog-container, .mat-mdc-dialog-surface) {
+  border: 1px solid var(--bte-fg-strong) !important;
+}
+
+html.bte[data-bte-style="editorial"]:not(#bte-z) m-auth .m-login__title h1 {
+  font-family: var(--e-serif) !important;
+  font-style: italic;
+  font-size: 2.4em !important;
+}
+
+html.bte[data-bte-style="editorial"] .bte-window {
+  border: 1px solid var(--bte-fg-strong);
+  box-shadow: none;
+}
+
+html.bte[data-bte-style="editorial"] .bte-titlebar {
+  background: transparent;
+  color: var(--bte-fg-strong);
+  border-bottom: 4px double var(--bte-fg-strong);
+  font-variant: all-small-caps;
+  letter-spacing: 0.08em;
+}
+
+html.bte[data-bte-style="editorial"] .bte-prompt input {
+  font-family: "Newsreader", Georgia, serif !important;
+  font-size: 18px !important;
+  font-style: italic;
+}
+
+@media (max-width: 899px) {
+  html.bte[data-bte-style="editorial"]:not(#bte-z) mat-card.CourseCard {
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--e-line) !important;
+  }
+
+  html.bte[data-bte-style="editorial"]:not(#bte-z) .EMINUSPleca .g-font-size-18,
+  html.bte[data-bte-style="editorial"]:not(#bte-z) m-course-list > .container > div::before {
+    font-size: 1.8em !important;
+  }
+}
+
+/* ═══════════════════════════════ NEO ═══════════════════════════════
+ * Neobrutalismo: papel crema, bordes negros de 2px, sombras duras y
+ * bloques de color planos. Los controles "se hunden" al pulsarlos:
+ * respuesta táctil clara. Trae su propia paleta (contraste verificado:
+ * texto 17:1, estados ≥ 5:1, texto negro sobre cada bloque ≥ 8.9:1).
+ */
+
+html.bte[data-bte-style="neo"] {
+  --bte-bg: #fff4e0;
+  --bte-bg0: #ffffff;
+  --bte-bg1: #ffe8c2;
+  --bte-bg2: #ffd88a;
+  --bte-surface: #ffffff;
+  --bte-fg: #111111;
+  --bte-fg-strong: #000000;
+  --bte-dim: #4a4a4a;
+  --bte-border: #111111;
+  --bte-accent: #ffd23f;
+  --bte-accent-fg: #111111;
+  --bte-link: #1c4fd6;
+  --bte-red: #c41e3a;
+  --bte-green: #17783a;
+  --bte-yellow: #7a5c00;
+  --bte-blue: #1c4fd6;
+  --bte-purple: #7b2cbf;
+  --bte-aqua: #0b6f6a;
+  --bte-orange: #a8430a;
+  --bte-glow: none;
+  --bte-scheme: light;
+  --bte-header-h: 60px;
+
+  --nb-line: 2px solid #111;
+  --nb-shadow: 4px 4px 0 #111;
+  --nb-shadow-lg: 6px 6px 0 #111;
+  --nb-r: 10px;
+  --nb-yellow: #ffd23f;
+  --nb-pink: #ff8fb8;
+  --nb-blue: #8fc1ff;
+  --nb-green: #86e3a8;
+  --nb-lilac: #c7a6ff;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, m-auth, app-root) {
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: #111 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(:not(svg, svg *, img, video, canvas, iframe)) {
+  border-color: #111 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, app-root) :where(h1, h2, h3, h4) {
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
+  color: #000 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, app-root) :where(.text-muted, .GrayContrats, small, .TittlePleca, .kt-portlet_header-subtitle, .kt-portlet_header-element, .activity-time, .detail-label strong) {
+  color: #4a4a4a !important;
+}
+
+/* Encabezado amarillo */
+html.bte[data-bte-style="neo"]:not(#bte-z) m-header header,
+html.bte[data-bte-style="neo"]:not(#bte-z) m-header :where(.m-container, .m-stack, m-topbar, .m-topbar, .m-brand__tools),
+html.bte[data-bte-style="neo"]:not(#bte-z) m-header a.m-brand__logo-wrapper,
+html.bte[data-bte-style="neo"]:not(#bte-z) m-header a.m-brand__logo-wrapper + #bte-header-links {
+  height: 60px !important;
+  min-height: 60px !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) m-header header {
+  background-color: var(--nb-yellow) !important;
+  border-bottom: var(--nb-line) !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) m-header a.m-brand__logo-wrapper::before {
+  content: "eminus";
+  height: 38px;
+  margin-left: 14px;
+  padding: 0 14px;
+  border: var(--nb-line);
+  border-radius: var(--nb-r);
+  background: #111;
+  color: var(--nb-yellow);
+  font-size: 1.2em;
+  font-weight: 800;
+  box-shadow: 3px 3px 0 #fff;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) m-header a.m-brand__logo-wrapper::after {
+  color: #111;
+  font-weight: 700;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) #bte-header-links {
+  gap: 8px;
+  align-items: center !important;
+  border-left: 0 !important;
+}
+
+
+html.bte[data-bte-style="neo"]:not(#bte-z) #bte-header-links button {
+  height: 34px;
+  padding: 0 12px !important;
+  border: var(--nb-line) !important;
+  border-radius: var(--nb-r) !important;
+  background-color: #fff !important;
+  color: #111 !important;
+  font-weight: 800;
+  box-shadow: 3px 3px 0 #111;
+  transition: transform 0.08s, box-shadow 0.08s !important;
+  transition-duration: 0.08s !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) #bte-header-links button:hover {
+  background-color: var(--nb-pink) !important;
+  color: #111 !important;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #111;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) #bte-header-links button:active,
+html.bte[data-bte-style="neo"]:not(#bte-z) #bte-header-links button[aria-pressed="true"] {
+  background-color: var(--nb-blue) !important;
+  color: #111 !important;
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) m-header :where(m-user-profile) .h5,
+html.bte[data-bte-style="neo"]:not(#bte-z) m-header m-notification i {
+  color: #111 !important;
+  font-weight: 700 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) m-header :where(m-user-profile) img {
+  width: 34px !important;
+  height: 34px !important;
+  border: var(--nb-line);
+  border-radius: 50% !important;
+}
+
+/* Barra lateral */
+@media (min-width: 900px) {
+  html.bte[data-bte-style="neo"]:not(#bte-z) main.layout-main > m-aside-left.m-aside-left {
+    top: 60px !important;
+    height: calc(100vh - 84px) !important;
+    flex-basis: 220px;
+    width: 220px !important;
+    padding: 14px 12px !important;
+    background-color: #fff4e0 !important;
+    border-right: var(--nb-line) !important;
+  }
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) #m_ver_menu .m-menu__link {
+  margin: 0 0 6px !important;
+  padding: 7px 10px !important;
+  border: 2px solid transparent !important;
+  border-radius: var(--nb-r) !important;
+  font-weight: 700;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) #m_ver_menu .m-menu__link-text {
+  font-weight: 700 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) #m_ver_menu .m-menu__link-icon {
+  color: #111 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) #m_ver_menu .m-menu__item:hover > .m-menu__link {
+  background-color: #fff !important;
+  border-color: #111 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) #m_ver_menu .m-menu__item--active > .m-menu__link {
+  background-color: var(--nb-pink) !important;
+  border-color: #111 !important;
+  color: #111 !important;
+  box-shadow: 3px 3px 0 #111 !important;
+}
+
+/* Cabecera de curso: bloque azul */
+html.bte[data-bte-style="neo"]:not(#bte-z) .EMINUSPleca {
+  margin: 16px 16px 0 !important;
+  border: var(--nb-line) !important;
+  border-radius: 14px !important;
+  background-color: var(--nb-blue) !important;
+  box-shadow: var(--nb-shadow-lg) !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) .EMINUSPleca :where(.PlecaOverlay, .PlecaOverlayChange) {
+  padding: 20px 24px !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) .EMINUSPleca .g-font-size-18 {
+  font-size: 1.9em !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) .EMINUSPleca .TittlePleca {
+  color: #111 !important;
+  font-weight: 700 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) m-course-list > .container > div::before {
+  content: "Tus cursos";
+  align-self: flex-start;
+  margin: 28px 0 18px;
+  padding: 4px 16px;
+  border: var(--nb-line);
+  border-radius: var(--nb-r);
+  background: var(--nb-green);
+  box-shadow: var(--nb-shadow);
+  font-size: 2.2em;
+  font-weight: 800;
+  line-height: 1.2;
+  transform: rotate(-1.5deg);
+}
+
+/* Tarjetas con sombra dura y cabecera de color */
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, app-root, .modal) :where(mat-card, .mat-card, .mat-mdc-card, .card, .m-portlet, .kt-portlet, .m-alert, .alert, .cardInContent, .list-group-item, .mat-expansion-panel) {
+  border: var(--nb-line) !important;
+  border-radius: 14px !important;
+  background-color: #fff !important;
+  box-shadow: var(--nb-shadow) !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) mat-card.CourseCard {
+  --nb-card: var(--nb-yellow);
+  margin: 6px 12px 26px !important;
+  overflow: hidden;
+  transition: transform 0.1s, box-shadow 0.1s !important;
+  transition-duration: 0.1s !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) m-course-list .container_courses > .d-flex > div:nth-of-type(4n + 2) mat-card.CourseCard { --nb-card: var(--nb-pink); }
+html.bte[data-bte-style="neo"]:not(#bte-z) m-course-list .container_courses > .d-flex > div:nth-of-type(4n + 3) mat-card.CourseCard { --nb-card: var(--nb-blue); }
+html.bte[data-bte-style="neo"]:not(#bte-z) m-course-list .container_courses > .d-flex > div:nth-of-type(4n + 4) mat-card.CourseCard { --nb-card: var(--nb-green); }
+
+html.bte[data-bte-style="neo"]:not(#bte-z) mat-card.CourseCard:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 #111 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) mat-card.CourseCard:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 #111 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) mat-card.CourseCard .CardHeader,
+html.bte[data-bte-style="neo"]:not(#bte-z) mat-card.CourseCard:hover .CardHeader {
+  background-color: var(--nb-card) !important;
+  border-bottom: var(--nb-line) !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) mat-card.CourseCard .CardHeaderContainer {
+  padding: 14px 16px !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) mat-card.CourseCard .CardHeaderContainer b {
+  color: #111 !important;
+  font-size: 1.1em !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) mat-card.CourseCard .CardBody {
+  padding: 12px 16px !important;
+  border-bottom: var(--nb-line) !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) mat-card.CourseCard .CardBody > span {
+  color: #111 !important;
+  font-weight: 600 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) mat-card.CourseCard .CardBody > span b {
+  padding: 1px 8px;
+  border: var(--nb-line);
+  border-radius: 999px !important;
+  background: var(--nb-lilac) !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) mat-card.CourseCard .CardFooter {
+  padding: 8px 16px !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) mat-card.CourseCard .CardFooter i,
+html.bte[data-bte-style="neo"]:not(#bte-z) mat-card.CourseCard .hiddebutton mat-icon {
+  color: #111 !important;
+}
+
+/* Módulos */
+html.bte[data-bte-style="neo"]:not(#bte-z) .m-kt-portlet-unit {
+  padding: 14px 18px !important;
+  margin-bottom: 14px !important;
+  transition: transform 0.1s, box-shadow 0.1s !important;
+  transition-duration: 0.1s !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) .m-kt-portlet-unit:hover {
+  background-color: var(--nb-yellow) !important;
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #111 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) .m-kt-portlet-unit .m-alert__icon {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border: var(--nb-line);
+  border-radius: 10px;
+  background-color: var(--nb-lilac) !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) .m-kt-portlet-unit .m-alert__icon i {
+  color: #111 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) .m-kt-portlet-unit .kt-portlet__head-title {
+  font-weight: 800 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, app-root) .d-brd-separator {
+  border-bottom: 0 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, app-root) .d-brd-separator :where(h3, h4) {
+  display: inline-block;
+  padding: 2px 12px;
+  border: var(--nb-line);
+  border-radius: var(--nb-r);
+  background: var(--nb-yellow);
+  box-shadow: 3px 3px 0 #111;
+  font-size: 1.2em !important;
+}
+
+/* Botones que se hunden */
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .mat-mdc-outlined-button, .btn, .input-group-text.btn-success) {
+  padding: 6px 16px !important;
+  border: var(--nb-line) !important;
+  border-radius: var(--nb-r) !important;
+  background-color: #fff !important;
+  color: #111 !important;
+  font-weight: 800 !important;
+  box-shadow: 3px 3px 0 #111 !important;
+  transition: transform 0.08s, box-shadow 0.08s !important;
+  transition-duration: 0.08s !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.btn-success, .btn-primary, .mat-stroked-button-green, .input-group-text.btn-success, .mat-primary.mat-flat-button) {
+  background-color: var(--nb-yellow) !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .mat-mdc-outlined-button, .btn, .input-group-text.btn-success):hover {
+  background-color: var(--nb-pink) !important;
+  color: #111 !important;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #111 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .btn, .input-group-text.btn-success):active {
+  transform: translate(3px, 3px);
+  box-shadow: none !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, m-auth, app-root) .input-group-text.btn-success i {
+  color: #111 !important;
+}
+
+/* Campos */
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) :where(.form-control, textarea, select) {
+  border: var(--nb-line) !important;
+  border-radius: var(--nb-r) !important;
+  background-color: #fff !important;
+  color: #111 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, app-root, .cdk-overlay-container, .modal) :where(.form-control, textarea, select):focus {
+  box-shadow: 3px 3px 0 #111 !important;
+  background-color: #fffbe8 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(a, button, input, select, textarea, [role="tab"], [role="button"]):focus-visible {
+  outline: 3px solid var(--bte-link) !important;
+  outline-offset: 3px !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) m-course-list .SEARCH_BAR_BOX .input-group {
+  height: 50px;
+  border: var(--nb-line) !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: var(--nb-shadow) !important;
+  overflow: hidden;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) m-course-list .SEARCH_BAR {
+  height: 46px !important;
+  padding-left: 16px !important;
+  font-weight: 600;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) m-course-list .FILTER_BOX > div {
+  border: var(--nb-line) !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: 3px 3px 0 #111 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) m-course-list .container_courses {
+  border-top: 0 !important;
+}
+
+/* Pestañas como botones */
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-header, .mat-mdc-tab-header) {
+  border-bottom: 0 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-labels, .mat-mdc-tab-labels) {
+  gap: 8px;
+  padding: 4px 4px 8px;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-label, .mat-mdc-tab) {
+  height: 38px !important;
+  border: var(--nb-line) !important;
+  border-radius: var(--nb-r) !important;
+  background-color: #fff !important;
+  color: #111 !important;
+  font-weight: 800;
+  box-shadow: 3px 3px 0 #111 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-label-active, .mdc-tab--active) {
+  background-color: var(--nb-green) !important;
+  transform: translate(3px, 3px);
+  box-shadow: none !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, app-root) :where(.mdc-tab--active .mdc-tab__text-label, .mat-tab-label-active .mat-tab-label-content) {
+  color: #111 !important;
+}
+
+/* Actividades: bloque de estado a la izquierda */
+html.bte[data-bte-style="neo"]:not(#bte-z) app-root .principal-card {
+  border: 0 !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) app-root .activity-card[style*="border-color"] {
+  margin: 16px 8px 0 !important;
+  border: var(--nb-line) !important;
+  border-left: 12px solid var(--bte-st, #111) !important;
+  box-shadow: var(--nb-shadow) !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) app-root .activity-card .card-title {
+  font-weight: 800 !important;
+  font-size: 1.15em !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) app-root .activity-card .card-text strong {
+  color: #17783a !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) app-root .FILTER_BOX .row {
+  border: var(--nb-line) !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: 3px 3px 0 #111 !important;
+}
+
+/* Menús y diálogos */
+html.bte[data-bte-style="neo"]:not(#bte-z) .cdk-overlay-container :where(.mat-menu-panel, .mat-mdc-menu-panel, .mat-select-panel, .mat-mdc-select-panel, .mat-autocomplete-panel, .mdc-menu-surface, .mat-datepicker-content),
+html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, app-root) .dropdown-menu {
+  border: var(--nb-line) !important;
+  border-radius: 12px !important;
+  background-color: #fff !important;
+  box-shadow: var(--nb-shadow) !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) .cdk-overlay-container :where(.mat-menu-item, .mat-mdc-menu-item, .mat-option, .mat-mdc-option):hover,
+html.bte[data-bte-style="neo"]:not(#bte-z) .cdk-overlay-container :where(.mat-option.mat-active, .mat-mdc-option.mat-mdc-option-active) {
+  background-color: var(--nb-yellow) !important;
+  color: #111 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) .cdk-overlay-container :where(.mat-dialog-container, .mat-mdc-dialog-surface, .mdc-dialog__surface),
+html.bte[data-bte-style="neo"]:not(#bte-z) .modal .modal-content {
+  border: var(--nb-line) !important;
+  border-radius: 16px !important;
+  background-color: #fff !important;
+  box-shadow: 8px 8px 0 #111 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) .cdk-overlay-container :where(.mat-tooltip, .mdc-tooltip__surface) {
+  border: var(--nb-line) !important;
+  border-radius: 8px !important;
+  background-color: #111 !important;
+  color: var(--nb-yellow) !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) m-pages > footer {
+  border-top: var(--nb-line) !important;
+  color: #111 !important;
+}
+
+/* Login */
+html.bte[data-bte-style="neo"]:not(#bte-z) m-auth .m-login__body {
+  border: var(--nb-line) !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 8px 8px 0 #111 !important;
+}
+
+html.bte[data-bte-style="neo"]:not(#bte-z) m-auth .m-login__title h1 {
+  font-weight: 800 !important;
+  font-size: 2em !important;
+}
+
+/* UI propia */
+html.bte[data-bte-style="neo"] .bte-window {
+  border: 2px solid #111;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 8px 8px 0 #111;
+}
+
+html.bte[data-bte-style="neo"] .bte-titlebar {
+  background: #ffd23f;
+  color: #111;
+  border-bottom: 2px solid #111;
+}
+
+html.bte[data-bte-style="neo"] .bte-prompt {
+  margin: 10px;
+  border: 2px solid #111;
+  border-radius: 10px;
+  background: #fff;
+}
+
+html.bte[data-bte-style="neo"] .bte-item {
+  margin: 2px 8px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+}
+
+html.bte[data-bte-style="neo"] .bte-item[aria-selected="true"] {
+  background: #ff8fb8;
+  color: #111;
+  border-color: #111;
+}
+
+html.bte[data-bte-style="neo"] .bte-item[aria-selected="true"] :is(.bte-item-meta, .bte-item-mark, mark) {
+  color: #111;
+}
+
+html.bte[data-bte-style="neo"] .bte-footer {
+  background: #fff4e0;
+  border-top: 2px solid #111;
+  color: #111;
+}
+
+html.bte[data-bte-style="neo"] #bte-statusline {
+  background: #111;
+  border-top: 2px solid #111;
+  color: #fff4e0;
+}
+
+html.bte[data-bte-style="neo"] #bte-statusline .bte-mode {
+  background: #ffd23f;
+  color: #111;
+}
+
+html.bte[data-bte-style="neo"] #bte-statusline .bte-theme {
+  background: #ff8fb8;
+  color: #111;
+}
+
+html.bte[data-bte-style="neo"] #bte-statusline .bte-clock {
+  background: #8fc1ff;
+  color: #111;
+  border: 0;
+}
+
+html.bte[data-bte-style="neo"] #bte-statusline :is(.bte-msg, .bte-hint) {
+  color: #fff4e0;
+}
+
+html.bte[data-bte-style="neo"] #bte-statusline kbd {
+  color: #ffd23f;
+}
+
+html.bte[data-bte-style="neo"] #bte-toast {
+  border: 2px solid #111;
+  border-radius: 12px;
+  background: #ffd23f;
+  color: #111;
+  box-shadow: 4px 4px 0 #111;
+}
+
+@media (max-width: 899px) {
+  html.bte[data-bte-style="neo"]:not(#bte-z) main.layout-main > m-aside-left.m-aside-left {
+    background-color: #fff4e0 !important;
+    border-right: var(--nb-line) !important;
+  }
+
+  html.bte[data-bte-style="neo"]:not(#bte-z) .EMINUSPleca {
+    margin: 10px 10px 0 !important;
+  }
+
+  html.bte[data-bte-style="neo"]:not(#bte-z) .EMINUSPleca .g-font-size-18 {
+    font-size: 1.45em !important;
+  }
+}
+
+@media (max-width: 760px) {
+  html.bte[data-bte-style="neo"]:not(#bte-z) m-header a.m-brand__logo-wrapper::before {
+    content: "e";
+    padding: 0 12px;
+  }
+
+  html.bte[data-bte-style="neo"]:not(#bte-z) #bte-header-links {
+    gap: 5px;
+  }
+
+  html.bte[data-bte-style="neo"]:not(#bte-z) #bte-header-links button {
+    height: 30px;
+    padding: 0 7px !important;
+    font-size: 0.88em;
+    box-shadow: 2px 2px 0 #111;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, app-root) * {
+    transform: none !important;
+  }
+}
