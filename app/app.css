@@ -772,3 +772,26 @@ mark {
   .row { grid-template-columns: 2ch 12ch minmax(0, 1fr); }
   .row .course { display: none; }
 }
+
+/* ─────────────── fondo con foto (bg.js) ─────────────── */
+
+/* El lienzo (#bte-bg, reglas en src/bg.css) queda detrás; los paneles son
+   translúcidos para que la foto se vea y el texto se siga leyendo. */
+html.bte.bte-has-bg body {
+  background: transparent;
+}
+
+html.bte.bte-has-bg .pane,
+html.bte.bte-has-bg .splash {
+  background: color-mix(in oklab, var(--bte-bg) var(--bte-panel-alpha, 65%), transparent);
+}
+
+/* La etiqueta corta el borde del panel: casi opaca para que no se cruce. */
+html.bte.bte-has-bg .pane-title {
+  background: color-mix(in oklab, var(--bte-bg) 92%, transparent);
+}
+
+html.bte.bte-has-bg .topbar,
+html.bte.bte-has-bg .statusline {
+  background: color-mix(in oklab, var(--bte-bg0) 85%, transparent);
+}

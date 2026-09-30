@@ -27,6 +27,7 @@
   const themeGroup = (t) => (t.a11y ? "accesibles" : t.dark ? "oscuros" : "claros");
 
   let prefs = bte.sanitize(null);
+  const inTab = location.hash === "#fondo";
 
   const render = () => {
     root.dataset.bteTheme = prefs.theme;
@@ -52,6 +53,57 @@
       li.tabIndex = selected ? 0 : -1;
       li.firstElementChild.textContent = selected ? "❯" : " ";
     }
+    renderBg();
+  };
+
+  const renderBg = () => {
+    bte.bg.sync(prefs);
+    const meta = bte.bg.info();
+    $("bg-pick").textContent = meta ? "[ cambiar… ]" : "[ elegir… ]";
+    $("bg-clear").hidden = !meta;
+    $("bg-opts").hidden = !meta;
+    $("bg-strength").value = prefs.bgStrength;
+    $("bg-strength-value").textContent = prefs.bgStrength + "%";
+    $("bg-panel").value = prefs.bgPanel;
+    $("bg-panel-value").textContent = prefs.bgPanel + "%";
+    $("bg-zoom").value = prefs.bgZoom;
+    $("bg-zoom-value").textContent = Math.round(prefs.bgZoom) + "%";
+    $("bg-rotate").value = prefs.bgRotate;
+    $("bg-rotate-value").textContent = prefs.bgRotate + "°";
+    $("bg-flipx").setAttribute("aria-pressed", String(prefs.bgFlipX));
+    $("bg-flipy").setAttribute("aria-pressed", String(prefs.bgFlipY));
+    $("bg-card").value = prefs.bgCard;
+    $("bg-card-value").textContent = prefs.bgCard + "%";
+    $("bg-palette").checked = prefs.bgPalette;
+    for (const b of $("bg-style").querySelectorAll("button")) {
+      b.setAttribute("aria-pressed", String(b.dataset.v === prefs.bgStyle));
+    }
+    $("bg-note").textContent = !meta
+      ? ""
+      : !prefs.bgPalette
+        ? ""
+        : meta.tone
+          ? "(colores tomados de la foto)"
+          : "(la foto casi no tiene color: se queda el tema)";
+  };
+
+  const renderThumb = async () => {
+    const data = bte.bg.info() ? await bte.bg.image() : null;
+    const thumb = $("bg-thumb");
+    thumb.style.backgroundImage = data ? `url("${data}")` : "";
+    thumb.textContent = data ? "" : "ninguno";
+  };
+
+  const setBgFile = async (file) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    $("bg-thumb").textContent = "…";
+    try {
+      await bte.bg.setFile(file);
+    } catch (_) {
+      $("bg-note").textContent = "(no se pudo leer la imagen)";
+    }
+    renderBg();
+    renderThumb();
   };
 
   // Se pinta antes de guardar: el cambio se ve al instante.
@@ -148,6 +200,7 @@
     buildThemes();
     buildFonts();
     prefs = await bte.loadPrefs();
+    await bte.bg.ready.catch(() => {});
     render();
 
     $("open-app").addEventListener("click", async () => {
@@ -168,6 +221,82 @@
     $("zoom-in").addEventListener("click", () => save({ fontSize: prefs.fontSize + 1 }));
     $("zoom-out").addEventListener("click", () => save({ fontSize: prefs.fontSize - 1 }));
     $("zoom-reset").addEventListener("click", () => save({ fontSize: 14 }));
+
+    // El diálogo de archivos cierra el popup en muchos sistemas: desde el
+    // popup se abre esta misma página en una pestaña y ahí se elige.
+    if (inTab) {
+      root.classList.add("bte-tab");
+      $("fondo").scrollIntoView({ block: "center" });
+    }
+    $("bg-pick").addEventListener("click", () => {
+      if (inTab) $("bg-file").click();
+      else chrome.tabs.create({ url: chrome.runtime.getURL("popup/popup.html#fondo") }).then(() => window.close());
+    });
+    $("bg-file").addEventListener("change", (e) => setBgFile(e.target.files[0]));
+    $("bg-clear").addEventListener("click", async () => {
+      await bte.bg.clear();
+      renderBg();
+      renderThumb();
+    });
+    $("bg-style").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-v]");
+      if (b) save({ bgStyle: b.dataset.v });
+    });
+    $("bg-strength").addEventListener("input", (e) => {
+      $("bg-strength-value").textContent = e.target.value + "%";
+    });
+    $("bg-strength").addEventListener("change", (e) => save({ bgStrength: Number(e.target.value) }));
+    $("bg-panel").addEventListener("input", (e) => {
+      $("bg-panel-value").textContent = e.target.value + "%";
+    });
+    $("bg-panel").addEventListener("change", (e) => save({ bgPanel: Number(e.target.value) }));
+    $("bg-zoom").addEventListener("input", (e) => {
+      $("bg-zoom-value").textContent = e.target.value + "%";
+    });
+    $("bg-zoom").addEventListener("change", (e) => save({ bgZoom: Number(e.target.value) }));
+    $("bg-rotate").addEventListener("input", (e) => {
+      $("bg-rotate-value").textContent = e.target.value + "°";
+    });
+    $("bg-rotate").addEventListener("change", (e) => save({ bgRotate: Number(e.target.value) }));
+    $("bg-flipx").addEventListener("click", () => save({ bgFlipX: !prefs.bgFlipX }));
+    $("bg-flipy").addEventListener("click", () => save({ bgFlipY: !prefs.bgFlipY }));
+    $("bg-reset").addEventListener("click", () => save({ ...bte.BG_FRAME_DEFAULTS }));
+    $("bg-edit").addEventListener("click", async () => {
+      // Se acomoda sobre la página de Eminus abierta; si no hay, se avisa.
+      try {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        const res = await chrome.tabs.sendMessage(tab.id, { type: "bte:bgEdit" });
+        if (res && res.ok) window.close();
+        else $("bg-note").textContent = "(activa el reskin y elige una imagen)";
+      } catch (_) {
+        $("bg-note").textContent = "(abre eminus en esta pestaña para acomodar)";
+      }
+    });
+    $("bg-card").addEventListener("input", (e) => {
+      $("bg-card-value").textContent = e.target.value + "%";
+    });
+    $("bg-card").addEventListener("change", (e) => save({ bgCard: Number(e.target.value) }));
+    $("bg-palette").addEventListener("change", (e) => save({ bgPalette: e.target.checked }));
+    if (inTab) {
+      document.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        root.classList.add("drag");
+      });
+      document.addEventListener("dragleave", () => root.classList.remove("drag"));
+      document.addEventListener("drop", (e) => {
+        e.preventDefault();
+        root.classList.remove("drag");
+        setBgFile(e.dataTransfer.files[0]);
+      });
+    }
+    // La imagen se guarda desde otra pestaña: aquí sólo se refresca.
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === "local" && "bteBgMeta" in changes) {
+        renderBg();
+        renderThumb();
+      }
+    });
+    renderThumb();
 
     bte.onPrefsChanged((next) => {
       prefs = next;

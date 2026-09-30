@@ -251,3 +251,58 @@ output {
 .toggle input:disabled ~ span {
   opacity: 0.45;
 }
+
+/* ─────────────── fondo ─────────────── */
+
+.thumb {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 42px;
+  border: 1px solid var(--bte-border);
+  background: var(--bte-bg0) center / cover no-repeat;
+  color: var(--bte-dim);
+  font-size: 11px;
+}
+
+.seg span,
+.lbl {
+  min-width: 11ch;
+  color: var(--bte-dim);
+}
+
+.seg button[aria-pressed="true"] {
+  background: var(--bte-accent);
+  color: var(--bte-accent-fg);
+}
+
+input[type="range"] {
+  flex: 1;
+  accent-color: var(--bte-accent);
+}
+
+/* Abierto en pestaña para elegir la imagen: el diálogo de archivos cierra
+   el popup, así que el selector vive aquí. */
+html.bte-tab body {
+  margin: 32px auto;
+  border: 1px solid var(--bte-border);
+}
+
+html.bte-tab #fondo {
+  outline: 1px dashed var(--bte-accent);
+  outline-offset: 4px;
+}
+
+html.bte-tab.drag #fondo {
+  background: var(--bte-bg1);
+}
+
+.frame-btns button[aria-pressed="true"] {
+  background: var(--bte-accent);
+  color: var(--bte-accent-fg);
+}
+
+#bg-edit {
+  margin-top: 4px;
+}

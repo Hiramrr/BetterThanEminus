@@ -29,22 +29,32 @@ El estilo cambia la forma y el tema cambia los colores. Se combinan como quieras
 | Estilo | Para qué |
 |--------|----------|
 | **tui** | Terminal: monoespaciada, bordes de 1px, corchetes, menú numerado y atajos a la vista |
-| **nube** | Claro y suave, inspirado en cap.so: página gris claro, contenido en un panel grande con cielo pálido, títulos en Instrument Sans de peso normal, texto largo en Source Serif ligera, botón principal azul "vidrio" y controles segmentados. Usa sus propios colores |
+| **nube** | Claro y suave, inspirado en cap.so: página gris claro, contenido en un panel grande con cielo pálido, títulos en Instrument Sans de peso normal, texto largo en Source Serif, botón principal azul "vidrio" y controles segmentados. Usa sus propios colores |
 | **enfoque** | Para leer: sin cajas, cursos en lista de una columna, títulos serif y contenido docente a 70 caracteres por línea |
 | **compacto** | Densidad: fuente del sistema a 13px, cursos en retícula apretada, filas de 30px con cebra y actividades en una línea. Ves el doble sin desplazarte |
-| **editorial** | Periódico: mancheta en cursiva, doble filete, titulares en Newsreader, etiquetas en versalitas, módulos en números romanos y capitular en el contenido docente |
+| **editorial** | Periódico: mancheta en cursiva, doble filete, titulares en Newsreader, etiquetas en versalitas y módulos en números romanos |
 | **neo** | Neobrutalismo: bordes negros de 2px, sombras duras, bloques de color y botones que se hunden al pulsarlos. Usa sus propios colores (contraste verificado) |
 | **retro 95** | Ventanas, barras de título azules, botones con bisel y barra de tareas. Usa sus propios colores |
 
 ### Temas de color
 
-17 temas, agrupados en el popup. Todos los propios tienen contraste verificado (WCAG): texto ≥ 10:1, texto secundario y colores de estado ≥ 4.5:1, texto de botón ≥ 4.5:1 sobre el acento.
+17 temas, agrupados en el popup. Todos tienen contraste verificado (WCAG): texto ≥ 7:1 (≥ 10:1 en los propios), texto secundario y colores de estado ≥ 4.5:1, texto de botón ≥ 4.5:1 sobre el acento.
 
 | Grupo | Temas |
 |-------|-------|
 | Oscuros | gruvbox, tokyo night, catppuccin mocha, nord, phosphor, amber, **medianoche** (azul tinta y ámbar), **terracota** (barro, arena y teja), **océano** (petróleo y turquesa), **grafito** (gris neutro con un solo acento lima) |
 | Claros | gruvbox light, paper, **matcha** (crema y verde bosque), **lavanda** (lila y ciruela), **sakura** (rosa pétalo y cereza) |
 | Accesibles | **alto contraste** (negro, blanco y amarillo, con foco de 3px y enlaces siempre subrayados) y **daltonismo** (estados con la paleta Okabe-Ito; además la barra de estado de cada actividad cambia de patrón, no sólo de color) |
+
+### Fondo con foto
+
+Desde el popup (sección **fondo**) eliges una imagen que queda detrás de Eminus, tramada con puntos (Bayer 8×8) y fundida hacia el color de fondo del tema, o lisa. El encabezado, el menú lateral y la tarjeta principal se vuelven translúcidos. Opcionalmente, **colores de la foto como tema**: se toma el tono dominante de la imagen y se arma con él la paleta (neutros teñidos y acento), en claro u oscuro según el tema o estilo elegido. Se ajustan la intensidad de la foto y la opacidad de los paneles de Eminus.
+
+Puedes acomodar la imagen: *fondo: acomodar…* (en `:` o desde el popup) desvanece Eminus y te deja arrastrarla para moverla, hacer zoom con la rueda (o `+`/`-`), girarla con shift + rueda, `[` `]` o `r` (90°), voltearla con `h`/`v` y restablecer con `0`; `enter` guarda y `esc` cancela. Zoom, giro y volteos también están como deslizadores y comandos en `:` y en el popup. Al elegir otra imagen el encuadre vuelve a empezar.
+
+La foto también se ve en la vista tui (agenda, cursos, miyu, tareas calificadas), con los paneles translúcidos.
+
+Se controla desde la paleta de comandos (`:` → *fondo: elegir imagen…*, tramado/liso, deslizadores de *intensidad* de la foto y *opacidad de eminus* en la misma lista —se mueven con ← →—, colores de la foto, quitar) o desde el popup. Como el diálogo de archivos cierra el popup, ahí *elegir…* abre el popup en una pestaña, donde también puedes arrastrar la imagen.
 
 ### Reskin de Eminus
 
@@ -104,6 +114,7 @@ En la vista tui: `1`/`2`/`3`/`4` vistas (agenda, cursos, miyu, tareas calificada
 ## Datos y privacidad
 
 - Los borradores se guardan en el `localStorage` de eminus.uv.mx (sólo en este navegador, se borran solos a los 14 días). Los recientes, en `chrome.storage.local`.
+- La imagen de fondo se reduce a 1920px y se guarda en `chrome.storage.local` (sólo en este navegador).
 - Las preferencias (tema, fuente, zoom, detalles) se guardan en `chrome.storage.sync`, con un espejo en `localStorage` para pintar el tema sin parpadeo.
 - La vista tui necesita tu sesión: el content script pasa el `accessToken` de Eminus al service worker, que lo guarda sólo en `chrome.storage.session` (en memoria, se borra al cerrar Chrome). También se cachean ahí los cursos y actividades de la sesión.
 - Sólo se consulta `https://eminus.uv.mx`. Las fuentes se cargan de Google Fonts.
@@ -116,6 +127,7 @@ En la vista tui: `1`/`2`/`3`/`4` vistas (agenda, cursos, miyu, tareas calificada
 | `background.js` | Relevo del token hacia la vista tui |
 | `src/prefs.js` | Preferencias, temas y fuentes |
 | `src/boot.js` | Aplica el tema en `document_start` |
+| `src/bg.js` · `src/bg.css` | Fondo con foto: tramado y paleta tomada de la imagen |
 | `src/themes.css` | Paletas |
 | `src/tui.css` | Reskin de Eminus y UI propia |
 | `src/styles.css` | Estilos nube, enfoque, compacto, editorial, neo y retro 95 |

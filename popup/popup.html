@@ -37,6 +37,62 @@
       <ul class="themes" id="themes" role="listbox" aria-label="Tema de color"></ul>
     </section>
 
+    <section id="fondo">
+      <h2>fondo <span class="note" id="bg-note"></span></h2>
+      <div class="row bg-pick">
+        <span class="thumb" id="bg-thumb">ninguno</span>
+        <button type="button" id="bg-pick">[ elegir… ]</button>
+        <button type="button" id="bg-clear" class="dim" hidden>[ quitar ]</button>
+        <input type="file" id="bg-file" accept="image/*" hidden />
+      </div>
+      <div id="bg-opts" hidden>
+        <div class="row seg" id="bg-style">
+          <span>efecto</span>
+          <button type="button" data-v="dither">[ tramado ]</button>
+          <button type="button" data-v="plain">[ liso ]</button>
+        </div>
+        <div class="row">
+          <span class="lbl">intensidad</span>
+          <input type="range" id="bg-strength" min="10" max="100" step="5" aria-label="Intensidad del fondo" />
+          <output id="bg-strength-value"></output>
+        </div>
+        <div class="row">
+          <span class="lbl">paneles</span>
+          <input type="range" id="bg-panel" min="0" max="100" step="5" aria-label="Opacidad del encabezado, menú y paneles" />
+          <output id="bg-panel-value"></output>
+        </div>
+        <div class="row">
+          <span class="lbl">tarjetas</span>
+          <input type="range" id="bg-card" min="0" max="100" step="5" aria-label="Opacidad de las tarjetas de curso" />
+          <output id="bg-card-value"></output>
+        </div>
+        <div class="row">
+          <span class="lbl">zoom</span>
+          <input type="range" id="bg-zoom" min="50" max="400" step="10" aria-label="Zoom de la imagen" />
+          <output id="bg-zoom-value"></output>
+        </div>
+        <div class="row">
+          <span class="lbl">giro</span>
+          <input type="range" id="bg-rotate" min="-180" max="180" step="5" aria-label="Giro de la imagen" />
+          <output id="bg-rotate-value"></output>
+        </div>
+        <div class="row frame-btns">
+          <span class="lbl">voltear</span>
+          <button type="button" id="bg-flipx" title="Voltear horizontal">[ ⇋ ]</button>
+          <button type="button" id="bg-flipy" title="Voltear vertical">[ ⇵ ]</button>
+          <button type="button" id="bg-reset" class="dim" title="Centrar, sin zoom ni giro">[ restablecer ]</button>
+        </div>
+        <div class="row">
+          <button type="button" id="bg-edit" class="open-app">❯ acomodar en eminus</button>
+        </div>
+        <label class="row toggle" for="bg-palette">
+          <input type="checkbox" id="bg-palette" />
+          <span class="box" aria-hidden="true"></span>
+          <span>colores de la foto como tema</span>
+        </label>
+      </div>
+    </section>
+
     <section>
       <h2>fuente</h2>
       <div class="row">
@@ -77,6 +133,7 @@
   </main>
 
   <script src="../src/prefs.js"></script>
+  <script src="../src/bg.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

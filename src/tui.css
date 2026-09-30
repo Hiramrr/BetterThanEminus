@@ -31,6 +31,18 @@ html.bte.bte-top:not(#bte-z) :where(m-pages, m-auth, body > app-root) {
   zoom: var(--bte-zoom, 1);
 }
 
+/* Dentro de un elemento con zoom, Chrome también escala 100vh: con zoom
+   menor al 100 % la barra lateral quedaba corta (hueco abajo) y con zoom
+   mayor se salía de la ventana. Las alturas "hasta abajo" se dividen entre
+   --bte-vz, que sólo vale el zoom donde se aplica (marco superior). */
+html.bte {
+  --bte-vz: 1;
+}
+
+html.bte.bte-top {
+  --bte-vz: var(--bte-zoom, 1);
+}
+
 html.bte:not(#bte-z)
   :where(m-pages, m-auth, app-root, .cdk-overlay-container, .m-splash-screen, .modal, .swal2-container)
   :where(:not(svg, svg *, img, video, canvas, iframe, input[type="color"])) {
@@ -318,7 +330,7 @@ html.bte:not(#bte-z) .m-aside-left {
     align-self: flex-start;
     flex: 0 0 180px;
     width: 180px !important;
-    height: calc(100vh - 60px) !important;
+    height: calc((100vh - 24px) / var(--bte-vz) - 36px) !important;
     overflow-y: auto;
     left: auto !important;
   }
@@ -352,7 +364,7 @@ html.bte:not(#bte-z) .m-aside-left {
     align-self: flex-start;
     flex: 0 0 52px;
     width: 52px !important;
-    height: calc(100vh - var(--bte-header-h) - 24px) !important;
+    height: calc((100vh - 24px) / var(--bte-vz) - var(--bte-header-h)) !important;
     overflow-y: auto;
   }
 
@@ -906,6 +918,30 @@ html.bte:not(#bte-z) :where(m-pages, app-root) .fr-view img {
   opacity: 1;
 }
 
+/* Recursos del contenido: en pantallas anchas Eminus pone el texto y la
+   columna de «me gusta»/comentarios lado a lado, y el texto del siguiente
+   recurso se cuela en el hueco. Siempre en una columna: contenido a todo lo
+   ancho y debajo la valoración y los comentarios (la fila interna del
+   comentario conserva sus columnas). */
+html.bte:not(#bte-z) :where(m-pages, app-root) .row:has(.fr-view, .kt-portlet__body-editor, .kt-portlet__body-rating, .kt-portlet__body-comment) {
+  flex-wrap: wrap !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) .row:has(.fr-view, .kt-portlet__body-editor, .kt-portlet__body-rating, .kt-portlet__body-comment)
+  > [class*="col-"]:not(:where(.kt-portlet__body-comment, .mIV-bg-Comments, .mIV-content-insert-comment) *) {
+  flex: 0 0 100% !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  float: none !important;
+}
+
+html.bte:not(#bte-z) :where(m-pages, app-root) :where(.kt-portlet__body-editor, .kt-portlet__body-rating, .kt-portlet__body-comment) {
+  float: none !important;
+  clear: both;
+  width: auto !important;
+  max-width: 100% !important;
+}
+
 /* ───────────────── formularios y botones ───────────────── */
 
 html.bte:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]), textarea, select, .form-control) {
@@ -1257,14 +1293,48 @@ html.bte:not(#bte-z) :where(m-pages, app-root) :where(.badge, .mat-chip, .mat-md
 
 /* ─────────────────────── pie de página ─────────────────────── */
 
+/* El pie deja libres los 24px de la barra de estado. Se reservan como
+   relleno del propio pie y no como margen: con margen quedaba una franja
+   vacía debajo y, con fondo de foto, el pie se veía flotando. */
 html.bte:not(#bte-z) m-pages > footer {
   position: static !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
   padding: 8px 20px !important;
   font-size: 0.8em !important;
+  line-height: 1.4 !important;
+  text-align: center !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
   color: var(--bte-dim) !important;
   border-top: 1px dashed var(--bte-border) !important;
   background-color: var(--bte-bg) !important;
-  margin-bottom: 24px;
+}
+
+html.bte:not(#bte-z) m-pages > footer * {
+  float: none !important;
+  width: auto !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  white-space: normal !important;
+}
+
+html.bte.bte-top:not(#bte-z) m-pages > footer {
+  padding-bottom: calc(8px + 24px / var(--bte-zoom, 1)) !important;
+}
+
+@media (max-width: 600px) {
+  html.bte:not(#bte-z) m-pages > footer {
+    padding: 6px 12px !important;
+    font-size: 0.72em !important;
+  }
+
+  html.bte.bte-top:not(#bte-z) m-pages > footer {
+    padding-bottom: calc(6px + 24px / var(--bte-zoom, 1)) !important;
+  }
 }
 
 /* ────────────────── iframe de actividades ────────────────── */
@@ -1496,7 +1566,7 @@ html.bte:not(#bte-z) m-auth .m-login__wrapper {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: calc(100vh / var(--bte-vz));
   padding: 24px 16px !important;
 }
 
@@ -2178,4 +2248,30 @@ html:not(.bte) #bte-toast {
 @media (prefers-reduced-motion: reduce) {
   .bte-window, #bte-toast { animation: none; }
   html.bte m-auth .m-login__title h1::after { animation: none; }
+}
+
+/* Filas de la paleta con deslizador */
+.bte-item .bte-item-slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: none;
+  overflow: visible;
+}
+
+.bte-item-range {
+  width: 18ch;
+  margin: 0;
+  accent-color: var(--bte-accent);
+  cursor: pointer;
+}
+
+.bte-item[aria-selected="true"] .bte-item-range {
+  accent-color: var(--bte-accent-fg);
+}
+
+.bte-item-value {
+  min-width: 4ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }

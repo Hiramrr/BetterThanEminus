@@ -92,6 +92,10 @@
   };
 
   // items: [{ group, label, meta, hint, keywords, run }]
+  // Un item con `range: { min, max, step, value, format, onInput, onCommit }`
+  // se dibuja con un deslizador en la misma fila: ← → lo mueven cuando está
+  // seleccionado, onInput da la vista previa y onCommit guarda (con un respiro,
+  // y siempre al cerrar la paleta).
   // `items` puede ser una función async; se muestra "cargando" mientras llega.
   bte.openPalette = ({ title = "comandos", placeholder = "escribe para filtrar…", sigil = ":", items, initialQuery = "" }) => {
     const el = showWindow(
@@ -110,9 +114,35 @@
           <span><kbd>esc</kbd> cerrar</span>
         </div>
       </div>`,
-      () => bte.setMode && bte.setMode()
+      () => {
+        flushRanges();
+        bte.setMode && bte.setMode();
+      }
     );
     bte.setMode && bte.setMode("cmd");
+
+    const pending = new Map(); // item → timeout del guardado
+    const commitRange = (item) => {
+      clearTimeout(pending.get(item));
+      pending.delete(item);
+      if (item.range.onCommit) item.range.onCommit(item.range.value);
+    };
+    const flushRanges = () => [...pending.keys()].forEach(commitRange);
+    const setRange = (item, value, row) => {
+      const r = item.range;
+      const v = Math.min(r.max, Math.max(r.min, Math.round(value / r.step) * r.step));
+      if (v === r.value) return;
+      r.value = v;
+      if (row) {
+        const slider = row.querySelector(".bte-item-range");
+        if (slider) slider.value = v;
+        const out = row.querySelector(".bte-item-value");
+        if (out) out.textContent = (r.format || String)(v);
+      }
+      if (r.onInput) r.onInput(v);
+      clearTimeout(pending.get(item));
+      pending.set(item, setTimeout(() => commitRange(item), 350));
+    };
 
     const input = el.querySelector("input");
     const list = el.querySelector(".bte-list");
@@ -160,10 +190,14 @@
           lastGroup = item.group;
         }
         const meta = grouped ? item.meta || "" : item.meta || item.group || "";
-        html += `<li class="bte-item" role="option" data-index="${index}" aria-selected="${index === selected}">
+        const r = item.range;
+        const right = r
+          ? `<span class="bte-item-meta bte-item-slider"><input type="range" class="bte-item-range" tabindex="-1" min="${r.min}" max="${r.max}" step="${r.step}" value="${r.value}" aria-label="${esc(item.label)}" /><output class="bte-item-value">${esc((r.format || String)(r.value))}</output></span>`
+          : `<span class="bte-item-meta">${item.hint ? `<kbd>${esc(item.hint)}</kbd> ` : ""}${esc(meta)}</span>`;
+        html += `<li class="bte-item${r ? " bte-item-has-range" : ""}" role="option" data-index="${index}" aria-selected="${index === selected}">
           <span class="bte-item-mark">${index === selected ? "❯" : " "}</span>
           <span class="bte-item-label">${highlight(item.label, hits)}</span>
-          <span class="bte-item-meta">${item.hint ? `<kbd>${esc(item.hint)}</kbd> ` : ""}${esc(meta)}</span>
+          ${right}
         </li>`;
       });
       list.innerHTML = html;
@@ -217,9 +251,16 @@
           input.value = entry.item.label;
           render();
         }
+      } else if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && shown[selected] && shown[selected].item.range) {
+        // Sobre un deslizador, las flechas lo mueven en vez del cursor de texto.
+        e.preventDefault();
+        const item = shown[selected].item;
+        const step = item.range.step * (e.shiftKey ? 4 : 1);
+        setRange(item, item.range.value + (e.key === "ArrowRight" ? step : -step), list.querySelector(`.bte-item[data-index="${selected}"]`));
       } else if (e.key === "Enter") {
         e.preventDefault();
-        run(selected);
+        if (shown[selected] && shown[selected].item.range) bte.closeOverlay();
+        else run(selected);
       } else if (e.key === "Backspace" && !input.value && sigil !== ":") {
         // En una subpaleta, borrar con el campo vacío vuelve a la principal.
         e.preventDefault();
@@ -232,6 +273,8 @@
     input.addEventListener("keypress", (e) => e.stopPropagation());
 
     list.addEventListener("mousemove", (e) => {
+      // Mientras se arrastra un deslizador no se redibuja la lista.
+      if (e.buttons) return;
       const li = e.target.closest(".bte-item");
       if (!li) return;
       const index = Number(li.dataset.index);
@@ -242,7 +285,19 @@
     });
     list.addEventListener("click", (e) => {
       const li = e.target.closest(".bte-item");
-      if (li) run(Number(li.dataset.index));
+      if (!li) return;
+      const entry = shown[Number(li.dataset.index)];
+      // En una fila con deslizador el clic no ejecuta nada: el foco vuelve al
+      // campo de texto para seguir con ← →.
+      if (entry && entry.item.range) input.focus();
+      else run(Number(li.dataset.index));
+    });
+    list.addEventListener("input", (e) => {
+      const slider = e.target.closest(".bte-item-range");
+      if (!slider) return;
+      const li = slider.closest(".bte-item");
+      const entry = shown[Number(li.dataset.index)];
+      if (entry) setRange(entry.item, Number(slider.value), li);
     });
 
     input.value = initialQuery;

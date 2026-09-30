@@ -1,0 +1,193 @@
+/*
+ * Fondo con foto (bg.js). El lienzo va fijo detrás de todo, como hijo de
+ * <html>; body y el área principal se vuelven transparentes y el encabezado,
+ * el menú lateral y la tarjeta principal quedan translúcidos para que el
+ * texto se siga leyendo. El doble :not(#…) gana a los fondos fijos de
+ * nube, neo y retro.
+ */
+
+#bte-bg {
+  display: none;
+}
+
+html.bte.bte-has-bg #bte-bg {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: var(--bte-bg-strength, 0.7);
+}
+
+#bte-bg canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+html.bte.bte-has-bg:not(#bte-z):not(#bte-y) body,
+html.bte.bte-has-bg:not(#bte-z):not(#bte-y) main.layout-main {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+html.bte.bte-has-bg:not(#bte-z):not(#bte-y) :where(m-header header, .m-aside-left, main.layout-main > .ContentFromMain, m-pages > footer) {
+  /* Sin backdrop-filter: volvería a estos contenedores el bloque contenedor de
+     sus hijos position: fixed (menús y modales de Eminus). */
+  background-color: color-mix(in oklab, var(--bte-bg) var(--bte-panel-alpha, 65%), transparent) !important;
+  background-image: none !important;
+}
+
+/* Tarjetas de curso, portlets y cajas: el fondo de cada estilo mezclado con
+   transparente según --bte-card-alpha. --bte-card-base y --bte-card-head son
+   el color que la tarjeta y su cabecera tienen en cada estilo. */
+html.bte.bte-has-bg {
+  --bte-card-base: var(--bte-bg);
+  --bte-card-head: var(--bte-bg1);
+}
+
+html.bte.bte-has-bg:is([data-bte-style="nube"], [data-bte-style="neo"], [data-bte-style="retro"], [data-bte-style="compacto"]) {
+  --bte-card-base: var(--bte-surface);
+  --bte-card-head: transparent;
+}
+
+html.bte.bte-has-bg:is([data-bte-style="enfoque"], [data-bte-style="editorial"]) {
+  --bte-card-base: transparent;
+  --bte-card-head: transparent;
+}
+
+html.bte.bte-has-bg:not(#bte-z):not(#bte-y) :where(m-pages, app-root) :where(mat-card, .mat-card, .mat-mdc-card, .card, .m-portlet, .kt-portlet, .m-alert, .alert, .cardInContent, .list-group-item, .mat-expansion-panel) {
+  background-color: color-mix(in oklab, var(--bte-card-base) var(--bte-card-alpha, 85%), transparent) !important;
+}
+
+html.bte.bte-has-bg:not(#bte-z):not(#bte-y) :where(m-pages, app-root) :where(mat-card.CourseCard .CardHeader, .card-header, .card-footer, .kt-portlet__head) {
+  background-color: color-mix(in oklab, var(--bte-card-head) var(--bte-card-alpha, 85%), transparent) !important;
+}
+
+/* En neo la cabecera es de color (amarillo, rosa…): se conserva el tono. */
+html.bte.bte-has-bg[data-bte-style="neo"]:not(#bte-z):not(#bte-y) mat-card.CourseCard .CardHeader {
+  background-color: color-mix(in oklab, var(--nb-card) var(--bte-card-alpha, 85%), transparent) !important;
+}
+
+/* ─── acomodar la imagen (bte.bg.edit) ─── */
+
+/* Eminus se desvanece para ver la foto completa mientras se acomoda. */
+html.bte.bte-bg-editing body {
+  opacity: 0.12 !important;
+  transition: opacity 0.15s;
+}
+
+#bte-bg-edit {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483600;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+#bte-bg-edit.dragging {
+  cursor: grabbing;
+}
+
+.bte-bg-edit-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 12px;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  padding: 8px 12px;
+  background: var(--bte-bg0);
+  color: var(--bte-fg);
+  border: 1px solid var(--bte-border);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  font: 12.5px/1.4 var(--bte-font, ui-monospace, monospace);
+  cursor: default;
+}
+
+.bte-bg-edit-title {
+  color: var(--bte-accent);
+  font-weight: 700;
+}
+
+.bte-bg-edit-label {
+  color: var(--bte-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.bte-bg-edit-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.bte-bg-edit-bar button {
+  min-width: 28px;
+  padding: 2px 8px;
+  font: inherit;
+  color: var(--bte-fg);
+  background: var(--bte-bg1);
+  border: 1px solid var(--bte-border);
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.bte-bg-edit-bar button:hover {
+  background: var(--bte-bg2);
+}
+
+.bte-bg-edit-bar button.bte-bg-edit-save {
+  background: var(--bte-accent);
+  color: var(--bte-accent-fg);
+  border-color: var(--bte-accent);
+  font-weight: 700;
+}
+
+.bte-bg-edit-hint {
+  flex-basis: 100%;
+  text-align: center;
+  color: var(--bte-dim);
+  font-size: 11.5px;
+}
+
+@media (max-width: 600px) {
+  .bte-bg-edit-bar {
+    bottom: 8px;
+    padding: 6px 8px;
+  }
+
+  .bte-bg-edit-hint {
+    display: none;
+  }
+}
+
+/* Capa en vivo (bg.js): la foto con transform CSS mientras se acomoda; al
+   quedarse quieta se cambia por el tramado. Imita el desvanecido hacia abajo. */
+#bte-bg .bte-bg-live-img {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: none;
+  transform-origin: 0 0;
+  will-change: transform;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 20%, rgba(0, 0, 0, 0.45) 100%);
+  mask-image: linear-gradient(to bottom, #000 20%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+#bte-bg.bte-bg-live .bte-bg-live-img {
+  display: block;
+}
+
+#bte-bg.bte-bg-live canvas {
+  visibility: hidden;
+}

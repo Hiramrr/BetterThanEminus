@@ -294,6 +294,98 @@
     return next;
   };
 
+  // ───────────── fondo con foto ─────────────
+
+  // Se llama desde la paleta al pulsar enter o clic: todavía hay activación
+  // del usuario, así que el diálogo de archivos se puede abrir aquí mismo.
+  const pickBackground = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.addEventListener("change", async () => {
+      const file = input.files[0];
+      if (!file || !file.type.startsWith("image/")) return;
+      bte.toast("fondo: procesando imagen…");
+      try {
+        const meta = await bte.bg.setFile(file);
+        const colors = bte.prefs.bgPalette ? (meta.tone ? " · colores tomados de la foto" : " · la foto casi no tiene color") : "";
+        bte.toast("fondo: listo" + colors);
+      } catch (_) {
+        bte.toast("fondo: no se pudo leer la imagen");
+      }
+    });
+    input.click();
+  };
+
+  const backgroundItems = () => {
+    const items = [{ group: "fondo", label: "fondo: " + (bte.bg.info() ? "cambiar imagen…" : "elegir imagen…"), keywords: "background foto imagen wallpaper", run: pickBackground }];
+    if (!bte.bg.info()) return items;
+    const p = bte.prefs;
+    // Vista previa en vivo en el marco superior (donde está el lienzo); se
+    // guarda al soltar y de ahí llega a la vista tui y a los demás marcos.
+    const preview = (name, value) => (topDoc || document).documentElement.style.setProperty(name, value);
+    items.push(
+      { group: "fondo", label: "fondo: " + (p.bgStyle === "dither" ? "liso (sin tramado)" : "tramado con puntos"), keywords: "background dither puntos efecto", run: () => setPrefs({ bgStyle: p.bgStyle === "dither" ? "plain" : "dither" }) },
+      { group: "fondo", label: (p.bgPalette ? "usar colores del tema" : "usar colores de la foto como tema"), keywords: "fondo background paleta colores foto", run: () => setPrefs({ bgPalette: !p.bgPalette }) },
+      {
+        group: "fondo",
+        label: "fondo: intensidad",
+        keywords: "background foto opacidad slider deslizador tenue intenso",
+        range: {
+          min: 10, max: 100, step: 5, value: p.bgStrength, format: (v) => v + "%",
+          onInput: (v) => preview("--bte-bg-strength", String(v / 100)),
+          onCommit: (v) => setPrefs({ bgStrength: v })
+        }
+      },
+      {
+        group: "fondo",
+        label: "fondo: opacidad de paneles",
+        keywords: "background encabezado menu lateral vista tui transparencia translucido slider deslizador eminus",
+        range: {
+          min: 0, max: 100, step: 5, value: p.bgPanel, format: (v) => v + "%",
+          onInput: (v) => preview("--bte-panel-alpha", v + "%"),
+          onCommit: (v) => setPrefs({ bgPanel: v })
+        }
+      },
+      {
+        group: "fondo",
+        label: "fondo: opacidad de tarjetas",
+        keywords: "background cursos cajas portlets transparencia translucido slider deslizador eminus",
+        range: {
+          min: 0, max: 100, step: 5, value: p.bgCard, format: (v) => v + "%",
+          onInput: (v) => preview("--bte-card-alpha", v + "%"),
+          onCommit: (v) => setPrefs({ bgCard: v })
+        }
+      },
+      { group: "fondo", label: "fondo: acomodar (mover, zoom, girar)…", keywords: "background encuadre posicion mover arrastrar rotar girar voltear espejo zoom", run: () => sendToTop("bgEdit") },
+      {
+        group: "fondo",
+        label: "fondo: zoom",
+        keywords: "background acercar alejar escala tamaño slider deslizador",
+        range: {
+          min: 50, max: 400, step: 10, value: Math.round(p.bgZoom / 10) * 10, format: (v) => v + "%",
+          onInput: (v) => sendToTop("bgPreview", { bgZoom: v }),
+          onCommit: (v) => setPrefs({ bgZoom: v }).then(() => sendToTop("bgPreview", null))
+        }
+      },
+      {
+        group: "fondo",
+        label: "fondo: girar",
+        keywords: "background rotar rotacion angulo grados slider deslizador",
+        range: {
+          min: -180, max: 180, step: 5, value: Math.round(p.bgRotate / 5) * 5, format: (v) => v + "°",
+          onInput: (v) => sendToTop("bgPreview", { bgRotate: v }),
+          onCommit: (v) => setPrefs({ bgRotate: v }).then(() => sendToTop("bgPreview", null))
+        }
+      },
+      { group: "fondo", label: "fondo: voltear horizontal", meta: p.bgFlipX ? "● volteada" : "", keywords: "background espejo reflejar invertir", run: () => setPrefs({ bgFlipX: !p.bgFlipX }) },
+      { group: "fondo", label: "fondo: voltear vertical", meta: p.bgFlipY ? "● volteada" : "", keywords: "background espejo reflejar invertir de cabeza", run: () => setPrefs({ bgFlipY: !p.bgFlipY }) },
+      { group: "fondo", label: "fondo: restablecer encuadre", keywords: "background centrar reiniciar posicion zoom giro", run: () => setPrefs({ ...bte.BG_FRAME_DEFAULTS }).then(() => bte.toast("fondo: encuadre restablecido")) },
+      { group: "fondo", label: "fondo: quitar imagen", keywords: "background borrar eliminar", run: () => bte.bg.clear().then(() => bte.toast("fondo: quitado")) }
+    );
+    return items;
+  };
+
   // ───────────── recientes ─────────────
 
   const RECENT_KEY = "bteRecent";
@@ -533,6 +625,8 @@
       { group: "apariencia", label: "desactivar reskin (eminus original)", hint: "alt ⇧ b", keywords: "apagar off original tema", run: () => toggleEnabled() }
     );
 
+    items.push(...backgroundItems());
+
     items.push(
       { group: "herramientas", label: (readingOn() ? "salir del" : "entrar al") + " modo lectura", hint: "z", keywords: "leer enfoque concentracion", run: () => toggleReading() },
       { group: "herramientas", label: "borradores guardados…", keywords: "draft recuperar texto perdido", run: () => bte.openPalette({ title: "borradores", sigil: "✎", items: draftItems() }) }
@@ -569,6 +663,8 @@
       case "app": bte.showApp(arg || "agenda"); break;
       case "toast": bte.toast(String(arg || "")); break;
       case "mode": if (!bte.overlayOpen()) bte.setMode(arg === "nav" ? "nav" : "normal"); break;
+      case "bgEdit": if (!bte.bg.edit()) bte.toast("fondo: primero elige una imagen"); break;
+      case "bgPreview": bte.bg.preview(arg && typeof arg === "object" ? arg : null); break;
       default: break;
     }
   };
@@ -954,7 +1050,13 @@
   // El popup pide abrir la vista en la pestaña actual.
   if (bte.isTop && runtimeAlive()) {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      if (sender.id !== chrome.runtime.id || !message || message.type !== "bte:showApp") return false;
+      if (sender.id !== chrome.runtime.id || !message) return false;
+      if (message.type === "bte:bgEdit") {
+        bte.hideApp && bte.appOpen() && bte.hideApp();
+        sendResponse({ ok: bte.bg.edit() });
+        return false;
+      }
+      if (message.type !== "bte:showApp") return false;
       bte.showApp(message.view);
       sendResponse({ ok: true });
       return false;

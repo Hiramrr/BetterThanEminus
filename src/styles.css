@@ -150,23 +150,23 @@ html.bte[data-bte-style="nube"] {
   --bte-surface: #ffffff;
   --bte-fg: #111111;
   --bte-fg-strong: #111111;
-  --bte-dim: #7a7f87;
+  --bte-dim: #5d6570;
   --bte-border: #dde4eb;
-  --bte-accent: #3f7fcd;
+  --bte-accent: #2f6bb8;
   --bte-accent-fg: #ffffff;
-  --bte-link: #2f6fbf;
-  --bte-red: #d2452f;
-  --bte-green: #2f8a57;
-  --bte-yellow: #b7791f;
-  --bte-blue: #3f7fcd;
-  --bte-purple: #7c5cd6;
-  --bte-aqua: #2b8a8a;
-  --bte-orange: #d0661e;
+  --bte-link: #2560a8;
+  --bte-red: #b3321f;
+  --bte-green: #22704a;
+  --bte-yellow: #855a0c;
+  --bte-blue: #2f6bb8;
+  --bte-purple: #6545c0;
+  --bte-aqua: #1e6b6b;
+  --bte-orange: #a24b0e;
   --bte-glow: none;
   --bte-scheme: light;
 
-  --n-ink-2: rgba(17, 17, 17, 0.78);
-  --n-ink-3: rgba(17, 17, 17, 0.5);
+  --n-ink-2: rgba(17, 17, 17, 0.86);
+  --n-ink-3: rgba(17, 17, 17, 0.68);
   --n-line: #dde4eb;
   --n-line-2: #d3dce6;
   --n-ring: 0 0 0 1px rgba(17, 17, 17, 0.045);
@@ -210,7 +210,7 @@ html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) :where(.fr
 html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) .fr-view {
   max-width: 68ch;
   font-size: 1.07em;
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1.7;
   color: var(--n-ink-2) !important;
 }
@@ -307,7 +307,7 @@ html.bte[data-bte-style="nube"]:not(#bte-z) m-header m-notification i {
     top: var(--n-header) !important;
     flex-basis: 224px;
     width: 224px !important;
-    height: calc(100vh - var(--n-header) - 24px) !important;
+    height: calc((100vh - 24px) / var(--bte-vz) - var(--n-header)) !important;
     padding: 8px 12px !important;
     background-color: #f2f2f2 !important;
     border-right: 0 !important;
@@ -342,7 +342,7 @@ html.bte[data-bte-style="nube"]:not(#bte-z) #m_ver_menu .m-menu__item--active > 
 }
 
 html.bte[data-bte-style="nube"]:not(#bte-z) #m_ver_menu .m-menu__item--active .m-menu__link-icon {
-  color: #3f7fcd !important;
+  color: var(--bte-accent) !important;
 }
 
 /* ── Panel principal: la "tarjeta grande" con cielo arriba ── */
@@ -389,7 +389,7 @@ html.bte[data-bte-style="nube"]:not(#bte-z) .EMINUSPleca .g-font-size-18 {
 
 html.bte[data-bte-style="nube"]:not(#bte-z) .EMINUSPleca .TittlePleca {
   font-family: var(--n-serif) !important;
-  font-weight: 300 !important;
+  font-weight: 400 !important;
   font-size: 1.05em !important;
 }
 
@@ -488,7 +488,7 @@ html.bte[data-bte-style="nube"]:not(#bte-z) mat-card.CourseCard .CardBody {
 
 html.bte[data-bte-style="nube"]:not(#bte-z) mat-card.CourseCard .CardBody > span {
   font-family: var(--n-serif) !important;
-  font-weight: 300 !important;
+  font-weight: 400 !important;
   font-size: 0.92em !important;
   color: var(--n-ink-2) !important;
 }
@@ -601,7 +601,7 @@ html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, m-auth, app-root, .c
 }
 
 html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, m-auth, app-root) .input-group-text.btn-success i {
-  color: #3f7fcd !important;
+  color: var(--bte-accent) !important;
 }
 
 html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(.mat-button, .mat-mdc-button) {
@@ -626,15 +626,15 @@ html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, m-auth, app-root, .c
 }
 
 html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) a:not(.m-menu__link, .mat-button, .mat-mdc-button, .btn) {
-  color: #111 !important;
+  color: var(--bte-link) !important;
   text-decoration: underline !important;
-  text-decoration-color: #c9d3de !important;
+  text-decoration-color: rgba(37, 96, 168, 0.4) !important;
   text-underline-offset: 4px;
 }
 
 html.bte[data-bte-style="nube"]:not(#bte-z) :where(m-pages, app-root) a:not(.m-menu__link, .mat-button, .mat-mdc-button, .btn):hover {
   background-color: transparent !important;
-  color: #3f7fcd !important;
+  color: #111 !important;
   text-decoration-color: currentColor !important;
 }
 
@@ -694,7 +694,7 @@ html.bte[data-bte-style="nube"]:not(#bte-z) app-root .activity-card .flag-icon {
 }
 
 html.bte[data-bte-style="nube"]:not(#bte-z) app-root .activity-card .card-text strong {
-  color: #2f8a57 !important;
+  color: var(--bte-green) !important;
   font-weight: 500 !important;
 }
 
@@ -819,7 +819,7 @@ html.bte[data-bte-style="nube"] .bte-prompt {
 }
 
 html.bte[data-bte-style="nube"] .bte-prompt-sigil {
-  color: #3f7fcd;
+  color: var(--bte-accent);
 }
 
 html.bte[data-bte-style="nube"] .bte-item {
@@ -834,7 +834,7 @@ html.bte[data-bte-style="nube"] .bte-item[aria-selected="true"] {
 }
 
 html.bte[data-bte-style="nube"] .bte-item[aria-selected="true"] :is(.bte-item-meta, .bte-item-mark, mark) {
-  color: #2f6fbf;
+  color: var(--bte-link);
 }
 
 html.bte[data-bte-style="nube"] .bte-footer {
@@ -844,11 +844,10 @@ html.bte[data-bte-style="nube"] .bte-footer {
 
 html.bte[data-bte-style="nube"] .bte-help {
   font-family: var(--n-serif);
-  font-weight: 300;
 }
 
 html.bte[data-bte-style="nube"] .bte-help pre {
-  color: #3f7fcd;
+  color: var(--bte-link);
 }
 
 html.bte[data-bte-style="nube"] #bte-overlay {
@@ -1046,7 +1045,7 @@ html.bte[data-bte-style="enfoque"]:not(#bte-z) #bte-header-links button[aria-pre
     top: var(--f-header) !important;
     flex-basis: 210px;
     width: 210px !important;
-    height: calc(100vh - var(--f-header) - 24px) !important;
+    height: calc((100vh - 24px) / var(--bte-vz) - var(--f-header)) !important;
     padding: 20px 8px !important;
     background-color: var(--bte-bg) !important;
     border-right: 1px solid var(--f-line) !important;
@@ -1304,10 +1303,10 @@ html.bte[data-bte-style="enfoque"] #bte-statusline .bte-mode {
 
 /* Paleta propia: el tema elegido no aplica en este estilo. */
 html.bte[data-bte-style="retro"] {
-  --bte-bg: #008080;
+  --bte-bg: #c0c0c0;
   --bte-bg0: #ffffff;
   --bte-bg1: #c0c0c0;
-  --bte-bg2: #000080;
+  --bte-bg2: #dfdfdf;
   --bte-surface: #c0c0c0;
   --bte-fg: #000000;
   --bte-fg-strong: #000000;
@@ -1316,13 +1315,13 @@ html.bte[data-bte-style="retro"] {
   --bte-accent: #000080;
   --bte-accent-fg: #ffffff;
   --bte-link: #0000ee;
-  --bte-red: #c00000;
-  --bte-green: #007000;
-  --bte-yellow: #806000;
+  --bte-red: #a00000;
+  --bte-green: #005a00;
+  --bte-yellow: #5e4600;
   --bte-blue: #000080;
   --bte-purple: #800080;
-  --bte-aqua: #006d6d;
-  --bte-orange: #b04000;
+  --bte-aqua: #005252;
+  --bte-orange: #8a3300;
   --bte-glow: none;
   --bte-scheme: light;
   --r-raised: inset -1px -1px #0a0a0a, inset 1px 1px #ffffff, inset -2px -2px #808080, inset 2px 2px #dfdfdf;
@@ -1333,7 +1332,6 @@ html.bte[data-bte-style="retro"] {
 
 html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) {
   font-size: 13px;
-  -webkit-font-smoothing: none;
 }
 
 html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(:not(svg, svg *, img, video, canvas, iframe)) {
@@ -1341,6 +1339,7 @@ html.bte[data-bte-style="retro"]:not(#bte-z) :where(m-pages, m-auth, app-root, .
 }
 
 /* Escritorio verde azulado; el contenido va en ventanas grises */
+html.bte[data-bte-style="retro"]:not(#bte-z),
 html.bte[data-bte-style="retro"]:not(#bte-z) main.layout-main,
 html.bte[data-bte-style="retro"]:not(#bte-z) .ContentFromMain,
 html.bte[data-bte-style="retro"]:not(#bte-z) body {
@@ -1439,7 +1438,7 @@ html.bte[data-bte-style="retro"]:not(#bte-z) m-header m-notification i {
 @media (min-width: 900px) {
   html.bte[data-bte-style="retro"]:not(#bte-z) main.layout-main > m-aside-left.m-aside-left {
     top: 40px !important;
-    height: calc(100vh - 64px) !important;
+    height: calc((100vh - 24px) / var(--bte-vz) - 40px) !important;
     flex-basis: 200px;
     width: 200px !important;
     padding: 4px !important;
@@ -2077,7 +2076,6 @@ html.bte[data-bte-style="compacto"]:not(#bte-z) app-root .activity-card .d-flex.
 
 html.bte[data-bte-style="compacto"]:not(#bte-z) app-root .activity-card .detail-row {
   padding: 0 12px 0 0 !important;
-  font-size: 0.92em;
 }
 
 html.bte[data-bte-style="compacto"]:not(#bte-z) app-root .activity-card hr {
@@ -2146,8 +2144,8 @@ html.bte[data-bte-style="compacto"] .bte-item {
 
 /* ═══════════════════════════════ EDITORIAL ═══════════════════════════════
  * Periódico / revista: titulares en serif (Newsreader), etiquetas en
- * Libre Franklin, doble filete bajo la cabecera, módulos numerados en
- * romanos y capitular en el contenido docente. Usa los colores del tema.
+ * Libre Franklin, doble filete bajo la cabecera y módulos numerados en
+ * romanos. Usa los colores del tema.
  */
 
 html.bte[data-bte-style="editorial"] {
@@ -2174,9 +2172,9 @@ html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root) :wher
 
 /* Etiquetas: versalitas */
 html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root)
-  :where(.TittlePleca, .kt-portlet_header-subtitle, .kt-portlet_header-element, .detail-label, .activity-time, th, .mat-header-cell, .mat-mdc-header-cell) {
+  :where(.TittlePleca, .kt-portlet_header-subtitle, .detail-label strong, th, .mat-header-cell, .mat-mdc-header-cell) {
   font-variant: all-small-caps;
-  letter-spacing: 0.06em !important;
+  letter-spacing: 0.04em !important;
   font-weight: 600 !important;
 }
 
@@ -2217,9 +2215,6 @@ html.bte[data-bte-style="editorial"]:not(#bte-z) m-header a.m-brand__logo-wrappe
 html.bte[data-bte-style="editorial"]:not(#bte-z) m-header a.m-brand__logo-wrapper::after {
   padding-left: 14px;
   border-left: 1px solid var(--e-line);
-  font-variant: all-small-caps;
-  letter-spacing: 0.08em;
-  font-weight: 600;
 }
 
 html.bte[data-bte-style="editorial"]:not(#bte-z) #bte-header-links {
@@ -2243,11 +2238,11 @@ html.bte[data-bte-style="editorial"]:not(#bte-z) #bte-header-links button[aria-p
   text-underline-offset: 6px;
 }
 
-/* Índice lateral en versalitas */
+/* Índice lateral */
 @media (min-width: 900px) {
   html.bte[data-bte-style="editorial"]:not(#bte-z) main.layout-main > m-aside-left.m-aside-left {
     top: var(--e-header) !important;
-    height: calc(100vh - var(--e-header) - 24px) !important;
+    height: calc((100vh - 24px) / var(--bte-vz) - var(--e-header)) !important;
     flex-basis: 200px;
     width: 200px !important;
     padding: 20px 0 !important;
@@ -2271,10 +2266,7 @@ html.bte[data-bte-style="editorial"]:not(#bte-z) #m_ver_menu .m-menu__link {
 }
 
 html.bte[data-bte-style="editorial"]:not(#bte-z) #m_ver_menu .m-menu__link-text {
-  font-variant: all-small-caps;
-  letter-spacing: 0.07em;
-  font-weight: 600 !important;
-  font-size: 1.02em !important;
+  font-weight: 500 !important;
 }
 
 html.bte[data-bte-style="editorial"]:not(#bte-z) #m_ver_menu .m-menu__item:hover > .m-menu__link,
@@ -2285,10 +2277,8 @@ html.bte[data-bte-style="editorial"]:not(#bte-z) #m_ver_menu .m-menu__item--acti
 
 html.bte[data-bte-style="editorial"]:not(#bte-z) #m_ver_menu .m-menu__item--active .m-menu__link-text {
   font-family: var(--e-serif) !important;
-  font-variant: normal;
   font-style: italic;
   font-size: 1.15em !important;
-  letter-spacing: 0;
 }
 
 /* Cabecera de curso: titular centrado entre filetes */
@@ -2367,9 +2357,7 @@ html.bte[data-bte-style="editorial"]:not(#bte-z) mat-card.CourseCard .CardBody {
 }
 
 html.bte[data-bte-style="editorial"]:not(#bte-z) mat-card.CourseCard .CardBody > span {
-  font-variant: all-small-caps;
-  letter-spacing: 0.06em;
-  font-weight: 600 !important;
+  color: var(--bte-dim) !important;
 }
 
 html.bte[data-bte-style="editorial"]:not(#bte-z) mat-card.CourseCard .CardFooter {
@@ -2425,7 +2413,7 @@ html.bte[data-bte-style="editorial"]:not(#bte-z) .m-kt-portlet-unit:hover .kt-po
   color: var(--bte-accent) !important;
 }
 
-/* Contenido docente: columna de lectura con capitular */
+/* Contenido docente: columna de lectura */
 html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root) .fr-view {
   max-width: 66ch;
   font-family: var(--e-serif) !important;
@@ -2436,15 +2424,6 @@ html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root) .fr-v
 
 html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root) .fr-view * {
   font-family: var(--e-serif) !important;
-}
-
-html.bte[data-bte-style="editorial"]:not(#bte-z) :where(m-pages, app-root) .fr-view > p:first-of-type::first-letter {
-  float: left;
-  margin: 0.08em 0.1em 0 0;
-  color: var(--bte-accent);
-  font-size: 3.4em;
-  font-weight: 700;
-  line-height: 0.85;
 }
 
 /* Botones: versalitas; el principal invertido */
@@ -2567,8 +2546,8 @@ html.bte[data-bte-style="neo"] {
   --bte-fg-strong: #000000;
   --bte-dim: #4a4a4a;
   --bte-border: #111111;
-  --bte-accent: #ffd23f;
-  --bte-accent-fg: #111111;
+  --bte-accent: #111111;
+  --bte-accent-fg: #ffd23f;
   --bte-link: #1c4fd6;
   --bte-red: #c41e3a;
   --bte-green: #17783a;
@@ -2697,7 +2676,7 @@ html.bte[data-bte-style="neo"]:not(#bte-z) m-header :where(m-user-profile) img {
 @media (min-width: 900px) {
   html.bte[data-bte-style="neo"]:not(#bte-z) main.layout-main > m-aside-left.m-aside-left {
     top: 60px !important;
-    height: calc(100vh - 84px) !important;
+    height: calc((100vh - 24px) / var(--bte-vz) - 60px) !important;
     flex-basis: 220px;
     width: 220px !important;
     padding: 14px 12px !important;
