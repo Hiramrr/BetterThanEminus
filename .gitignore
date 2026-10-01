@@ -1,3 +1,9 @@
 .DS_Store
 node_modules/
 *.zip
+xcuserdata/
+*.xcuserstate
+ios/build/
+__pycache__/
+# Fuentes con licencia (ABC Areal, Dinamo): se empaquetan en la app pero no se suben.
+ios/fonts/

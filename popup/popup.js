@@ -28,6 +28,9 @@
 
   let prefs = bte.sanitize(null);
   const inTab = location.hash === "#fondo";
+  // En la app de iOS los ajustes viven dentro de la página: el diálogo de
+  // archivos no los cierra, así que se elige ahí mismo como en la pestaña.
+  const pickHere = inTab || document.documentElement.dataset.bteDoc === "popup";
 
   const render = () => {
     root.dataset.bteTheme = prefs.theme;
@@ -229,7 +232,7 @@
       $("fondo").scrollIntoView({ block: "center" });
     }
     $("bg-pick").addEventListener("click", () => {
-      if (inTab) $("bg-file").click();
+      if (pickHere) $("bg-file").click();
       else chrome.tabs.create({ url: chrome.runtime.getURL("popup/popup.html#fondo") }).then(() => window.close());
     });
     $("bg-file").addEventListener("change", (e) => setBgFile(e.target.files[0]));

@@ -44,6 +44,11 @@
     { id: "plex", name: "IBM Plex Mono", css: '"IBM Plex Mono"', google: "IBM+Plex+Mono:wght@400;500;700" },
     { id: "fira", name: "Fira Code", css: '"Fira Code"', google: "Fira+Code:wght@400;500;700" },
     { id: "vt323", name: "VT323 (retro)", css: '"VT323"', google: "VT323" },
+    // ABC Areal (Dinamo): no está en Google Fonts; se usa si está instalada
+    // en el equipo, y la app de iOS la trae empaquetada.
+    { id: "areal-mono", name: "ABC Areal Mono", css: '"ABC Areal Mono"', google: "" },
+    { id: "areal-semi", name: "ABC Areal Semi Mono", css: '"ABC Areal Semi Mono"', google: "" },
+    { id: "areal", name: "ABC Areal", css: '"ABC Areal"', google: "" },
     { id: "system", name: "del sistema", css: "", google: "" }
   ];
 

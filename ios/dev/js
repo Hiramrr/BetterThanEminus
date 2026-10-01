@@ -1,0 +1,6 @@
+#!/bin/sh
+# Evalúa JavaScript en la página de Eminus dentro de la app (simulador).
+# Uso: ios/dev/js 'return document.title'   ·   ios/dev/js __reload__
+if [ "$1" = "-f" ]; then code=$(cat "$2"); else code="$1"; fi
+curl -s -X POST --data-binary "$code" http://127.0.0.1:8777/eval
+echo
