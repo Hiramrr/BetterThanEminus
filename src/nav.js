@@ -294,7 +294,15 @@
     }
     if (card) {
       bte.toast("abriendo " + pending.name.toLowerCase());
-      card.click();
+      // Si el router de Eminus estaba a media navegación (p. ej. al cerrar
+      // la vista tui con atrás), descarta el clic: se reintenta.
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        const target = attempt === 0 ? card : findCourseCard(pending.name);
+        if (!target) break;
+        target.click();
+        const left = await bte.waitFor(() => !location.pathname.includes("/page/course/list"), 1500, 100);
+        if (left) break;
+      }
     } else if (location.pathname.includes("/page/course/list")) {
       bte.toast("no encontré «" + pending.name + "» en la lista (¿filtro de cursos?)");
     }

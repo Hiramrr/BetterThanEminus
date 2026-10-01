@@ -1,0 +1,1221 @@
+/*
+ * App de iOS: Eminus en el teléfono.
+ *
+ * Todo cuelga de html.bte-app (lo pone mobile.js en la app). Las reglas de
+ * estructura usan tres :not(#…) para ganarle al diseño de escritorio de
+ * cualquier estilo (tui, nube, retro…), que llega a dos. Los colores y la
+ * tipografía siguen siendo los de cada estilo y tema.
+ *
+ * Alturas: --m-dock (barra inferior) y --m-safe-b (indicador de inicio).
+ */
+
+html.bte-app {
+  --m-dock: 58px;
+  --m-safe-b: env(safe-area-inset-bottom, 0px);
+  --m-safe-l: env(safe-area-inset-left, 0px);
+  --m-safe-r: env(safe-area-inset-right, 0px);
+  --m-bottom: calc(var(--m-dock) + var(--m-safe-b));
+  --m-vvh: 100dvh; /* alto visible con el teclado (mobile.js) */
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Sin reskin: sólo el dock, para poder volver a activarlo. */
+html.bte-app:not(.bte) #bte-dock {
+  display: flex !important;
+}
+
+html.bte-app body {
+  overscroll-behavior-x: none;
+}
+
+html.bte.bte-app.bte-top:not(#bte-z):not(#bte-y):not(#bte-x) body {
+  padding-bottom: var(--m-bottom) !important;
+}
+
+html.bte.bte-app.bte-top:not(#bte-z):not(#bte-y):not(#bte-x) m-pages > footer {
+  padding-bottom: 10px !important;
+}
+
+/* Controles táctiles: sin retraso de doble toque ni menú de selección. */
+html.bte-app :where(button, a, [role="button"], [role="tab"], .m-menu__link, mat-card, .row) {
+  touch-action: manipulation;
+}
+
+html.bte-app :where(#bte-dock, #bte-overlay, #bte-toast-m, #bte-app-host) {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* iOS acerca la página si un campo tiene letra menor de 16px. */
+html.bte-app:not(#bte-z):not(#bte-y) :where(input:not([type="checkbox"], [type="radio"], [type="range"]), textarea, select, .fr-element) {
+  font-size: max(16px, 1em) !important;
+}
+
+/* La barra de estado de escritorio (modo, atajos, reloj) cede su sitio al
+   dock; sus avisos se muestran como globo (mobile.js). */
+html.bte-app #bte-statusline {
+  display: none !important;
+}
+
+/* ───────────────────────── encabezado ───────────────────────── */
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) {
+  --bte-header-h: 44px;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header header,
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header :where(.m-container, .m-stack, m-topbar, .m-topbar, .m-brand__tools) {
+  height: 44px !important;
+  min-height: 44px !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header header {
+  padding: 0 var(--m-safe-r) 0 var(--m-safe-l) !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header a.m-brand__logo-wrapper {
+  height: 44px !important;
+  min-width: 0;
+  flex: 1 1 auto !important;
+  overflow: hidden;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header a.m-brand__logo-wrapper::before {
+  height: 44px;
+  flex: none;
+}
+
+/* La ruta ("curso / actividades") es lo más útil del encabezado en el
+   teléfono: vuelve, recortada, en lugar de los accesos a las vistas. */
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header a.m-brand__logo-wrapper::after {
+  display: block !important;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 10px;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) #bte-header-links,
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header :where(m-user-profile) .h5 {
+  display: none !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header .m-brand__tools > div:first-child {
+  flex: 1 1 auto;
+}
+
+/* La marca dice el nombre de la app; en la lista de cursos la ruta
+   («cursos») sobra a su lado. */
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header a.m-brand__logo-wrapper::before {
+  content: "better than eminus";
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header a.m-brand__logo-wrapper[data-bte-path="cursos"]::after {
+  display: none !important;
+}
+
+/* Iconos de la derecha: cajas iguales de 40×44 con el dibujo centrado. */
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header .m-brand__tools > div:last-child {
+  flex: none;
+  gap: 0;
+  padding-right: 8px;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header m-notification > div {
+  gap: 0;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header m-notification i {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 40px !important;
+  height: 44px !important;
+  margin: 0 !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header m-user-profile > div,
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header m-user-profile > div > div {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 44px;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header :where(m-user-profile) img {
+  display: block;
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 0;
+  margin: 0 !important;
+  border-radius: 50% !important;
+  object-fit: cover;
+  filter: none;
+  opacity: 1;
+}
+
+/* Con fondo de foto el encabezado y la tira son translúcidos; aquí van
+   fijos y el contenido pasa por debajo, así que se vuelven casi opacos y
+   desenfocan lo de atrás (en un pseudo-elemento: backdrop-filter en el
+   propio contenedor atraparía los menús fijos de Eminus). */
+html.bte.bte-app.bte-has-bg:not(#bte-z):not(#bte-y):not(#bte-x) m-header header,
+html.bte.bte-app.bte-has-bg:not(#bte-z):not(#bte-y):not(#bte-x) main.layout-main > m-aside-left.m-aside-left {
+  background-color: color-mix(in oklab, var(--bte-bg0) 84%, transparent) !important;
+}
+
+html.bte.bte-app.bte-has-bg:not(#bte-z):not(#bte-y):not(#bte-x) m-header header {
+  position: relative;
+  z-index: 0;
+}
+
+html.bte.bte-app.bte-has-bg m-header header::after,
+html.bte.bte-app.bte-has-bg main.layout-main > m-aside-left.m-aside-left::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  backdrop-filter: blur(18px) saturate(1.2);
+}
+
+/* ───────────── menú del curso: tira deslizable ───────────── */
+
+/* En vez del riel lateral de 52px (que roba un séptimo de la pantalla), las
+   secciones del curso van en una tira horizontal fija bajo el encabezado. */
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) main.layout-main {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) main.layout-main > m-aside-left.m-aside-left {
+  position: sticky !important;
+  top: 44px !important;
+  left: auto !important;
+  z-index: 90;
+  flex: none !important;
+  align-self: stretch !important;
+  width: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  border-right: 0 !important;
+  border-bottom: 1px solid var(--bte-border) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) main.layout-main > .ContentFromMain {
+  width: 100% !important;
+  margin: 0 !important;
+  padding-left: var(--m-safe-l) !important;
+  padding-right: var(--m-safe-r) !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) #m_ver_menu {
+  width: 100% !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+
+html.bte.bte-app #m_ver_menu::-webkit-scrollbar {
+  display: none;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) #m_ver_menu .m-menu__nav {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 6px;
+  width: max-content !important;
+  min-width: 100%;
+  margin: 0 !important;
+  padding: 7px calc(10px + var(--m-safe-r)) 7px calc(10px + var(--m-safe-l)) !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) #m_ver_menu .m-menu__nav::before {
+  display: none !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) #m_ver_menu .m-menu__item {
+  flex: none !important;
+  width: auto !important;
+  margin: 0 !important;
+  scroll-snap-align: start;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) #m_ver_menu .m-menu__link {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px;
+  height: 34px !important;
+  min-height: 34px !important;
+  width: auto !important;
+  padding: 0 12px !important;
+  border: 1px solid var(--bte-border) !important;
+  white-space: nowrap;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) #m_ver_menu :where(.m-menu__link-text, .m-menu__link-icon) {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) #m_ver_menu .m-menu__link-icon {
+  font-size: 17px !important;
+  width: auto !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) #m_ver_menu .m-menu__link-text {
+  display: flex !important;
+  align-items: center;
+  height: auto !important;
+  min-height: 0 !important;
+  font-size: 13.5px !important;
+  overflow: visible;
+  white-space: nowrap;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) #m_ver_menu .m-menu__link::before {
+  flex: none !important;
+  font-size: 12px;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) #m_ver_menu .m-menu__item--active > .m-menu__link {
+  border-color: var(--bte-accent) !important;
+}
+
+/* Eminus pone touch-action: none en línea a cada enlace del menú (su
+   librería de gestos): al tocar una píldora el dedo no podía deslizar la
+   tira. Lo mismo con el logo. */
+html.bte-app #m_ver_menu :is(.m-menu__link, .m-menu__link *),
+html.bte-app m-header a.m-brand__logo-wrapper img {
+  touch-action: pan-x pan-y !important;
+}
+
+/* Se desvanece a la derecha: hay más secciones deslizando. */
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) #m_ver_menu {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 44px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 44px), transparent);
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) #m_ver_menu.m-at-end {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) #m_ver_menu .m-menu__nav {
+  padding-right: 48px !important;
+}
+
+/* ───────────────────── contenido ───────────────────── */
+
+/* Cabecera del curso compacta: nombre y buscador en columna. */
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) .EMINUSPleca :where(.PlecaOverlay, .PlecaOverlayChange) {
+  padding: 10px 14px !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) :where(m-pages, app-root) .container,
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) :where(m-pages, app-root) .container-fluid {
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+  max-width: 100% !important;
+}
+
+/* Eminus deja 110px arriba del contenido para su pleca fija en el teléfono;
+   aquí la pleca va en el flujo. */
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) .m-content-sub {
+  padding: 12px 0 16px !important;
+}
+
+/* La portada con atajos de teclado no aplica en el teléfono. */
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-course-list > .container > div::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* Tarjetas de curso: una columna, cómodas de tocar. */
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) mat-card.CourseCard {
+  margin-bottom: 12px !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) .m-kt-portlet-unit {
+  min-height: 48px;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) .m-kt-portlet-unit p {
+  white-space: normal !important;
+}
+
+/* Tablas anchas: se desplazan de lado sin romper la página. */
+html.bte.bte-app:not(#bte-z):not(#bte-y) :where(m-pages, app-root) .fr-view table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y) :where(m-pages, app-root) :where(.fr-view img, .fr-view video, .fr-view iframe) {
+  max-width: 100% !important;
+  height: auto;
+}
+
+/* Diálogos de Material a pantalla completa (menos márgenes). */
+html.bte.bte-app:not(#bte-z):not(#bte-y) .cdk-overlay-pane.mat-dialog-container,
+html.bte.bte-app:not(#bte-z):not(#bte-y) .cdk-overlay-pane:has(> .mat-dialog-container, > mat-dialog-container, > .mat-mdc-dialog-container) {
+  max-width: calc(100vw - 16px) !important;
+  max-height: calc(var(--m-vvh) - 24px) !important;
+}
+
+/* Botones de Eminus: altura táctil. */
+html.bte.bte-app:not(#bte-z):not(#bte-y) :where(m-pages, app-root, .cdk-overlay-container) :where(.btn, .mat-button, .mat-flat-button, .mat-stroked-button, .mat-raised-button, .mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-outlined-button) {
+  min-height: 40px;
+}
+
+/* Sin hover pegajoso tras tocar. */
+@media (hover: none) {
+  html.bte.bte-app:not(#bte-z):not(#bte-y) :where(m-pages, app-root) a:not(.m-menu__link, .mat-button, .mat-mdc-button, .btn):hover {
+    background-color: transparent !important;
+    color: var(--bte-link) !important;
+    text-decoration: underline dotted !important;
+  }
+
+  html.bte.bte-app:not(#bte-z):not(#bte-y) #m_ver_menu .m-menu__item:not(.m-menu__item--active):hover > .m-menu__link {
+    background-color: transparent !important;
+  }
+}
+
+/* ───────────────────────── dock ───────────────────────── */
+
+#bte-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2147482150;
+  display: flex;
+  align-items: stretch;
+  height: var(--m-bottom);
+  padding: 0 var(--m-safe-r) var(--m-safe-b) var(--m-safe-l);
+  background: color-mix(in oklab, var(--bte-bg0, #1d2021) 94%, transparent);
+  border-top: 1px solid var(--bte-border, #504945);
+  font-family: var(--bte-font, ui-monospace, monospace);
+  color: var(--bte-dim, #a89984);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+html:not(.bte) #bte-dock {
+  background: #fff;
+  color: #555;
+  border-top-color: #ddd;
+}
+
+#bte-dock button {
+  position: relative;
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 6px 2px 4px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: 600 10.5px/1.1 var(--bte-font, ui-monospace, monospace);
+  letter-spacing: 0.01em;
+  text-transform: lowercase;
+  cursor: pointer;
+}
+
+#bte-dock button svg {
+  width: 23px;
+  height: 23px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#bte-dock button[aria-current="true"],
+#bte-dock button[aria-pressed="true"] {
+  color: var(--bte-accent, #fabd2f);
+}
+
+#bte-dock button:active {
+  transform: scale(0.94);
+}
+
+#bte-dock .m-badge {
+  position: absolute;
+  top: 4px;
+  left: calc(50% + 6px);
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--bte-red, #fb4934);
+  color: var(--bte-bg, #1d2021);
+  font: 700 11px/18px var(--bte-mono, ui-monospace, monospace);
+  text-align: center;
+}
+
+#bte-dock .m-badge[hidden] {
+  display: none;
+}
+
+/* La sesión por vencer se ve arriba del dock, con color. */
+#bte-session-m {
+  position: fixed;
+  right: calc(10px + var(--m-safe-r));
+  bottom: calc(var(--m-bottom) + 8px);
+  z-index: 2147482140;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font: 700 12px/1.3 var(--bte-mono, ui-monospace, monospace);
+  background: var(--bte-yellow, #fabd2f);
+  color: var(--bte-bg, #1d2021);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+#bte-session-m[data-level="crit"],
+#bte-session-m[data-level="expired"] {
+  background: var(--bte-red, #fb4934);
+}
+
+#bte-session-m[hidden],
+html:not(.bte) #bte-session-m {
+  display: none;
+}
+
+/* ───────────────────── avisos breves ───────────────────── */
+
+#bte-toast-m {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--m-bottom) + 12px);
+  z-index: 2147483650;
+  max-width: calc(100vw - 32px);
+  padding: 9px 14px;
+  border: 1px solid var(--bte-accent, #fabd2f);
+  border-radius: 12px;
+  background: var(--bte-bg1, #32302f);
+  color: var(--bte-fg, #ebdbb2);
+  font: 13px/1.4 var(--bte-font, ui-monospace, monospace);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, 0);
+  transition: opacity 0.18s, transform 0.18s;
+  pointer-events: none;
+}
+
+#bte-toast-m[hidden] {
+  display: block;
+  opacity: 0;
+  transform: translate(-50%, 10px);
+}
+
+html.bte #bte-toast-m {
+  border-radius: 0;
+}
+
+/* ─────────────── hojas: paleta, ayuda, ajustes ─────────────── */
+
+html.bte-app #bte-overlay {
+  align-items: flex-end;
+  padding: 0;
+  height: var(--m-vvh);
+  bottom: auto;
+  background: rgba(0, 0, 0, 0.5);
+  animation: m-fade 0.16s ease-out both;
+}
+
+html.bte-app .bte-window {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  height: min(86vh, calc(var(--m-vvh) - 12px));
+  max-height: none;
+  padding-bottom: var(--m-safe-b);
+  border: 0;
+  border-top: 1px solid var(--bte-border);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  animation: m-sheet-up 0.24s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+/* Con el teclado abierto la hoja ocupa lo visible y pega arriba del teclado. */
+html.bte-app.m-keyboard .bte-window {
+  height: calc(var(--m-vvh) - 8px);
+  padding-bottom: 0;
+}
+
+html.bte.bte-app .bte-window {
+  border-radius: 0;
+  border-top: 1px solid var(--bte-fg);
+}
+
+/* Asa para arrastrar y cerrar. */
+html.bte-app .bte-window::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 38px;
+  height: 5px;
+  margin-left: -19px;
+  border-radius: 3px;
+  background: currentColor;
+  opacity: 0.35;
+  z-index: 2;
+}
+
+html.bte-app .bte-titlebar {
+  min-height: 46px;
+  padding: 12px 8px 6px 16px;
+  font-size: 14px;
+}
+
+html.bte-app .bte-titlebar > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html.bte-app .m-close {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  margin-left: 8px;
+  border: 0;
+  border-radius: 17px;
+  background: color-mix(in oklab, currentColor 18%, transparent);
+  color: inherit;
+  font: 700 16px/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+html.bte-app .bte-prompt {
+  padding: 8px 14px;
+  min-height: 50px;
+}
+
+html.bte-app .bte-prompt input {
+  font-size: 16px !important;
+  height: 34px;
+}
+
+html.bte-app .bte-count {
+  font-size: 12px;
+}
+
+html.bte-app .bte-list {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 0 12px;
+}
+
+html.bte-app .bte-group {
+  padding: 14px 16px 6px;
+  font-size: 12px;
+}
+
+html.bte-app .bte-item {
+  grid-template-columns: 2ch minmax(0, 1fr) auto;
+  min-height: 48px;
+  padding: 6px 16px;
+  font-size: 15px;
+  white-space: normal;
+}
+
+html.bte-app .bte-item .bte-item-label {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+}
+
+html.bte-app .bte-item .bte-item-meta {
+  max-width: 40vw;
+  font-size: 12px;
+  text-align: right;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+html.bte-app .bte-item .bte-item-meta kbd {
+  display: none;
+}
+
+/* En el teléfono no hay «selección» que seguir con flechas: sólo se marca
+   al tocar (clase m-press). */
+html.bte-app .bte-item[aria-selected="true"]:not(.m-press) {
+  background: none;
+  color: inherit;
+}
+
+html.bte-app .bte-item[aria-selected="true"]:not(.m-press) :where(.bte-item-meta, .bte-item-mark, mark) {
+  color: var(--bte-dim);
+}
+
+html.bte-app .bte-item[aria-selected="true"]:not(.m-press) mark {
+  color: var(--bte-accent);
+}
+
+html.bte-app .bte-item .bte-item-mark {
+  visibility: hidden;
+}
+
+html.bte-app .bte-item.m-press {
+  background: var(--bte-accent);
+  color: var(--bte-accent-fg);
+}
+
+/* Filas con deslizador: el deslizador debajo, a todo lo ancho. */
+html.bte-app .bte-item.bte-item-has-range {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+html.bte-app .bte-item.bte-item-has-range .bte-item-mark {
+  display: none;
+}
+
+html.bte-app .bte-item .bte-item-slider {
+  width: 100%;
+  max-width: none;
+  gap: 12px;
+}
+
+html.bte-app .bte-item-range {
+  flex: 1;
+  width: auto;
+  height: 32px;
+}
+
+html.bte-app .bte-item[aria-selected="true"]:not(.m-press) .bte-item-range {
+  accent-color: var(--bte-accent);
+}
+
+html.bte-app .bte-footer {
+  display: none;
+}
+
+/* Ayuda táctil */
+html.bte-app .bte-help {
+  padding: 8px 16px 24px;
+  font-size: 14px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+html.bte-app .bte-help pre {
+  font-size: 9px;
+}
+
+html.bte-app .bte-help dl {
+  grid-template-columns: 7.5em 1fr;
+  gap: 8px 12px;
+}
+
+html.bte-app .bte-help p {
+  color: var(--bte-dim);
+  line-height: 1.5;
+}
+
+/* Ajustes (popup de la extensión) como hoja con su propio documento. */
+#bte-settings {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483620;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: var(--m-vvh);
+  background: rgba(0, 0, 0, 0.5);
+  animation: m-fade 0.16s ease-out both;
+}
+
+#bte-settings[hidden] {
+  display: none;
+}
+
+#bte-settings .m-sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 640px;
+  height: min(92vh, calc(var(--m-vvh) - 8px));
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+  background: var(--bte-bg, #1d2021);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.35);
+  animation: m-sheet-up 0.24s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+#bte-settings .m-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 50px;
+  padding: 10px 8px 6px 16px;
+  background: var(--bte-bg0, #1d2021);
+  color: var(--bte-fg, #ebdbb2);
+  border-bottom: 1px solid var(--bte-border, #504945);
+  font: 700 14px/1.2 var(--bte-mono, ui-monospace, monospace);
+}
+
+#bte-settings iframe {
+  flex: 1;
+  width: 100%;
+  border: 0;
+  background: transparent;
+}
+
+@keyframes m-fade {
+  from { opacity: 0; }
+}
+
+@keyframes m-sheet-up {
+  from { transform: translateY(40px); opacity: 0.6; }
+}
+
+/* ─────────── dentro del iframe de actividades ─────────── */
+
+/* tui.css contiene el desplazamiento dentro del iframe (en escritorio se
+   desplaza por dentro). Aquí el iframe no se desplaza: el dedo debe mover
+   la página, así que el gesto pasa al documento de fuera. */
+html.bte.bte-app:not(.bte-top),
+html.bte.bte-app:not(.bte-top) :is(body, app-root > *) {
+  overscroll-behavior: auto !important;
+}
+
+/* El cuerpo de las pestañas de Material tiene 4px de scroll propio y
+   envuelve todas las tarjetas: al poner el dedo sobre una actividad iOS
+   elegía ese contenedor y el gesto ya no llegaba a la página. Con «clip»
+   deja de ser un contenedor de scroll (overflow-y: visible no basta: junto
+   a overflow-x: hidden se vuelve auto). */
+html.bte.bte-app:not(.bte-top):not(#bte-z):not(#bte-y) :is(mat-tab-body, .mat-mdc-tab-body, .mat-mdc-tab-body-content, .mat-mdc-tab-body-wrapper, .mat-tab-body-content) {
+  overflow: clip visible !important;
+  height: auto !important;
+}
+
+html.bte.bte-app:not(.bte-top) .m-no-scroll {
+  overflow-y: clip !important;
+}
+
+/* Sin scroll propio, ni siquiera de unos píxeles: se tragaría el gesto. */
+html.bte.bte-app:not(.bte-top),
+html.bte.bte-app:not(.bte-top) body {
+  overflow: hidden !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+html.bte.bte-app:not(.bte-top) [style*="touch-action: none"]:not(.mat-slider, .mat-mdc-slider, canvas) {
+  touch-action: pan-x pan-y !important;
+}
+
+/* Crece con su contenido (mobile.js ajusta el alto del iframe): las
+   vistas de Eminus (lista, detalle…) miden el alto de la ventana y se
+   desplazan por dentro. */
+html.bte.bte-app:not(.bte-top):not(#bte-z):not(#bte-y) app-root > * {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+html.bte.bte-app:not(.bte-top):not(#bte-z):not(#bte-y) app-principal-activity-layout {
+  padding: 10px 8px !important;
+}
+
+/* Paneles con alto fijo en vh: con el iframe alto quedaban enormes. */
+html.bte.bte-app:not(.bte-top):not(#bte-z):not(#bte-y) p-scrollpanel :where(.p-scrollpanel, .p-scrollpanel-wrapper, .p-scrollpanel-content) {
+  height: auto !important;
+  max-height: 420px;
+}
+
+html.bte.bte-app:not(.bte-top):not(#bte-z):not(#bte-y) app-activity-detail {
+  padding: 0 !important;
+}
+
+html.bte.bte-app:not(.bte-top):not(#bte-z):not(#bte-y) app-activity-detail .principal-card {
+  margin-top: 6px !important;
+}
+
+html.bte.bte-app:not(.bte-top):not(#bte-z):not(#bte-y) :where(app-root) .px-5.py-4 {
+  padding: 4px 0 !important;
+}
+
+html.bte.bte-app:not(.bte-top):not(#bte-z):not(#bte-y) :where(app-root) .principal-card > .mat-mdc-card-content {
+  padding: 8px 4px !important;
+}
+
+html.bte.bte-app:not(.bte-top):not(#bte-z):not(#bte-y) :where(app-root) :where(app-activity-card, .activity-card) {
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* ─────────────────── vista tui ─────────────────── */
+
+html.bte-app #bte-app-host {
+  bottom: var(--m-bottom);
+  border-top: 0;
+  animation: m-fade 0.14s ease-out both;
+}
+
+/* ─────────────────── borradores ─────────────────── */
+
+html.bte-app #bte-draft-chip {
+  left: 8px !important;
+  right: 8px;
+  max-width: none;
+  padding: 8px 8px 8px 12px;
+  font-size: 13px;
+}
+
+html.bte-app #bte-draft-chip button {
+  min-height: 34px;
+  padding: 4px 12px;
+}
+
+/* ─────────────────── modo lectura ─────────────────── */
+
+#bte-reading-exit {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--m-bottom) + 12px);
+  z-index: 2147482140;
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid var(--bte-accent, #fabd2f);
+  border-radius: 20px;
+  background: var(--bte-bg1, #32302f);
+  color: var(--bte-accent, #fabd2f);
+  font: 700 13px/1 var(--bte-font, ui-monospace, monospace);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  transform: translateX(-50%);
+}
+
+#bte-reading-exit[hidden],
+html:not(.bte) #bte-reading-exit {
+  display: none;
+}
+
+/* ─────────────────── fondo: acomodar ─────────────────── */
+
+html.bte-app .bte-bg-edit-bar {
+  left: 8px;
+  right: 8px;
+  bottom: calc(8px + var(--m-safe-b));
+  width: auto;
+  max-width: none;
+  transform: none;
+  padding: 10px;
+  border-radius: 14px;
+}
+
+html.bte-app .bte-bg-edit-btns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+
+html.bte-app .bte-bg-edit-bar button {
+  min-height: 42px;
+  font-size: 15px;
+  border-radius: 8px;
+}
+
+html.bte-app .bte-bg-edit-bar button[data-a="save"] {
+  grid-column: span 2;
+}
+
+html.bte-app .bte-bg-edit-hint {
+  display: block;
+  font-size: 12px;
+}
+
+/* ─────────────────── login ─────────────────── */
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .m-login__wrapper {
+  min-height: calc(100dvh - var(--m-bottom));
+  padding: 24px 14px !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth m-login {
+  padding: 20px 18px 18px !important;
+}
+
+/* Sin la barra que imita una ventana: una caja simple del tema. */
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .m-login__body::before {
+  content: none !important;
+  display: none !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .m-login__body {
+  border: 1px solid var(--bte-border) !important;
+}
+
+/* El rótulo dibujado con caracteres de caja sólo cuadra en monoespaciada
+   (se rompía con ABC Areal): aquí es el nombre de la app, en texto. */
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .m-login__title_system::before {
+  content: "better than eminus";
+  white-space: normal;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin-bottom: 10px;
+}
+
+/* El aviso de derechos de Eminus queda suelto sobre el fondo. */
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .bottom_banner_login {
+  display: none !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y) m-auth .mat-stroked-button {
+  min-height: 46px;
+  font-size: 15px !important;
+}
+
+/* ─────────────────── perfiles ─────────────────── */
+
+#bte-profiles {
+  position: fixed;
+  inset: 0 0 var(--m-bottom) 0;
+  z-index: 2147482130;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  overflow-y: auto;
+  padding: 24px calc(18px + var(--m-safe-r)) 24px calc(18px + var(--m-safe-l));
+  color: var(--bte-fg, #ebdbb2);
+  font: 15px/1.3 var(--bte-font, ui-monospace, monospace);
+}
+
+#bte-profiles[hidden],
+html:not(.bte) #bte-profiles {
+  display: none;
+}
+
+/* En el selector no se ve el formulario (sigue ahí: la app lo llena). */
+html.bte.bte-app.m-pick:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .m-login__wrapper {
+  visibility: hidden;
+}
+
+#bte-profiles .m-profiles-brand {
+  color: var(--bte-accent, #fabd2f);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+#bte-profiles .m-profiles-title {
+  margin-bottom: 8px;
+  color: var(--bte-dim, #a89984);
+  font-size: 14px;
+}
+
+#bte-profiles .m-profiles-title::before {
+  content: "$ ";
+  color: var(--bte-green, #b8bb26);
+}
+
+#bte-profiles .m-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 76px;
+  padding: 10px 14px;
+  border: 1px solid var(--bte-border, #504945);
+  background: color-mix(in oklab, var(--bte-bg0, #1d2021) 88%, transparent);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  touch-action: manipulation;
+}
+
+#bte-profiles .m-avatar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bte-accent, #fabd2f);
+  color: var(--bte-accent-fg, #1d2021);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+#bte-profiles .m-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#bte-profiles .m-who {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+#bte-profiles .m-who b {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--bte-fg-strong, #fbf1c7);
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+#bte-profiles .m-who i {
+  color: var(--bte-dim, #a89984);
+  font-size: 13px;
+  font-style: normal;
+}
+
+#bte-profiles .m-go {
+  flex: none;
+  color: var(--bte-accent, #fabd2f);
+  font-weight: 700;
+}
+
+#bte-profiles .m-profile:active,
+#bte-profiles .m-profile[aria-busy="true"] {
+  border-color: var(--bte-accent, #fabd2f);
+  background: var(--bte-bg1, #32302f);
+}
+
+#bte-profiles .m-profile[aria-busy="true"] .m-who i {
+  color: var(--bte-accent, #fabd2f);
+}
+
+#bte-profiles .m-profile-new {
+  min-height: 50px;
+  margin-top: 6px;
+  border: 1px dashed var(--bte-border, #504945);
+  background: none;
+  color: var(--bte-dim, #a89984);
+  font: inherit;
+  touch-action: manipulation;
+}
+
+#bte-profiles .m-profile-new:active {
+  color: var(--bte-accent, #fabd2f);
+  border-color: var(--bte-accent, #fabd2f);
+}
+
+/* Con el formulario a la vista: volver a los perfiles guardados. */
+#bte-profiles-back {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--m-bottom) + 14px);
+  z-index: 2147482130;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid var(--bte-border, #504945);
+  background: var(--bte-bg0, #1d2021);
+  color: var(--bte-accent, #fabd2f);
+  font: 700 14px/1 var(--bte-font, ui-monospace, monospace);
+  transform: translateX(-50%);
+  touch-action: manipulation;
+}
+
+#bte-profiles-back[hidden],
+html:not(.bte) #bte-profiles-back,
+html.m-keyboard #bte-profiles-back {
+  display: none;
+}
+
+#bte-profile-save {
+  position: fixed;
+  left: calc(12px + var(--m-safe-l));
+  right: calc(12px + var(--m-safe-r));
+  bottom: calc(var(--m-bottom) + 12px);
+  z-index: 2147482160;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--bte-accent, #fabd2f);
+  background: var(--bte-bg1, #32302f);
+  color: var(--bte-fg, #ebdbb2);
+  font: 14px/1.45 var(--bte-font, ui-monospace, monospace);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4);
+  animation: m-sheet-up 0.24s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+#bte-profile-save b {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--bte-fg-strong, #fbf1c7);
+}
+
+#bte-profile-save span {
+  color: var(--bte-dim, #a89984);
+  font-size: 13px;
+}
+
+#bte-profile-save .m-profile-save-btns {
+  display: flex;
+  gap: 10px;
+}
+
+#bte-profile-save button {
+  flex: 1;
+  min-height: 44px;
+  border: 1px solid var(--bte-border, #504945);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  touch-action: manipulation;
+}
+
+#bte-profile-save button[data-a="yes"] {
+  border-color: var(--bte-accent, #fabd2f);
+  background: var(--bte-accent, #fabd2f);
+  color: var(--bte-accent-fg, #1d2021);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.bte-app :where(#bte-overlay, .bte-window, #bte-settings, .m-sheet, #bte-toast-m, #bte-app-host) {
+    animation: none !important;
+    transition: none !important;
+  }
+}

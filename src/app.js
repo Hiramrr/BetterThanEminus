@@ -167,6 +167,8 @@
       frame.style.removeProperty("height");
       return;
     }
+    // La app de iOS lo hace crecer con su contenido (un solo scroll).
+    if (bte.sizeActivityFrame) return bte.sizeActivityFrame(frame);
     const top = frame.getBoundingClientRect().top + window.scrollY;
     const bar = document.getElementById("bte-statusline");
     const height = Math.max(320, Math.floor(window.innerHeight - top - (bar ? bar.offsetHeight : 0))) + "px";
@@ -890,7 +892,10 @@
   // luego sólo se oculta: volver a Eminus es instantáneo y la página de
   // detrás no se toca. Se habla con ella por postMessage, verificando origen.
   const VIEWS = ["agenda", "courses", "miyu", "grades"];
+  // En la app de iOS la vista tui es un documento srcdoc del mismo origen.
+  const native = globalThis.__bteNative;
   const EXT_ORIGIN = (() => {
+    if (native) return location.origin;
     try {
       return new URL(chrome.runtime.getURL("/")).origin;
     } catch (_) {
@@ -927,7 +932,8 @@
     appHost.hidden = true;
     appFrame = document.createElement("iframe");
     appFrame.title = "eminus tui";
-    appFrame.src = chrome.runtime.getURL("app/app.html") + "#embedded";
+    if (native) appFrame.srcdoc = native.doc("app/app.html");
+    else appFrame.src = chrome.runtime.getURL("app/app.html") + "#embedded";
     appHost.appendChild(appFrame);
     document.body.appendChild(appHost);
     window.addEventListener("resize", placeAppHost);

@@ -1,0 +1,459 @@
+/*
+ * App de iOS: la vista tui (agenda, cursos, miyu, calificaciones) en el
+ * teléfono. Un panel a la vez: lista → (actividades) → detalle, con las
+ * vistas como pestañas arriba. app-mobile.js lleva la pila (data-m-stack).
+ */
+
+html.bte-app {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html.bte-app body {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html.bte-app .detail,
+html.bte-app .rich {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* ─────────────── pestañas ─────────────── */
+
+html.bte-app.embedded .topbar {
+  display: flex;
+  flex: none;
+  height: 46px;
+  padding: 0 4px 0 calc(4px + env(safe-area-inset-left));
+  gap: 4px;
+  align-items: center;
+}
+
+html.bte-app .brand,
+html.bte-app .clock,
+html.bte-app .views kbd {
+  display: none;
+}
+
+html.bte-app .views {
+  flex: 1;
+  min-width: 0;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+html.bte-app .views::-webkit-scrollbar {
+  display: none;
+}
+
+html.bte-app .views button {
+  flex: none;
+  height: 34px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 17px;
+  font-size: 13px;
+  color: var(--bte-dim);
+  touch-action: manipulation;
+}
+
+html.bte-app .views button:hover {
+  background: none;
+  color: var(--bte-dim);
+}
+
+html.bte-app .views button[aria-current="page"] {
+  background: var(--bte-accent);
+  color: var(--bte-accent-fg);
+  font-weight: 700;
+  text-shadow: none;
+}
+
+html.bte-app .m-tools {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+
+html.bte-app .m-tools button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 19px;
+  background: none;
+  color: var(--bte-dim);
+  touch-action: manipulation;
+}
+
+html.bte-app .m-tools button[aria-pressed="true"] {
+  color: var(--bte-accent);
+  background: var(--bte-bg1);
+}
+
+html.bte-app .m-tools svg {
+  flex: none;
+  width: 21px;
+  height: 21px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+html.bte-app .m-tools button.m-spin svg {
+  animation: m-spin 0.9s linear infinite;
+}
+
+@keyframes m-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Filtro: bajo las pestañas (el teclado taparía la barra de abajo). */
+html.bte-app .filter {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  margin: 0;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--bte-border);
+  background: var(--bte-bg0);
+}
+
+html.bte-app .filter[hidden] {
+  display: none;
+}
+
+html.bte-app .filter input {
+  flex: 1;
+  width: auto;
+  font-size: 16px;
+  height: 36px;
+}
+
+/* ─────────────── paneles ─────────────── */
+
+html.bte-app main,
+html.bte-app main.view-courses,
+html.bte-app main.view-miyu {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 10px calc(10px + env(safe-area-inset-bottom, 0px) * 0);
+}
+
+html.bte-app .pane {
+  margin-bottom: 18px;
+}
+
+html.bte-app .pane-body {
+  overflow: visible;
+  padding: 10px 0 6px;
+}
+
+html.bte-app .pane.focused {
+  border-color: var(--bte-border);
+}
+
+html.bte-app .pane.focused .pane-title {
+  color: var(--bte-dim);
+}
+
+/* Una sola cosa a la vez. */
+html.bte-app main[data-m-stack="list"] #pane-mid,
+html.bte-app main[data-m-stack="mid"] #pane-list,
+html.bte-app main[data-m-stack="mid"] #pane-dash,
+html.bte-app main #pane-detail {
+  display: none;
+}
+
+html.bte-app main.view-courses[data-m-stack="mid"] #pane-mid {
+  display: flex;
+}
+
+/* El detalle se desliza encima de la lista. */
+html.bte-app main[data-m-stack="detail"] #pane-detail {
+  display: flex;
+  position: fixed;
+  inset: 46px 0 30px 0;
+  z-index: 8;
+  margin: 0;
+  border: 0;
+  background: var(--bte-bg);
+  animation: m-slide-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+html.bte-app main[data-m-stack="detail"] #pane-detail .pane-title {
+  display: none;
+}
+
+html.bte-app main[data-m-stack="detail"] #pane-detail .pane-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 0 24px;
+}
+
+@keyframes m-slide-in {
+  from { transform: translateX(30%); opacity: 0.4; }
+}
+
+/* Barra de volver (panel de actividades y detalle). */
+html.bte-app .m-back {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px 0 8px;
+  border: 0;
+  border-bottom: 1px solid var(--bte-border);
+  background: var(--bte-bg0);
+  color: var(--bte-accent);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+}
+
+html.bte-app .m-back span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--bte-dim);
+  font-weight: 400;
+}
+
+html.bte-app #pane-mid .m-back {
+  margin-top: -10px;
+}
+
+/* ─────────────── filas ─────────────── */
+
+html.bte-app .group {
+  padding: 12px 14px 4px;
+  font-size: 12.5px;
+}
+
+html.bte-app .row,
+html.bte-app .row.act-row {
+  grid-template-columns: 2ch minmax(0, 1fr) auto;
+  grid-template-areas:
+    "st title title"
+    "st due course";
+  gap: 2px 10px;
+  align-items: baseline;
+  min-height: 52px;
+  padding: 8px 14px;
+  white-space: normal;
+  touch-action: manipulation;
+}
+
+html.bte-app .row .st { grid-area: st; align-self: start; }
+html.bte-app .row .due { grid-area: due; font-size: 12.5px; white-space: nowrap; }
+html.bte-app .row .course {
+  display: block;
+  grid-area: course;
+  min-width: 0;
+  font-size: 12.5px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+html.bte-app .row .title {
+  grid-area: title;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.35;
+  color: var(--bte-fg-strong);
+}
+
+html.bte-app .row.u-done .title {
+  color: var(--bte-dim);
+}
+
+html.bte-app .row.course-row {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "title" "meta";
+}
+
+html.bte-app .row.course-row > :not(.title) {
+  grid-area: meta;
+  font-size: 12.5px;
+}
+
+html.bte-app .row + .row {
+  border-top: 1px dashed color-mix(in oklab, var(--bte-border) 60%, transparent);
+}
+
+/* Sin hover ni selección que seguir: sólo el toque. */
+html.bte-app .row:hover,
+html.bte-app .row[aria-selected="true"],
+html.bte-app .pane.focused .row[aria-selected="true"] {
+  background: none;
+  color: inherit;
+}
+
+/* app.css pinta la fila seleccionada con el acento y sus partes heredan el
+   color; aquí la selección no se ve, así que vuelven sus colores. */
+html.bte-app .pane.focused .row[aria-selected="true"] :is(.due, .meta) { color: var(--bte-dim) !important; }
+html.bte-app .pane.focused .row[aria-selected="true"] .course { color: var(--bte-aqua) !important; }
+html.bte-app .pane.focused .row[aria-selected="true"] .bar { color: var(--bte-green) !important; }
+html.bte-app .pane.focused .row[aria-selected="true"].u-normal .st { color: var(--bte-blue) !important; }
+html.bte-app .pane.focused .row[aria-selected="true"].u-future .st { color: var(--bte-purple) !important; }
+html.bte-app .pane.focused .row[aria-selected="true"].u-done .st { color: var(--bte-green) !important; }
+html.bte-app .pane.focused .row[aria-selected="true"].u-overdue :is(.st, .due) { color: var(--bte-red) !important; }
+html.bte-app .pane.focused .row[aria-selected="true"].u-imminent :is(.st, .due) { color: var(--bte-orange) !important; }
+html.bte-app .pane.focused .row[aria-selected="true"].u-urgent :is(.st, .due) { color: var(--bte-yellow) !important; }
+html.bte-app .pane.focused .row[aria-selected="true"] mark { color: var(--bte-accent); }
+
+html.bte-app .row.m-press,
+html.bte-app .pane .row.m-press[aria-selected="true"] {
+  background: var(--bte-bg2);
+}
+
+html.bte-app .empty-note {
+  padding: 18px 16px;
+  line-height: 1.6;
+}
+
+html.bte-app .m-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0 16px 16px;
+}
+
+/* ─────────────── detalle ─────────────── */
+
+html.bte-app .detail {
+  font-size: 15px;
+}
+
+html.bte-app .detail > :not(.m-back) {
+  margin-left: 16px;
+  margin-right: 16px;
+}
+
+html.bte-app .detail h3 {
+  margin-top: 14px;
+  font-size: 1.15em;
+  line-height: 1.35;
+}
+
+html.bte-app .kv {
+  grid-template-columns: 12.5ch minmax(0, 1fr);
+  gap: 4px 10px;
+}
+
+html.bte-app .rich {
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+html.bte-app .rich table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+html.bte-app .actions {
+  flex-direction: column;
+  gap: 10px;
+}
+
+html.bte-app .btn {
+  min-height: 46px;
+  padding: 8px 14px;
+  font-size: 15px;
+  font-weight: 700;
+  touch-action: manipulation;
+}
+
+html.bte-app .actions .btn:first-child {
+  background: var(--bte-accent);
+  border-color: var(--bte-accent);
+  color: var(--bte-accent-fg);
+}
+
+html.bte-app .btn:hover {
+  background: none;
+  border-color: var(--bte-border);
+  color: inherit;
+}
+
+html.bte-app .actions .btn:first-child:hover {
+  background: var(--bte-accent);
+  color: var(--bte-accent-fg);
+}
+
+/* ─────────────── resumen (miyu) ─────────────── */
+
+html.bte-app .dash {
+  padding: 10px 14px 6px;
+}
+
+html.bte-app .countdown {
+  font-size: 2.1em;
+}
+
+html.bte-app .next-title {
+  white-space: normal;
+}
+
+/* ─────────────── barra de abajo ─────────────── */
+
+html.bte-app .statusline {
+  flex: none;
+  height: 30px;
+  font-size: 12px;
+}
+
+html.bte-app .statusline :is(.back, .hints, .theme) {
+  display: none;
+}
+
+html.bte-app .counters {
+  gap: 12px;
+  border-left: 0;
+  margin-left: auto;
+}
+
+html.bte-app .counters :is(.c-soon, .c-week) {
+  display: none;
+}
+
+html.bte-app .splash {
+  inset: 0;
+  padding: 16px;
+}
+
+/* Dibujo con caracteres de caja: siempre en monoespaciada. */
+html.bte-app .splash-box pre {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.bte-app main[data-m-stack="detail"] #pane-detail {
+    animation: none;
+  }
+}

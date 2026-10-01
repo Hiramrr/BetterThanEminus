@@ -4,6 +4,8 @@ Extensión de Chrome (Manifest V3) que viste [Eminus](https://eminus.uv.mx) de t
 
 Es compatible con **Miyu --pendientes**: puedes tener las dos activas a la vez.
 
+También hay una **app para iPhone** con todo esto adaptado al teléfono: ver [ios/README.md](ios/README.md).
+
 ## Instalación
 
 1. Abre `chrome://extensions/`

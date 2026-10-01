@@ -18,7 +18,9 @@
 
   // Se pinta en el marco superior de Eminus y en la vista tui (agenda, cursos,
   // miyu…); los iframes de Eminus y el popup sólo toman la paleta.
-  const isAppView = location.protocol === "chrome-extension:" && location.pathname.endsWith("/app/app.html");
+  const isAppView =
+    (/-extension:$/.test(location.protocol) && location.pathname.endsWith("/app/app.html")) ||
+    document.documentElement.dataset.bteDoc === "app"; // app de iOS (srcdoc)
   const isPageTop = () => /^https?:$/.test(location.protocol) && window.top === window;
   const drawHere = isPageTop() || isAppView;
 
@@ -443,27 +445,57 @@
     });
 
     // Arrastrar: el desplazamiento se mide en % de media ventana, igual que
-    // se guarda, así que se ve igual con cualquier tamaño de ventana.
-    let drag = null;
+    // se guarda, así que se ve igual con cualquier tamaño de ventana. Con dos
+    // dedos (pantalla táctil) además se pellizca para el zoom y se gira.
+    const pointers = new Map();
+    let gesture = null;
+    const toX = (dx) => (dx / (window.innerWidth / 2)) * 100;
+    const toY = (dy) => (dy / ((window.innerHeight * 0.95) / 2)) * 100;
+    const pair = () => {
+      const [a, b] = [...pointers.values()];
+      return {
+        dist: Math.hypot(b.x - a.x, b.y - a.y) || 1,
+        angle: Math.atan2(b.y - a.y, b.x - a.x),
+        cx: (a.x + b.x) / 2,
+        cy: (a.y + b.y) / 2
+      };
+    };
+    // Cada vez que entra o sale un dedo se toma de nuevo el punto de partida.
+    const startGesture = () => {
+      const pts = [...pointers.values()];
+      if (pts.length >= 2) gesture = { ...pair(), two: true, f: { ...f } };
+      else if (pts.length === 1) gesture = { x: pts[0].x, y: pts[0].y, two: false, f: { ...f } };
+      else gesture = null;
+      layer.classList.toggle("dragging", !!gesture);
+    };
     layer.addEventListener("pointerdown", (e) => {
       if (e.target.closest(".bte-bg-edit-bar")) return;
-      drag = { x: e.clientX, y: e.clientY, bgX: f.bgX, bgY: f.bgY };
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       layer.setPointerCapture(e.pointerId);
-      layer.classList.add("dragging");
+      startGesture();
     });
     layer.addEventListener("pointermove", (e) => {
-      if (!drag) return;
-      set({
-        bgX: drag.bgX + ((e.clientX - drag.x) / (window.innerWidth / 2)) * 100,
-        bgY: drag.bgY + ((e.clientY - drag.y) / ((window.innerHeight * 0.95) / 2)) * 100
-      });
+      if (!pointers.has(e.pointerId) || !gesture) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const g = gesture;
+      if (g.two && pointers.size >= 2) {
+        const now = pair();
+        set({
+          bgZoom: g.f.bgZoom * (now.dist / g.dist),
+          bgRotate: Math.round(g.f.bgRotate + ((now.angle - g.angle) * 180) / Math.PI),
+          bgX: g.f.bgX + toX(now.cx - g.cx),
+          bgY: g.f.bgY + toY(now.cy - g.cy)
+        });
+      } else if (!g.two) {
+        set({ bgX: g.f.bgX + toX(e.clientX - g.x), bgY: g.f.bgY + toY(e.clientY - g.y) });
+      }
     });
-    const endDrag = () => {
-      drag = null;
-      layer.classList.remove("dragging");
+    const endPointer = (e) => {
+      pointers.delete(e.pointerId);
+      startGesture();
     };
-    layer.addEventListener("pointerup", endDrag);
-    layer.addEventListener("pointercancel", endDrag);
+    layer.addEventListener("pointerup", endPointer);
+    layer.addEventListener("pointercancel", endPointer);
     layer.addEventListener(
       "wheel",
       (e) => {
