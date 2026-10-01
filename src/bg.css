@@ -40,34 +40,49 @@ html.bte.bte-has-bg:not(#bte-z):not(#bte-y) :where(m-header header, .m-aside-lef
   background-image: none !important;
 }
 
+/* Iframes de Eminus (actividades): por defecto son un bloque opaco del color
+   de fondo encima de la foto. Con fondo, el iframe y su documento (clase
+   bte-sub-bg, la pone bg.js) se vuelven transparentes y dejan ver el mismo
+   panel translúcido que el resto de la página; sus tarjetas siguen la
+   opacidad de tarjetas de abajo. */
+html.bte.bte-has-bg:not(#bte-z):not(#bte-y) iframe.app-b-frame {
+  background-color: transparent !important;
+}
+
+html.bte.bte-sub-bg:not(#bte-z):not(#bte-y),
+html.bte.bte-sub-bg:not(#bte-z):not(#bte-y) body {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
 /* Tarjetas de curso, portlets y cajas: el fondo de cada estilo mezclado con
    transparente según --bte-card-alpha. --bte-card-base y --bte-card-head son
    el color que la tarjeta y su cabecera tienen en cada estilo. */
-html.bte.bte-has-bg {
+html.bte:is(.bte-has-bg, .bte-sub-bg) {
   --bte-card-base: var(--bte-bg);
   --bte-card-head: var(--bte-bg1);
 }
 
-html.bte.bte-has-bg:is([data-bte-style="nube"], [data-bte-style="neo"], [data-bte-style="retro"], [data-bte-style="compacto"]) {
+html.bte:is(.bte-has-bg, .bte-sub-bg):is([data-bte-style="nube"], [data-bte-style="neo"], [data-bte-style="retro"], [data-bte-style="compacto"]) {
   --bte-card-base: var(--bte-surface);
   --bte-card-head: transparent;
 }
 
-html.bte.bte-has-bg:is([data-bte-style="enfoque"], [data-bte-style="editorial"]) {
+html.bte:is(.bte-has-bg, .bte-sub-bg):is([data-bte-style="enfoque"], [data-bte-style="editorial"]) {
   --bte-card-base: transparent;
   --bte-card-head: transparent;
 }
 
-html.bte.bte-has-bg:not(#bte-z):not(#bte-y) :where(m-pages, app-root) :where(mat-card, .mat-card, .mat-mdc-card, .card, .m-portlet, .kt-portlet, .m-alert, .alert, .cardInContent, .list-group-item, .mat-expansion-panel) {
+html.bte:is(.bte-has-bg, .bte-sub-bg):not(#bte-z):not(#bte-y) :where(m-pages, app-root) :where(mat-card, .mat-card, .mat-mdc-card, .card, .m-portlet, .kt-portlet, .m-alert, .alert, .cardInContent, .list-group-item, .mat-expansion-panel) {
   background-color: color-mix(in oklab, var(--bte-card-base) var(--bte-card-alpha, 85%), transparent) !important;
 }
 
-html.bte.bte-has-bg:not(#bte-z):not(#bte-y) :where(m-pages, app-root) :where(mat-card.CourseCard .CardHeader, .card-header, .card-footer, .kt-portlet__head) {
+html.bte:is(.bte-has-bg, .bte-sub-bg):not(#bte-z):not(#bte-y) :where(m-pages, app-root) :where(mat-card.CourseCard .CardHeader, .card-header, .card-footer, .kt-portlet__head) {
   background-color: color-mix(in oklab, var(--bte-card-head) var(--bte-card-alpha, 85%), transparent) !important;
 }
 
 /* En neo la cabecera es de color (amarillo, rosa…): se conserva el tono. */
-html.bte.bte-has-bg[data-bte-style="neo"]:not(#bte-z):not(#bte-y) mat-card.CourseCard .CardHeader {
+html.bte:is(.bte-has-bg, .bte-sub-bg)[data-bte-style="neo"]:not(#bte-z):not(#bte-y) mat-card.CourseCard .CardHeader {
   background-color: color-mix(in oklab, var(--nb-card) var(--bte-card-alpha, 85%), transparent) !important;
 }
 

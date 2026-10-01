@@ -2,8 +2,16 @@
 (() => {
   const bte = globalThis.bte;
   const API8 = "https://eminus.uv.mx/eminusapi8/api";
+  // El contenido de los cursos (módulos, elementos y archivos) sólo está en
+  // la API anterior.
+  const API_OLD = "https://eminus.uv.mx/eminusapi/api";
   const EMINUS = "https://eminus.uv.mx";
   const CACHE_KEY = "bteAppCache";
+  const CONTENT_CACHE_KEY = "bteAppContent";
+  // El contenido publicado cambia poco y leerlo cuesta varias consultas por
+  // curso: se guarda en disco y sólo se vuelve a pedir pasado este tiempo.
+  const CONTENT_MAX_AGE = 30 * 60 * 1000;
+  const VIEWS = ["agenda", "courses", "miyu", "grades", "content"];
   const CACHE_MAX_AGE = 5 * 60 * 1000;
   const OVERDUE_WINDOW = 21 * 24 * 3600;
 
@@ -49,9 +57,16 @@
     acts: new Map(),
     actsLoading: new Set(),
     details: new Map(),
+    content: new Map(), // idCurso → módulos y elementos publicados, en orden
+    contentDetails: new Map(),
+    contentFiles: new Map(), // idCurso → archivos por ubicación (promesa)
+    contentLoading: false,
+    contentTried: false,
+    contentLoadedAt: 0,
+    contentAccount: "", // de quién es el contenido en memoria
     showAll: false,
     filter: "",
-    sel: { agenda: 0, courses: 0, mid: 0, miyu: 0, grades: 0 },
+    sel: { agenda: 0, courses: 0, mid: 0, miyu: 0, grades: 0, content: 0 },
     loading: false,
     loadedAt: 0
   };
@@ -155,27 +170,79 @@
 
   const GLYPH = { done: "✓", future: "○", overdue: "!", imminent: "◉", urgent: "●", normal: "●" };
 
+  // Las palabras del filtro se separan una vez por filtro, no por fila, y el
+  // texto normalizado de cada fila se recuerda entre teclas.
+  let wordsFor = null;
+  let words = [];
+  const filterWords = () => {
+    if (wordsFor !== state.filter) {
+      wordsFor = state.filter;
+      words = norm(state.filter).split(/\s+/).filter(Boolean);
+    }
+    return words;
+  };
+
+  const normCache = new Map();
+  const normed = (text) => {
+    let hay = normCache.get(text);
+    if (hay === undefined) {
+      if (normCache.size > 4000) normCache.clear();
+      hay = norm(text);
+      normCache.set(text, hay);
+    }
+    return hay;
+  };
+
   const matches = (text) => {
-    if (!state.filter) return true;
-    const hay = norm(text);
-    return norm(state.filter).split(/\s+/).filter(Boolean).every((w) => hay.includes(w));
+    const list = filterWords();
+    if (!list.length) return true;
+    const hay = normed(text);
+    return list.every((w) => hay.includes(w));
   };
 
   const highlight = (text) => {
-    const words = norm(state.filter).split(/\s+/).filter(Boolean);
-    if (!words.length) return esc(text);
-    const hay = norm(text);
+    const list = filterWords();
+    if (!list.length) return esc(text);
+    const hay = normed(text);
     const marks = new Array(text.length).fill(false);
-    for (const w of words) {
+    for (const w of list) {
       let i = hay.indexOf(w);
       while (i !== -1) {
         for (let k = i; k < i + w.length; k += 1) marks[k] = true;
         i = hay.indexOf(w, i + w.length);
       }
     }
+    // Un <mark> por tramo seguido, no por letra.
     let out = "";
-    for (let i = 0; i < text.length; i += 1) out += marks[i] ? "<mark>" + esc(text[i]) + "</mark>" : esc(text[i]);
+    for (let i = 0; i < text.length; ) {
+      let j = i + 1;
+      while (j < text.length && marks[j] === marks[i]) j += 1;
+      const chunk = esc(text.slice(i, j));
+      out += marks[i] ? "<mark>" + chunk + "</mark>" : chunk;
+      i = j;
+    }
     return out;
+  };
+
+  // Los modelos de cada vista (agrupar, filtrar, ordenar) se piden varias
+  // veces por tecla: se calculan una vez y valen mientras no cambien los
+  // datos (dataRev), el filtro o el panel con foco. Lo que depende de la hora
+  // se renueva solo cada 15 s.
+  let dataRev = 0;
+  let memoKey = "";
+  let memo = new Map();
+  const memoized = (name, build) => {
+    const key = dataRev + "|" + state.showAll + "|" + state.focus + "|" + Math.floor(Date.now() / 15000) + "|" + state.filter;
+    if (key !== memoKey) {
+      memoKey = key;
+      memo = new Map();
+    }
+    let value = memo.get(name);
+    if (value === undefined) {
+      value = build();
+      memo.set(name, value);
+    }
+    return value;
   };
 
   // ───────────── estado de la barra ─────────────
@@ -228,15 +295,22 @@
 
   class AuthError extends Error {}
 
-  const api = async (path) => {
+  const api = async (path, base = API8) => {
     if (!state.token) throw new AuthError("sin sesión");
-    const res = await fetch(API8 + path, { headers: { Authorization: "Bearer " + state.token } });
+    const res = await fetch(base + path, { headers: { Authorization: "Bearer " + state.token } });
     if (res.status === 401 || res.status === 403) throw new AuthError("sesión expirada");
     if (!res.ok) throw new Error("HTTP " + res.status);
     return res.json();
   };
 
   const rowsOf = (json) => (Array.isArray(json) ? json : Array.isArray(json && json.contenido) ? json.contenido : []);
+
+  // La API anterior a veces responde con un solo objeto en vez de una lista.
+  const rowsOfOld = async (path) => {
+    const json = await api(path, API_OLD);
+    const data = json && typeof json === "object" && !Array.isArray(json) && json.contenido != null ? json.contenido : json;
+    return Array.isArray(data) ? data : data && typeof data === "object" ? [data] : [];
+  };
 
   const loadCourses = async () => {
     const rows = rowsOf(await api("/Course/getAllCourses"));
@@ -252,6 +326,7 @@
         current: !c.fechaTerminoEpoch || c.fechaTerminoEpoch >= now
       }))
       .sort((a, b) => Number(b.current) - Number(a.current) || Number(b.favorite) - Number(a.favorite) || b.end - a.end || a.name.localeCompare(b.name));
+    dataRev += 1;
   };
 
   const loadActivities = async (course) => {
@@ -259,8 +334,233 @@
     try {
       const rows = rowsOf(await api("/Activity/getActividadesEstudiante/" + encodeURIComponent(course.id)));
       state.acts.set(course.id, rows.map((r) => normalizeActivity(r, course)).filter((a) => a.id && a.visible));
+      dataRev += 1;
     } finally {
       state.actsLoading.delete(course.id);
+    }
+  };
+
+  // ── Contenido de los cursos (mismo origen de datos que Miyu --pendientes) ──
+
+  // Los nombres de campo cambian de mayúsculas entre endpoints.
+  const pick = (source, fields) => {
+    if (!source || typeof source !== "object") return "";
+    for (const field of fields) {
+      const value = source[field];
+      if (value !== null && value !== undefined && String(value).trim() !== "") return value;
+    }
+    return "";
+  };
+  const idOf = (value, allowZero) => {
+    const raw = String(value == null ? "" : value).trim();
+    return /^\d+$/.test(raw) && (allowZero || Number(raw) > 0) ? String(Number(raw)) : "";
+  };
+
+  // "12/oct/2026 - 23:59" o ISO → epoch en segundos (0 si no se entiende).
+  const parseEminusDate = (text) => {
+    const lower = String(text || "").trim().toLowerCase();
+    if (!lower) return 0;
+    const m = lower.match(/(\d{1,2})\/(\w{3})\/(\d{4})\s*-\s*(\d{1,2}):(\d{2})/);
+    if (m && MONTHS.includes(m[2])) return new Date(Number(m[3]), MONTHS.indexOf(m[2]), Number(m[1]), Number(m[4]), Number(m[5])).getTime() / 1000;
+    const t = new Date(String(text)).getTime();
+    return Number.isNaN(t) ? 0 : t / 1000;
+  };
+
+  const PUBLISH_FIELDS = ["fechaPublicacionInicio", "FechaPublicacionInicio", "fechaPublicacion", "FechaPublicacion"];
+  const isPublished = (entry) => {
+    if (!entry || typeof entry !== "object") return false;
+    const visible = entry.visible ?? entry.Visible ?? entry.estado ?? entry.estatus;
+    if (["0", "false", "borrador", "draft", "oculto", "eliminado", "eliminada"].includes(String(visible ?? "").trim().toLowerCase())) return false;
+    if (Number(visible) === 3) return false;
+    return parseEminusDate(pick(entry, PUBLISH_FIELDS)) <= nowSec();
+  };
+
+  const FILE_ID_FIELDS = ["idArchivosElementos", "IdArchivosElementos", "idarchivoselementos", "idArchivoElemento", "IdArchivoElemento", "idarchivoelemento", "idArchivo", "IdArchivo", "idarchivo", "id"];
+  const FILE_NAME_FIELDS = ["nombreOriginal", "NombreOriginal", "nombreoriginal", "nombreArchivo", "NombreArchivo", "nombrearchivo", "nombre", "Nombre", "name"];
+  const ELEMENT_ID_FIELDS = ["idElemento", "IdElemento", "idelemento", "idContenido", "IdContenido", "idcontenido"];
+  const UNIT_ID_FIELDS = ["idUnidad", "IdUnidad", "idunidad"];
+  const DESC_FIELDS = ["descripcion", "Descripcion", "description", "contenido", "Contenido", "mensaje", "Mensaje", "texto", "Texto", "cuerpo", "Cuerpo", "detalle", "Detalle", "instrucciones", "Instrucciones", "observaciones", "Observaciones"];
+  const TITLE_FIELDS = ["titulo", "Titulo", "nombre", "Nombre"];
+
+  const contentFile = (row, unitId) => {
+    if (!row || typeof row !== "object") return null;
+    const id = idOf(pick(row, FILE_ID_FIELDS));
+    if (!id) return null;
+    const rawSize = pick(row, ["tamano", "Tamano", "size", "Size", "peso", "Peso"]);
+    const bytes = typeof rawSize === "number" ? rawSize : Number(String(rawSize || "").replace(/[^\d.]/g, ""));
+    return {
+      id,
+      elementId: idOf(pick(row, ELEMENT_ID_FIELDS)),
+      unitId: idOf(pick(row, UNIT_ID_FIELDS), true) || unitId || "",
+      name: String(pick(row, FILE_NAME_FIELDS) || "archivo").trim(),
+      size: typeof rawSize === "string" && /[a-z]/i.test(rawSize) ? rawSize.trim() : fileSize({ size: bytes })
+    };
+  };
+
+  const contentFilesOf = (entry) => {
+    const raw = pick(entry, ["archivos", "Archivos", "adjuntos", "Adjuntos", "archivosElementos", "ArchivosElementos"]);
+    return Array.isArray(raw) ? raw.map((f) => contentFile(f)).filter(Boolean) : [];
+  };
+
+  const descOf = (entry) => {
+    const value = pick(entry, DESC_FIELDS);
+    return typeof value === "string" ? value : "";
+  };
+
+  const loadContent = async (course) => {
+    const courseId = encodeURIComponent(course.id);
+    const units = (await rowsOfOld("/Contenido/getUnidades/" + courseId + "/0")).filter(isPublished);
+    const perUnit = new Array(units.length).fill(null);
+    await pool(units.map((unit, i) => [unit, i]), 3, async ([unit, i]) => {
+      const unitId = idOf(pick(unit, ["idUnidad", "IdUnidad", "idContenido", "IdContenido", "id"]), true);
+      const unitName = String(pick(unit, ["nombre", "Nombre", "unidad", "Unidad", "titulo", "Titulo"]) || "").trim();
+      if (!unitId || !unitName) return;
+      const base = { courseId: course.id, courseName: course.name, unitId, unitName };
+      const items = [{
+        ...base,
+        kind: "unit",
+        id: course.id + ":u:" + unitId,
+        elementId: "",
+        title: unitName,
+        html: descOf(unit),
+        files: [],
+        published: parseEminusDate(pick(unit, [...PUBLISH_FIELDS, "fechaRegistro", "FechaRegistro", "fechaAlta", "FechaAlta"]))
+      }];
+      perUnit[i] = items;
+      let elements = [];
+      try {
+        elements = (await rowsOfOld("/Contenido/getElementos/" + courseId + "/" + encodeURIComponent(unitId))).filter(isPublished);
+      } catch (err) {
+        if (err instanceof AuthError) throw err;
+        items[0].partial = true;
+      }
+      for (const el of elements) {
+        const elementId = idOf(pick(el, ["idElemento", "IdElemento", "idContenido", "IdContenido", "id"]));
+        const title = String(pick(el, TITLE_FIELDS) || "").trim();
+        if (!elementId || !title) continue;
+        const files = contentFilesOf(el);
+        const flagged = pick(el, ["tieneAdjuntos", "TieneAdjuntos"]);
+        items.push({
+          ...base,
+          kind: "element",
+          id: course.id + ":e:" + elementId,
+          elementId,
+          title,
+          html: descOf(el),
+          files,
+          hasFiles: files.length > 0 || (!!flagged && !["0", "false", "no"].includes(String(flagged).trim().toLowerCase())),
+          published: parseEminusDate(pick(el, [...PUBLISH_FIELDS, "fechaRegistro", "FechaRegistro", "fechaAlta", "FechaAlta"]))
+        });
+      }
+    });
+    state.content.set(course.id, perUnit.filter(Boolean).flat());
+    dataRev += 1;
+  };
+
+  // La caché es por cuenta: el id sale del token de Eminus.
+  const accountOf = (token) => {
+    try {
+      const b64 = String(token).split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+      const p = JSON.parse(decodeURIComponent(escape(atob(b64))));
+      const id = p.nameid || p.unique_name || p.sub || p.email || p.idPersona || p.matricula;
+      return id ? String(id) : "";
+    } catch (_) {
+      return "";
+    }
+  };
+
+  // En chrome.storage.local: sobrevive a cerrar el navegador, así la vista
+  // abre al instante y se pone al día por detrás.
+  const saveContentCache = async () => {
+    const account = state.contentAccount;
+    if (!account) return;
+    const entries = [...state.content.entries()];
+    const put = (content) => chrome.storage.local.set({ [CONTENT_CACHE_KEY]: { account, ts: state.contentLoadedAt, content } });
+    try {
+      await put(entries);
+    } catch (_) {
+      // No cupo: sin las descripciones de los elementos, que se vuelven a
+      // pedir al seleccionarlos.
+      await put(entries.map(([id, items]) => [id, items.map((it) => (it.kind === "element" ? { ...it, html: "" } : it))])).catch(() => {});
+    }
+  };
+
+  // Toma de la caché el contenido de la cuenta en sesión; si la cuenta
+  // cambió, lo que había en memoria ya no vale.
+  const adoptContentCache = async () => {
+    const account = accountOf(state.token);
+    if (account === state.contentAccount) return;
+    state.contentAccount = account;
+    state.content = new Map();
+    dataRev += 1;
+    state.contentDetails.clear();
+    state.contentFiles.clear();
+    state.contentLoadedAt = 0;
+    state.contentTried = false;
+    if (!account) return;
+    try {
+      const saved = (await chrome.storage.local.get(CONTENT_CACHE_KEY))[CONTENT_CACHE_KEY];
+      if (saved && saved.account === account && Array.isArray(saved.content)) {
+        state.content = new Map(saved.content);
+        dataRev += 1;
+        state.contentLoadedAt = saved.ts || 0;
+        state.contentTried = true;
+      }
+    } catch (_) {
+    }
+  };
+
+  // Pide el contenido si falta o ya es viejo (o siempre, con `force`). Se
+  // llama al cargar la app, no al abrir la vista: cuando llegas ya está.
+  const ensureContent = (force) => {
+    if (!state.token || !state.courses.length) return;
+    if (force || !state.contentLoadedAt || Date.now() - state.contentLoadedAt > CONTENT_MAX_AGE) loadAllContent();
+  };
+
+  const loadAllContent = async () => {
+    if (state.contentLoading || !state.token) return;
+    state.contentLoading = true;
+    state.contentTried = true;
+    const account = state.contentAccount;
+    const current = state.courses.filter((c) => c.current);
+    const live = () => state.view === "content";
+    let done = 0;
+    let failed = 0;
+    if (live()) setMode("load");
+    try {
+      await pool(current, 4, async (course) => {
+        try {
+          await loadContent(course);
+        } catch (err) {
+          if (err instanceof AuthError) throw err;
+          failed += 1;
+        }
+        done += 1;
+        if (live()) say("contenido " + done + "/" + current.length + "…", 0);
+        scheduleRender();
+      });
+      // Cambió la cuenta a media carga: esto ya no es de quien está en sesión.
+      if (account !== state.contentAccount) return;
+      state.contentFiles.clear();
+      state.contentDetails.clear();
+      // Con cursos sin leer no se da por fresco: se reintenta al volver.
+      if (!failed) {
+        state.contentLoadedAt = Date.now();
+        saveContentCache();
+      }
+      if (!state.loading) setMode("normal");
+      if (failed) say("contenido: no se pudo leer " + failed + (failed === 1 ? " curso" : " cursos"), 6000);
+      else if (live()) {
+        say(defaultMsg(), 0);
+        msgBusy = false;
+      }
+    } catch (err) {
+      setMode("error");
+      if (err instanceof AuthError) showLogin(err.message);
+      else say("error: " + (err && err.message ? err.message : err), 6000);
+    } finally {
+      state.contentLoading = false;
+      render();
     }
   };
 
@@ -291,6 +591,7 @@
       if (!data || !Array.isArray(data.courses)) return false;
       state.courses = data.courses;
       state.acts = new Map(data.acts || []);
+      dataRev += 1;
       state.loadedAt = data.ts || 0;
       return true;
     } catch (_) {
@@ -298,7 +599,8 @@
     }
   };
 
-  const refresh = async () => {
+  // `manual` (tecla r): también vuelve a leer el contenido aunque sea reciente.
+  const refresh = async (manual) => {
     if (state.loading) return;
     state.loading = true;
     setMode("load");
@@ -319,6 +621,7 @@
       setMode("normal");
       say(defaultMsg(), 0);
       msgBusy = false;
+      ensureContent(manual === true);
     } catch (err) {
       if (err instanceof AuthError) {
         showLogin(err.message);
@@ -335,18 +638,19 @@
 
   // ───────────── modelo de vistas ─────────────
 
-  const currentActs = () => {
+  const currentActs = () => memoized("acts", () => {
     const out = [];
     for (const course of state.courses) {
       if (!course.current) continue;
       for (const act of state.acts.get(course.id) || []) out.push(act);
     }
     return out;
-  };
+  });
 
   // Agenda: lista plana con cabeceras de grupo. Sólo las filas "item" son
   // seleccionables.
-  const agendaModel = () => {
+  const agendaModel = () => memoized("agenda", buildAgenda);
+  const buildAgenda = () => {
     const now = nowSec();
     const today = startOfDay(new Date());
     const groups = [
@@ -381,7 +685,8 @@
   };
 
   // Pendientes agrupados por materia, como el panel de Miyu.
-  const miyuModel = () => {
+  const miyuModel = () => memoized("miyu", buildMiyu);
+  const buildMiyu = () => {
     const now = nowSec();
     const byCourse = new Map();
     for (const act of currentActs()) {
@@ -417,20 +722,31 @@
     return c;
   };
 
-  const visibleCourses = () =>
-    state.courses.filter((c) => (state.showAll || c.current) && (state.focus !== "list" || matches(c.name)));
+  const visibleCourses = () => memoized("courses", () =>
+    state.courses.filter((c) => (state.showAll || c.current) && (state.focus !== "list" || matches(c.name))));
 
-  const courseActs = (course) => {
+  const courseActs = (course) => memoized("acts:" + course.id, () => {
     const list = (state.acts.get(course.id) || []).slice();
     list.sort((a, b) => (b.start || 0) - (a.start || 0));
     return list.filter((a) => state.focus !== "mid" || matches(a.title));
-  };
+  });
+
+  // Contenido por materia: cada módulo seguido de sus elementos.
+  const contentModel = () => memoized("content", () =>
+    state.courses
+      .filter((c) => c.current && state.content.has(c.id))
+      .map((c) => {
+        const items = state.content.get(c.id).filter((it) => matches(it.title + " " + it.unitName + " " + c.name));
+        return { label: shortCourse(c.name), count: items.filter((it) => it.kind === "element").length, items };
+      })
+      .filter((g) => g.items.length));
+
+  const MODELS = { content: () => contentModel(), agenda: () => agendaModel(), miyu: () => miyuModel(), grades: () => gradesModel() };
 
   // Elementos navegables del panel indicado.
   const itemsOf = (pane) => {
-    if (state.view === "agenda") return pane === "list" ? agendaModel().flatMap((g) => g.items) : [];
-    if (state.view === "miyu") return pane === "list" ? miyuModel().flatMap((g) => g.items) : [];
-    if (state.view === "grades") return pane === "list" ? gradesModel().flatMap((g) => g.items) : [];
+    const model = MODELS[state.view];
+    if (model) return pane === "list" ? memoized("flat:" + state.view, () => model().flatMap((g) => g.items)) : [];
     if (pane === "list") return visibleCourses();
     if (pane === "mid") {
       const course = visibleCourses()[state.sel.courses];
@@ -440,7 +756,7 @@
   };
 
   const selKey = (pane) =>
-    state.view === "agenda" ? "agenda" : state.view === "miyu" ? "miyu" : state.view === "grades" ? "grades" : pane === "list" ? "courses" : "mid";
+    state.view === "agenda" ? "agenda" : state.view === "miyu" ? "miyu" : state.view === "grades" ? "grades" : state.view === "content" ? "content" : pane === "list" ? "courses" : "mid";
 
   const selected = (pane) => {
     const items = itemsOf(pane);
@@ -470,7 +786,7 @@
 
   const renderAgenda = () => {
     const groups = agendaModel();
-    const flat = groups.flatMap((g) => g.items);
+    const flat = itemsOf("list");
     if (state.sel.agenda >= flat.length) state.sel.agenda = Math.max(0, flat.length - 1);
     els.listTitle.textContent = "agenda" + (state.showAll ? " · todo" : "") + (state.filter ? " · /" + state.filter : "");
     if (!flat.length) {
@@ -497,7 +813,7 @@
 
   const renderMiyu = () => {
     const groups = miyuModel();
-    const flat = groups.flatMap((g) => g.items);
+    const flat = itemsOf("list");
     if (state.sel.miyu >= flat.length) state.sel.miyu = Math.max(0, flat.length - 1);
     els.listTitle.textContent = "pendientes por materia" + (state.filter ? " · /" + state.filter : "");
     if (!flat.length) {
@@ -610,7 +926,8 @@
     return Number.isFinite(n) ? n : null;
   };
 
-  const gradesModel = () => {
+  const gradesModel = () => memoized("grades", buildGrades);
+  const buildGrades = () => {
     const byCourse = new Map();
     for (const act of currentActs()) {
       const grade = num(act.grade);
@@ -633,7 +950,7 @@
 
   const renderGrades = () => {
     const groups = gradesModel();
-    const flat = groups.flatMap((g) => g.items);
+    const flat = itemsOf("list");
     if (state.sel.grades >= flat.length) state.sel.grades = Math.max(0, flat.length - 1);
     const all = flat.map((a) => num(a.grade)).filter((g) => g !== null);
     const overall = all.length ? (all.reduce((x, y) => x + y, 0) / all.length).toFixed(1) : "—";
@@ -654,6 +971,43 @@
           <span class="st">${grade === null ? "◌" : "✓"}</span>
           <span class="due grade">${grade === null ? "en revisión" : esc(String(grade)) + (num(act.value) ? " / " + esc(String(act.value)) : "")}</span>
           <span class="title">${highlight(act.title)}</span>
+        </div>`;
+        index += 1;
+      }
+    }
+    els.list.innerHTML = html;
+  };
+
+  // ── Contenido: módulos y elementos publicados, por materia ──
+  const contentLabel = (it) =>
+    it.kind === "unit" ? "módulo" : it.files.length > 1 ? it.files.length + " archivos" : it.hasFiles ? "archivo" : "mensaje";
+
+  const renderContent = () => {
+    if (!state.contentTried && !state.contentLoading && !state.loading && state.token && state.courses.length) loadAllContent();
+    const groups = contentModel();
+    const flat = itemsOf("list");
+    if (state.sel.content >= flat.length) state.sel.content = Math.max(0, flat.length - 1);
+    els.listTitle.textContent = "contenido por materia" + (state.contentLoading && flat.length ? " · actualizando…" : "") + (state.filter ? " · /" + state.filter : "");
+    if (!flat.length) {
+      els.list.innerHTML = `<div class="empty-note">${
+        state.contentLoading || state.loading || !state.contentTried
+          ? "cargando contenido…"
+          : state.filter
+            ? "nada coincide con «" + esc(state.filter) + "»"
+            : "tus cursos actuales no tienen contenido publicado.\n\n  r  actualizar"
+      }</div>`;
+      return;
+    }
+    let html = "";
+    let index = 0;
+    for (const g of groups) {
+      html += `<div class="group" data-count="${g.count}">${esc(g.label)}</div>`;
+      for (const it of g.items) {
+        const unit = it.kind === "unit";
+        html += `<div class="row act-row ${unit ? "c-unit" : "c-el" + (it.hasFiles ? " c-files" : "")}" role="option" data-index="${index}" aria-selected="${index === state.sel.content}">
+          <span class="st">${unit ? "▸" : it.hasFiles ? "⬇" : "·"}</span>
+          <span class="due">${esc(contentLabel(it))}</span>
+          <span class="title">${highlight(it.title)}</span>
         </div>`;
         index += 1;
       }
@@ -749,6 +1103,13 @@
 
   const detailKey = (act) => act.courseId + ":" + act.id;
 
+  // Las descripciones pueden pesar (traen imágenes incrustadas): se guardan
+  // sólo las más recientes; las demás se vuelven a pedir si hacen falta.
+  const MAX_DETAILS = 60;
+  const trim = (map) => {
+    while (map.size > MAX_DETAILS) map.delete(map.keys().next().value);
+  };
+
   const fetchDetail = (act) => {
     const key = detailKey(act);
     if (!state.details.has(key)) {
@@ -762,6 +1123,7 @@
           if (err instanceof AuthError) showLogin(err.message);
         });
       state.details.set(key, { pending: p });
+      trim(state.details);
     }
     return state.details.get(key);
   };
@@ -783,7 +1145,7 @@
     clearTimeout(prefetchTimer);
     prefetchTimer = setTimeout(() => {
       const pane = state.view === "courses" ? "mid" : "list";
-      if (state.view === "courses" && state.focus === "list") return;
+      if (state.view === "content" || (state.view === "courses" && state.focus === "list")) return;
       const items = itemsOf(pane);
       const i = state.sel[selKey(pane)];
       for (const act of [items[i + 1], items[i - 1], items[i + 2]]) {
@@ -850,6 +1212,126 @@
     els.detail.replaceChildren(...body.childNodes);
   };
 
+  // Archivos de un curso según su ubicación (módulo o elemento). Una consulta
+  // por curso, compartida por todos sus elementos.
+  const courseFiles = (courseId) => {
+    if (!state.contentFiles.has(courseId)) {
+      state.contentFiles.set(courseId, rowsOfOld("/Contenido/UbicacionArchivos/" + encodeURIComponent(courseId)).then(
+        (rows) => rows.flatMap((row) => {
+          const unitId = idOf(pick(row, UNIT_ID_FIELDS), true);
+          return (Array.isArray(row && row.archivos) ? row.archivos : [row]).map((f) => contentFile(f, unitId)).filter(Boolean);
+        }),
+        (err) => {
+          state.contentFiles.delete(courseId);
+          if (err instanceof AuthError) throw err;
+          return [];
+        }
+      ));
+    }
+    return state.contentFiles.get(courseId);
+  };
+
+  // Descripción completa y archivos de un módulo o elemento, al seleccionarlo.
+  const fetchContentDetail = (item) => {
+    if (!state.contentDetails.has(item.id)) {
+      const load = async () => {
+        const located = await courseFiles(item.courseId);
+        let files = item.kind === "element" ? located.filter((f) => f.elementId === item.elementId) : located.filter((f) => f.unitId === item.unitId);
+        let html = item.html;
+        if (item.kind === "element") {
+          try {
+            const row = (await rowsOfOld("/Contenido/getElemento/" + encodeURIComponent(item.courseId) + "/" + encodeURIComponent(item.elementId)))[0] || {};
+            html = descOf(row) || html;
+            if (!files.length) files = contentFilesOf(row);
+          } catch (err) {
+            if (err instanceof AuthError) throw err;
+          }
+        }
+        const seen = new Set();
+        files = [...item.files, ...files].filter((f) => !seen.has(f.id) && seen.add(f.id));
+        return { ok: true, html, files };
+      };
+      const p = load().then(
+        (data) => state.contentDetails.set(item.id, data),
+        (err) => {
+          state.contentDetails.set(item.id, { ok: false, error: err });
+          if (err instanceof AuthError) showLogin(err.message);
+        }
+      );
+      state.contentDetails.set(item.id, { pending: p });
+      trim(state.contentDetails);
+    }
+    return state.contentDetails.get(item.id);
+  };
+
+  // Lo que hay que mostrar ahora mismo de un elemento: lo ya cargado o, si
+  // aún no llega, lo que venía en la lista.
+  const contentView = (item) => {
+    const cached = state.contentDetails.get(item.id);
+    const ready = cached && cached.ok;
+    return { cached, html: ready ? cached.html : item.html, files: ready ? cached.files : item.files };
+  };
+
+  const renderContentDetail = (item) => {
+    const { cached, html, files } = contentView(item);
+    const loading = !cached || cached.pending;
+    const body = document.createElement("div");
+    body.innerHTML = `
+      <h3>${esc(item.title)}</h3>
+      <div class="sub">${esc(item.courseName.toLowerCase())}</div>
+      <dl class="kv">
+        <dt>tipo</dt><dd>${esc(contentLabel({ ...item, files, hasFiles: item.hasFiles || files.length > 0 }))}</dd>
+        ${item.kind === "element" ? `<dt>módulo</dt><dd>${esc(item.unitName)}</dd>` : ""}
+        <dt>publicado</dt><dd>${esc(fullDate(item.published))}</dd>
+      </dl>
+      <div class="section-label">descripción</div>
+      <div class="rich" id="rich"></div>
+      <div class="section-label">archivos</div>
+      <div id="files"></div>
+      <div class="actions">
+        <button type="button" class="btn" data-action="open-content">abrir en eminus</button>
+        <button type="button" class="btn" data-action="open-course">ir al curso</button>
+      </div>`;
+    const rich = body.querySelector("#rich");
+    if (String(html || "").trim()) sanitizeInto(html, rich);
+    else rich.innerHTML = `<span class="dim">${loading ? "cargando…" : "sin descripción"}</span>`;
+    body.querySelector("#files").innerHTML = files.length
+      ? `<ul class="files">` + files.map((f, i) => `<li><button type="button" class="file" data-file="${i}" title="Descargar">${esc(f.name)}</button> <span class="dim">${esc(f.size)}</span></li>`).join("") + `</ul>`
+      : `<span class="dim">${loading ? "buscando archivos…" : cached && !cached.ok ? "no se pudieron cargar los archivos" : "sin archivos"}</span>`;
+    if (loading) {
+      clearTimeout(fetchTimer);
+      fetchTimer = setTimeout(() => {
+        fetchContentDetail(item).pending?.then(() => {
+          if (detailShown === "content:" + item.id) renderDetail();
+        });
+      }, cached ? 0 : 120);
+    }
+    els.detail.replaceChildren(...body.childNodes);
+  };
+
+  const downloadFile = async (item, file) => {
+    const elementId = file.elementId || item.elementId;
+    if (!elementId) return say("este archivo sólo se puede descargar desde eminus");
+    say("descargando " + file.name + "…", 0);
+    try {
+      const res = await fetch(API_OLD + "/contenido/descargaElementoArchivo/" + [item.courseId, elementId, file.id].map(encodeURIComponent).join("/"), {
+        headers: { Authorization: "Bearer " + state.token }
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const url = URL.createObjectURL(await res.blob());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.name || "archivo";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+      say("descarga iniciada: " + file.name);
+    } catch (err) {
+      say("no se pudo descargar " + file.name + " (" + (err && err.message ? err.message : err) + ")", 6000);
+    }
+  };
+
   const renderCourseDetail = (course) => {
     const acts = state.acts.get(course.id) || [];
     const pending = acts.filter((a) => !a.delivered && a.deadline && a.deadline > nowSec()).sort((a, b) => a.deadline - b.deadline);
@@ -871,6 +1353,7 @@
   };
 
   const detailTarget = () => {
+    if (state.view === "content") return { content: selected("list") };
     if (state.view !== "courses") return { act: selected("list") };
     if (state.focus === "list") return { course: selected("list") };
     return { act: selected("mid"), course: selected("list") };
@@ -878,14 +1361,17 @@
 
   const renderDetail = () => {
     const t = detailTarget();
-    const key = t.act ? detailKey(t.act) : t.course ? "course:" + t.course.id : "";
-    const cached = t.act && state.details.get(key);
+    const key = t.content ? "content:" + t.content.id : t.act ? detailKey(t.act) : t.course ? "course:" + t.course.id : "";
+    const cached = t.content ? state.contentDetails.get(t.content.id) : t.act && state.details.get(key);
     // Mismo elemento y nada nuevo que mostrar: no se toca (conserva el scroll).
     const stamp = key + "|" + (cached ? (cached.pending ? "p" : "d") : "-") + "|" + (t.act ? t.act.delivered : "") + "|" + (t.course ? (state.acts.get(t.course.id) || []).length : "") + "|" + Math.floor(Date.now() / 60000);
     if (stamp === detailStamp) return;
     detailStamp = stamp;
     detailShown = key;
-    if (t.act) {
+    if (t.content) {
+      renderContentDetail(t.content);
+      els.detail.scrollTop = 0;
+    } else if (t.act) {
       renderActivityDetail(t.act);
       els.detail.scrollTop = 0;
       prefetchAround();
@@ -926,6 +1412,7 @@
     if (state.view === "agenda") renderAgenda();
     else if (state.view === "miyu") renderMiyu();
     else if (state.view === "grades") renderGrades();
+    else if (state.view === "content") renderContent();
     else renderCourses();
     for (const [pane, el] of [["list", els.paneList], ["mid", els.paneMid], ["detail", els.paneDetail]]) {
       el.classList.toggle("focused", state.focus === pane);
@@ -949,7 +1436,7 @@
   };
 
   const renderHints = () => {
-    const pairs = [["j/k", "mover"], state.view === "courses" && ["h/l", "panel"], ["enter", "abrir"], ["/", "filtrar"], ["?", "atajos"]];
+    const pairs = [["j/k", "mover"], state.view === "courses" && ["h/l", "panel"], ["enter", "abrir"], state.view === "content" && ["D", "descargar"], ["/", "filtrar"], ["?", "atajos"]];
     const html = pairs.filter(Boolean).map(([k, v]) => `<span><kbd>${k}</kbd> ${v}</span>`).join("");
     if (els.hints.innerHTML !== html) els.hints.innerHTML = html;
   };
@@ -987,15 +1474,44 @@
 
   const openCourse = (course, section) => {
     if (!course) return;
-    openInEminus(section ? { course: course.name, section } : { course: course.name });
+    openInEminus(section ? { course: course.name, courseId: course.id, section } : { course: course.name, courseId: course.id });
     say("abriendo " + course.name.toLowerCase() + " en eminus…");
   };
 
+  const courseOf = (t) => t.course || state.courses.find((c) => c.id === (t.act || t.content || {}).courseId);
+
+  // Abre en Eminus el módulo al que pertenece el elemento.
+  const openContent = (item) => {
+    if (!item) return;
+    openInEminus({ course: item.courseName, courseId: item.courseId, section: "content", unit: item.unitId });
+    say("abriendo «" + item.unitName + "» en eminus…");
+  };
+
+  // D: descarga el archivo del elemento seleccionado, si es uno solo.
+  const downloadSelected = async () => {
+    const item = state.view === "content" && selected("list");
+    if (!item) return;
+    const entry = fetchContentDetail(item);
+    if (entry.pending) await entry.pending;
+    const { files } = contentView(item);
+    if (!files.length) say("«" + item.title + "» no tiene archivos");
+    else if (files.length === 1) downloadFile(item, files[0]);
+    else say(files.length + " archivos: elige cuál en el detalle");
+  };
+
   els.detail.addEventListener("click", (e) => {
+    const file = e.target.closest("[data-file]");
+    if (file) {
+      const item = detailTarget().content;
+      const chosen = item && contentView(item).files[Number(file.dataset.file)];
+      if (chosen) downloadFile(item, chosen);
+      return;
+    }
     const btn = e.target.closest("[data-action]");
     if (!btn) return;
     const t = detailTarget();
-    const course = t.course || (t.act && state.courses.find((c) => c.id === t.act.courseId));
+    const course = courseOf(t);
+    if (btn.dataset.action === "open-content") openContent(t.content);
     if (btn.dataset.action === "open-activity") openActivity(t.act);
     if (btn.dataset.action === "open-course") openCourse(course);
     if (btn.dataset.action === "open-course-activities") openCourse(course, "activities");
@@ -1026,7 +1542,9 @@
     if (token && token !== state.token) {
       state.token = token;
       state.details.clear();
-      refresh();
+      state.contentDetails.clear();
+      state.contentFiles.clear();
+      adoptContentCache().then(() => refresh());
     }
   });
 
@@ -1075,7 +1593,9 @@
   };
 
   const activate = () => {
-    if (state.view !== "courses") {
+    if (state.view === "content") {
+      openContent(selected("list"));
+    } else if (state.view !== "courses") {
       openActivity(selected("list"));
     } else if (state.focus === "list") {
       if (selected("list")) focusPane("mid");
@@ -1176,6 +1696,8 @@
     else if (key === "2") (handled(), setView("courses"));
     else if (key === "3") (handled(), setView("miyu"));
     else if (key === "4") (handled(), setView("grades"));
+    else if (key === "5") (handled(), setView("content"));
+    else if (key === "D") (handled(), downloadSelected());
     else if (key === "j" || key === "ArrowDown") (handled(), move(1));
     else if (key === "k" || key === "ArrowUp") (handled(), move(-1));
     else if (key === "d" || key === "PageDown") (handled(), move(10));
@@ -1193,15 +1715,15 @@
     } else if (key === "Enter" || key === "o") (handled(), activate());
     else if (key === "O") {
       handled();
-      const t = detailTarget();
-      openCourse(t.course || (t.act && state.courses.find((c) => c.id === t.act.courseId)));
+      openCourse(courseOf(detailTarget()));
     } else if (key === "/") (handled(), openFilter());
     else if (key === "a") {
       handled();
       state.showAll = !state.showAll;
-      say(state.showAll ? (state.view === "agenda" ? "mostrando entregadas y vencidas antiguas" : "mostrando cursos anteriores") : "sólo lo actual");
+      if (state.view === "content") say("el contenido sólo se lee de los cursos actuales");
+      else say(state.showAll ? (state.view === "agenda" ? "mostrando entregadas y vencidas antiguas" : "mostrando cursos anteriores") : "sólo lo actual");
       render();
-    } else if (key === "r") (handled(), refresh());
+    } else if (key === "r") (handled(), refresh(true));
     else if (key === "c") (handled(), cycleTheme());
     else if (key === "?") (handled(), (els.help.hidden = false));
     else if (key === "Escape" && state.filter) (handled(), closeFilter(true));
@@ -1234,19 +1756,43 @@
 
   // ───────────── arranque ─────────────
 
-  const init = async () => {
+  // Los relojes sólo corren mientras la vista se ve: oculta dentro de Eminus
+  // o con la pestaña en segundo plano no hay nada que repintar. Al volver se
+  // pone al día de una vez.
+  let shown = !embedded;
+  let timers = [];
+  const awake = () => shown && !document.hidden;
+
+  const tickCountdown = () => {
+    const el = state.view === "miyu" && document.getElementById("next-countdown");
+    if (el) el.textContent = countdown(Number(el.dataset.deadline), true);
+  };
+
+  // `repaint`: al despertar, las fechas relativas que quedaron viejas.
+  const syncTimers = (repaint) => {
+    const on = awake();
+    if (on === timers.length > 0) return;
+    for (const id of timers) clearInterval(id);
+    timers = [];
+    if (!on) return;
     tickClock();
-    setInterval(tickClock, 15000);
-    // La cuenta regresiva de la vista miyu avanza cada segundo.
-    setInterval(() => {
-      const el = document.getElementById("next-countdown");
-      if (el) el.textContent = countdown(Number(el.dataset.deadline), true);
-    }, 1000);
-    // Refresca fechas relativas ("en 5m") cada minuto.
-    setInterval(() => {
-      if (!state.loading) render();
-      if (!msgBusy) els.msg.textContent = defaultMsg();
-    }, 60000);
+    if (!msgBusy) els.msg.textContent = defaultMsg();
+    if (repaint && state.loadedAt && !state.loading) render();
+    timers = [
+      setInterval(tickClock, 15000),
+      // La cuenta regresiva de la vista miyu avanza cada segundo.
+      setInterval(tickCountdown, 1000),
+      // Refresca fechas relativas ("en 5m") cada minuto.
+      setInterval(() => {
+        if (!state.loading) render();
+        if (!msgBusy) els.msg.textContent = defaultMsg();
+      }, 60000)
+    ];
+  };
+
+  const init = async () => {
+    syncTimers(false);
+    document.addEventListener("visibilitychange", () => syncTimers(true));
     // La app siempre usa el tema, aunque el reskin de Eminus esté apagado.
     document.documentElement.classList.add("bte");
     document.addEventListener("bte:prefs", () => {
@@ -1254,11 +1800,11 @@
       els.theme.textContent = bte.themeById(bte.prefs.theme).name;
     });
 
-    // La vista puede venir en la URL (#agenda, #courses, #miyu) desde los
+    // La vista puede venir en la URL (#agenda, #courses, #miyu…) desde los
     // accesos del encabezado de Eminus.
     const viewFromHash = () => {
       const view = location.hash.slice(1);
-      if (["agenda", "courses", "miyu", "grades"].includes(view)) setView(view);
+      if (VIEWS.includes(view)) setView(view);
     };
     viewFromHash();
     window.addEventListener("hashchange", viewFromHash);
@@ -1268,23 +1814,36 @@
         if (e.source !== window.parent || e.origin !== EMINUS) return;
         const data = e.data;
         if (!data || data.bte !== true) return;
-        if (data.type === "view" && ["agenda", "courses", "miyu", "grades"].includes(data.view)) {
+        if (data.type === "hide") {
+          shown = false;
+          syncTimers(false);
+          return;
+        }
+        if (data.type === "view" && VIEWS.includes(data.view)) {
+          shown = true;
+          // Si cambia de vista, setView ya repinta.
+          syncTimers(state.view === data.view);
+          // Oculta no se dibuja el fondo: se pide ahora que ya tiene tamaño.
+          if (bte.prefs) bte.bg.sync(bte.prefs);
           setView(data.view, true);
           els.list.focus({ preventScroll: true });
           // Estuvo oculta: si los datos ya son viejos, se actualizan sin
           // quitar lo que ya se ve.
           if (state.token && state.loadedAt && Date.now() - state.loadedAt > CACHE_MAX_AGE) refresh();
-          else if (!msgBusy) els.msg.textContent = defaultMsg();
+          else {
+            if (!msgBusy) els.msg.textContent = defaultMsg();
+            ensureContent();
+          }
         }
       });
       els.back.addEventListener("click", () => toParent({ type: "close" }));
       toParent({ type: "ready" });
     }
 
-    const restored = await restoreCache();
+    // La caché y el token se leen a la vez.
+    const [restored, { bteToken }] = await Promise.all([restoreCache(), chrome.storage.session.get("bteToken")]);
     if (restored) render();
 
-    const { bteToken } = await chrome.storage.session.get("bteToken");
     state.token = bteToken || "";
     if (!state.token) {
       if (!restored) showLogin("abre eminus para empezar");
@@ -1292,10 +1851,12 @@
       render();
       return;
     }
+    await adoptContentCache();
     if (!restored || Date.now() - state.loadedAt > CACHE_MAX_AGE) refresh();
     else {
       els.msg.textContent = defaultMsg();
       render();
+      ensureContent();
     }
   };
 

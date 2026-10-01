@@ -2275,3 +2275,255 @@ html:not(.bte) #bte-toast {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
+/* ─────────────────── perfiles ─────────────────── */
+
+/* Selector de perfiles sobre el login (profiles.js). */
+#bte-profiles {
+  position: fixed;
+  inset: 0 0 24px 0;
+  z-index: 2147481900;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  color: var(--bte-fg, #ebdbb2);
+  font: 14px/1.3 var(--bte-font, ui-monospace, monospace);
+}
+
+#bte-profiles > * {
+  flex: none;
+  width: min(420px, 100%);
+  box-sizing: border-box;
+}
+
+/* Centrado vertical que no recorta la lista cuando no cabe. */
+#bte-profiles > :first-child { margin-top: auto; }
+#bte-profiles > :last-child { margin-bottom: auto; }
+
+#bte-profiles[hidden],
+html:not(.bte) #bte-profiles {
+  display: none;
+}
+
+/* En el selector no se ve el formulario (sigue ahí: la extensión lo llena). */
+html.bte.bte-pick:not(#bte-z):not(#bte-y) m-auth .m-login__wrapper {
+  visibility: hidden !important;
+}
+
+#bte-profiles .bte-profiles-brand {
+  color: var(--bte-accent, #fabd2f);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+#bte-profiles .bte-profiles-title {
+  margin: 6px 0 14px;
+  color: var(--bte-dim, #a89984);
+  font-size: 13px;
+}
+
+#bte-profiles .bte-profiles-title::before {
+  content: "$ ";
+  color: var(--bte-green, #b8bb26);
+}
+
+#bte-profiles .bte-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 68px;
+  margin-bottom: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--bte-border, #504945);
+  background: color-mix(in oklab, var(--bte-bg0, #1d2021) 88%, transparent);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+#bte-profiles .bte-profile-avatar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bte-accent, #fabd2f);
+  color: var(--bte-accent-fg, #1d2021);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+#bte-profiles .bte-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#bte-profiles .bte-profile-who {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+#bte-profiles .bte-profile-who b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--bte-fg-strong, #fbf1c7);
+  font-size: 15px;
+}
+
+#bte-profiles .bte-profile-who i {
+  color: var(--bte-dim, #a89984);
+  font-size: 12.5px;
+  font-style: normal;
+}
+
+#bte-profiles .bte-profile-go {
+  flex: none;
+  color: var(--bte-accent, #fabd2f);
+  font-weight: 700;
+}
+
+#bte-profiles .bte-profile-go kbd {
+  margin-right: 4px;
+  color: var(--bte-dim, #a89984);
+  font: inherit;
+  font-weight: 400;
+  background: none;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+#bte-profiles .bte-profile:hover,
+#bte-profiles .bte-profile:focus,
+#bte-profiles .bte-profile[aria-busy="true"] {
+  border-color: var(--bte-accent, #fabd2f);
+  background: var(--bte-bg1, #32302f);
+  outline: none;
+}
+
+#bte-profiles .bte-profile[aria-busy="true"] {
+  cursor: progress;
+}
+
+#bte-profiles .bte-profile[aria-busy="true"] .bte-profile-who i {
+  color: var(--bte-accent, #fabd2f);
+}
+
+#bte-profiles .bte-profile-new {
+  min-height: 42px;
+  margin-top: 4px;
+  border: 1px dashed var(--bte-border, #504945);
+  background: none;
+  color: var(--bte-dim, #a89984);
+  font: inherit;
+  cursor: pointer;
+}
+
+#bte-profiles .bte-profile-new:hover,
+#bte-profiles .bte-profile-new:focus {
+  color: var(--bte-accent, #fabd2f);
+  border-color: var(--bte-accent, #fabd2f);
+  outline: none;
+}
+
+/* Con el formulario a la vista: volver a los perfiles guardados. */
+#bte-profiles-back {
+  position: fixed;
+  left: 50%;
+  bottom: 38px;
+  z-index: 2147481900;
+  min-height: 34px;
+  padding: 0 16px;
+  border: 1px solid var(--bte-border, #504945);
+  background: var(--bte-bg0, #1d2021);
+  color: var(--bte-accent, #fabd2f);
+  font: 700 13px/1 var(--bte-font, ui-monospace, monospace);
+  transform: translateX(-50%);
+  cursor: pointer;
+}
+
+#bte-profiles-back:hover,
+#bte-profiles-back:focus-visible {
+  border-color: var(--bte-accent, #fabd2f);
+  outline: none;
+}
+
+#bte-profiles-back[hidden],
+html:not(.bte) #bte-profiles-back {
+  display: none;
+}
+
+/* Oferta de guardar el perfil, tras entrar a mano. */
+#bte-profile-save {
+  position: fixed;
+  right: 12px;
+  bottom: 36px;
+  z-index: 2147482200;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(380px, calc(100vw - 24px));
+  padding: 14px;
+  box-sizing: border-box;
+  border: 1px solid var(--bte-accent, #fabd2f);
+  background: var(--bte-bg1, #32302f);
+  color: var(--bte-fg, #ebdbb2);
+  font: 13px/1.45 var(--bte-font, ui-monospace, monospace);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4);
+}
+
+html:not(.bte) #bte-profile-save {
+  display: none;
+}
+
+#bte-profile-save b {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--bte-fg-strong, #fbf1c7);
+}
+
+#bte-profile-save span {
+  color: var(--bte-dim, #a89984);
+  font-size: 12.5px;
+}
+
+#bte-profile-save .bte-profile-save-btns {
+  display: flex;
+  gap: 10px;
+}
+
+#bte-profile-save button {
+  flex: 1;
+  min-height: 34px;
+  border: 1px solid var(--bte-border, #504945);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#bte-profile-save button[data-a="yes"] {
+  border-color: var(--bte-accent, #fabd2f);
+  background: var(--bte-accent, #fabd2f);
+  color: var(--bte-accent-fg, #1d2021);
+}
+
+#bte-profile-save button:focus-visible {
+  outline: 2px solid var(--bte-accent, #fabd2f);
+  outline-offset: 2px;
+}

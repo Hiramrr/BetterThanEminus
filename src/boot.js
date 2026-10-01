@@ -27,7 +27,14 @@
     link.href = href;
   };
 
+  // Al cargar llegan las mismas preferencias dos veces (espejo y storage), y
+  // otra más por cada cambio propio: si no cambió nada no se vuelve a aplicar
+  // (ni se repinta el fondo ni se recalculan estilos).
+  let applied = "";
   bte.applyPrefs = (prefs) => {
+    const sig = JSON.stringify(prefs);
+    if (sig === applied) return;
+    applied = sig;
     bte.prefs = prefs;
     const font = bte.fontById(prefs.font);
     const style = bte.styleById(prefs.style);

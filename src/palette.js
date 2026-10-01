@@ -7,10 +7,12 @@
 
   // Coincidencia por subsecuencia: premia letras seguidas e inicios de palabra.
   // Devuelve null si no coincide, o { score, hits } con los índices resaltables.
-  bte.fuzzy = (query, text) => {
-    const q = bte.norm(query).replace(/\s+/g, "");
+  bte.fuzzy = (query, text) => fuzzyNorm(bte.norm(query).replace(/\s+/g, ""), bte.norm(text));
+
+  // Lo mismo con la consulta y el texto ya normalizados: la paleta normaliza
+  // cada elemento una sola vez, no en cada tecla.
+  const fuzzyNorm = (q, t) => {
     if (!q) return { score: 0, hits: [] };
-    const t = bte.norm(text);
     // bte.norm quita acentos pero conserva la longitud sólo si no hay
     // espacios dobles; el texto de entrada ya viene limpio.
     const hits = [];
@@ -152,19 +154,31 @@
     let selected = 0;
     let loading = typeof items === "function";
 
+    const normed = new WeakMap(); // item → { label, extra } normalizados
+    const normOf = (item) => {
+      let n = normed.get(item);
+      if (!n) {
+        n = { label: bte.norm(item.label), extra: bte.norm((item.keywords || "") + " " + (item.meta || "")) };
+        normed.set(item, n);
+      }
+      return n;
+    };
+
     const render = () => {
       const query = input.value;
       if (!query.trim()) {
         shown = all.map((item) => ({ item, hits: [] }));
       } else {
+        const q = bte.norm(query).replace(/\s+/g, "");
+        const minScore = q.length * 3;
         shown = all
           .map((item) => {
-            const m = bte.fuzzy(query, item.label);
+            const n = normOf(item);
+            const m = fuzzyNorm(q, n.label);
             if (m) return { item, hits: m.hits, score: m.score + 5 };
             // Respaldo: palabras clave, sólo si coinciden de forma compacta
             // (evita que «cursos anteriores» atrape cualquier consulta).
-            const k = bte.fuzzy(query, (item.keywords || "") + " " + (item.meta || ""));
-            const minScore = bte.norm(query).replace(/\s+/g, "").length * 3;
+            const k = fuzzyNorm(q, n.extra);
             return k && k.score >= minScore ? { item, hits: [], score: k.score - 10 } : null;
           })
           .filter(Boolean)
@@ -205,10 +219,27 @@
       if (current) current.scrollIntoView({ block: "nearest" });
     };
 
+    // Cambiar de fila no reconstruye la lista: sólo se marcan la anterior y
+    // la nueva.
+    const mark = (index, on) => {
+      const li = list.querySelector('.bte-item[data-index="' + index + '"]');
+      if (!li) return null;
+      li.setAttribute("aria-selected", String(on));
+      li.querySelector(".bte-item-mark").textContent = on ? "❯" : " ";
+      return li;
+    };
+    const select = (index) => {
+      if (index === selected) return;
+      mark(selected, false);
+      selected = index;
+      const li = mark(selected, true);
+      if (li) li.scrollIntoView({ block: "nearest" });
+      else render();
+    };
+
     const move = (delta) => {
       if (!shown.length) return;
-      selected = (selected + delta + shown.length) % shown.length;
-      render();
+      select((((selected + delta) % shown.length) + shown.length) % shown.length);
     };
 
     const run = async (index) => {
@@ -277,11 +308,7 @@
       if (e.buttons) return;
       const li = e.target.closest(".bte-item");
       if (!li) return;
-      const index = Number(li.dataset.index);
-      if (index !== selected) {
-        selected = index;
-        render();
-      }
+      select(Number(li.dataset.index));
     });
     list.addEventListener("click", (e) => {
       const li = e.target.closest(".bte-item");

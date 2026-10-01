@@ -502,6 +502,35 @@ mark {
   border-top: 1px dashed var(--bte-border);
 }
 
+/* Contenido: los elementos van sangrados bajo su módulo. */
+.row.c-unit .title {
+  color: var(--bte-fg-strong);
+  font-weight: 700;
+}
+
+.row.c-unit .st { color: var(--bte-accent); }
+.row.c-el .title { padding-left: 2ch; }
+.row.c-el .st { color: var(--bte-dim); }
+.row.c-files .st { color: var(--bte-green); }
+.pane.focused .row[aria-selected="true"] .title { color: inherit; }
+
+.files .file {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--bte-blue);
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.files .file:hover,
+.files .file:focus-visible {
+  color: var(--bte-accent);
+  outline: none;
+}
+
 .files {
   list-style: none;
   margin: 0;

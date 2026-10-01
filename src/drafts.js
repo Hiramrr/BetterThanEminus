@@ -111,7 +111,7 @@
         const key = fieldKey(el);
         const text = valueOf(el);
         const data = read();
-        touched.set(el, key);
+        touch(el, key);
         if (text.length < MIN_LENGTH) {
           if (!text && data[key]) {
             delete data[key];
@@ -130,8 +130,9 @@
     true
   );
 
-  setInterval(() => {
-    if (!touched.size) return;
+  // Sólo corre mientras haya campos con texto que vigilar.
+  let sweepTimer = null;
+  const sweep = () => {
     const data = read();
     let changed = false;
     for (const [el, key] of touched) {
@@ -146,7 +147,15 @@
       }
     }
     if (changed) write(data);
-  }, 2000);
+    if (!touched.size) {
+      clearInterval(sweepTimer);
+      sweepTimer = null;
+    }
+  };
+  const touch = (el, key) => {
+    touched.set(el, key);
+    sweepTimer ??= setInterval(sweep, 2000);
+  };
 
   // ───────────── ofrecer recuperar ─────────────
 
@@ -181,7 +190,7 @@
         const { el: target, key: k, draft: d } = chipFor;
         if (btn.dataset.act === "restore") {
           setValue(target, d);
-          touched.set(target, k);
+          touch(target, k);
           target.focus();
         } else {
           const data = read();
@@ -222,7 +231,7 @@
     true
   );
 
-  window.addEventListener("scroll", hideChip, true);
+  window.addEventListener("scroll", hideChip, { capture: true, passive: true });
 
   // Para la paleta: todos los borradores guardados (copiar al portapapeles).
   bte.listDrafts = () =>

@@ -27,13 +27,17 @@
 
   // ───────────── aviso breve ─────────────
 
+  // Segmentos de la barra de estado, guardados al crearla para no buscarlos
+  // en el documento en cada aviso, tecla o cambio de la página.
+  const sl = { bar: null, mode: null, msg: null, session: null, miyu: null, theme: null, clock: null };
+
   let toastTimer = null;
   bte.toast = (text, ms = 2600) => {
     if (!bte.isTop && topDoc) {
       sendToTop("toast", text);
       return;
     }
-    const msg = document.querySelector("#bte-statusline .bte-msg");
+    const msg = sl.msg;
     if (msg) {
       msg.textContent = text;
       msg.classList.add("bte-msg-live");
@@ -50,7 +54,7 @@
   let mode = "normal";
   bte.setMode = (next) => {
     mode = next || (bte.appOpen && bte.appOpen() ? "tui" : readingOn() ? "read" : cursorEl && cursorEl.isConnected ? "nav" : "normal");
-    const el = document.querySelector("#bte-statusline .bte-mode");
+    const el = sl.mode;
     if (el) {
       el.dataset.mode = mode;
       el.textContent = { normal: "NORMAL", nav: "NAV", cmd: "CMD", g: "G-", tui: "TUI", read: "LECTURA" }[mode] || mode.toUpperCase();
@@ -69,21 +73,30 @@
       <span class="bte-seg bte-miyu bte-clickable" title="Mostrar u ocultar Miyu (alt+e)" hidden></span>
       <span class="bte-seg bte-theme bte-clickable" title="Cambiar tema (c)"></span>
       <span class="bte-seg bte-clock"></span>`;
-    bar.querySelector(".bte-theme").addEventListener("click", () => cycleTheme(1));
-    bar.querySelector(".bte-miyu").addEventListener("click", () => bte.miyu.toggle());
+    sl.bar = bar;
+    for (const name of ["mode", "msg", "session", "miyu", "theme", "clock"]) sl[name] = bar.querySelector(".bte-" + name);
+    sl.theme.addEventListener("click", () => cycleTheme(1));
+    sl.miyu.addEventListener("click", () => bte.miyu.toggle());
     bar.querySelector(".bte-hint").addEventListener("click", () => bte.showHelp());
     document.body.appendChild(bar);
     updateStatus();
     tickClock();
   };
 
+  const DAYS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
   const tickClock = () => {
-    const el = document.querySelector("#bte-statusline .bte-clock");
+    const el = sl.clock;
     if (!el) return;
     const now = new Date();
-    const days = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
-    el.textContent = days[now.getDay()] + " " + String(now.getDate()).padStart(2, "0") + " " +
-      String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+    setText(el, DAYS[now.getDay()] + " " + String(now.getDate()).padStart(2, "0") + " " +
+      String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0"));
+  };
+
+  // El reloj sólo muestra minutos: se despierta al cambiar el minuto, no cada
+  // 15 s.
+  const runClock = () => {
+    tickClock();
+    setTimeout(runClock, 60000 - (Date.now() % 60000) + 50);
   };
 
   // Accesos a la pestaña TUI junto a la ruta del encabezado. Si Angular vuelve
@@ -96,7 +109,8 @@
     nav.innerHTML = `<button type="button" data-view="agenda" title="Pendientes por fecha (A)">agenda</button>
       <button type="button" data-view="courses" title="Cursos y actividades en columnas">cursos</button>
       <button type="button" data-view="miyu" title="Pendientes por materia">miyu</button>
-      <button type="button" data-view="grades" title="Calificaciones y promedios">tareas calificadas</button>`;
+      <button type="button" data-view="grades" title="Calificaciones y promedios">tareas calificadas</button>
+      <button type="button" data-view="content" title="Módulos y archivos por materia">contenido</button>`;
     nav.addEventListener("click", (e) => {
       const btn = e.target.closest("button[data-view]");
       if (!btn) return;
@@ -104,6 +118,9 @@
       e.stopPropagation();
       bte.toggleApp(btn.dataset.view);
     });
+    // Al acercar el ratón o el foco a los botones se va cargando la vista.
+    nav.addEventListener("pointerenter", warmApp);
+    nav.addEventListener("focusin", warmApp);
     logo.after(nav);
   };
 
@@ -129,7 +146,7 @@
       clearCursor();
     }
 
-    const themeEl = document.querySelector("#bte-statusline .bte-theme");
+    const themeEl = sl.theme;
     if (themeEl && bte.prefs) {
       const style = bte.styleById(bte.prefs.style);
       setText(themeEl, style.ownColors ? style.name : style.id === "tui" ? bte.themeById(bte.prefs.theme).name : style.name + " · " + bte.themeById(bte.prefs.theme).name);
@@ -137,11 +154,11 @@
 
     // Miyu pone "Volver a Eminus" fijo abajo a la derecha en el detalle de
     // actividad: se le deja hueco en vez de taparlo.
-    const bar = document.getElementById("bte-statusline");
+    const bar = sl.bar;
     const hasBackBtn = !!document.getElementById("ep-back-home-btn");
     if (bar && bar.classList.contains("bte-miyu-btn") !== hasBackBtn) bar.classList.toggle("bte-miyu-btn", hasBackBtn);
 
-    const miyuEl = document.querySelector("#bte-statusline .bte-miyu");
+    const miyuEl = sl.miyu;
     if (miyuEl) {
       const present = bte.miyu.present();
       if (miyuEl.hidden === present) miyuEl.hidden = !present;
@@ -168,8 +185,13 @@
       return;
     }
     const top = frame.getBoundingClientRect().top + window.scrollY;
-    const bar = document.getElementById("bte-statusline");
-    const height = Math.max(320, Math.floor(window.innerHeight - top - (bar ? bar.offsetHeight : 0))) + "px";
+    const bar = sl.bar;
+    // El iframe vive dentro de m-pages, que lleva el zoom del tamaño de letra:
+    // el alto que se le pone se multiplica por ese zoom, así que el hueco
+    // (medido en px de la ventana) se divide entre él. Sin esto, con la letra
+    // por debajo del 100 % quedaba corto y por encima se salía de la ventana.
+    const zoom = frame.currentCSSZoom || (frame.closest("m-pages, m-auth, body > app-root") && bte.prefs ? bte.prefs.fontSize / 14 : 1);
+    const height = Math.max(320, Math.floor((window.innerHeight - top - (bar ? bar.offsetHeight : 0)) / zoom)) + "px";
     if (frame.style.getPropertyValue("height") !== height) frame.style.setProperty("height", height, "important");
   };
 
@@ -185,14 +207,13 @@
     if (had && !bte.isTop) sendToTop("mode", "normal");
   };
 
-  const setCursor = (el) => {
+  const setCursor = (el, items) => {
     if (cursorEl) cursorEl.classList.remove("bte-cursor");
     cursorEl = el;
     if (!el) return;
     el.classList.add("bte-cursor");
     el.scrollIntoView({ block: "nearest", behavior: "auto" });
     if (mode !== "cmd") bte.setMode("nav");
-    const items = bte.navItems();
     const pos = items.indexOf(el) + 1;
     const label = (el.innerText || "").trim().split("\n")[0].slice(0, 70);
     bte.toast(pos + "/" + items.length + "  " + label, 4000);
@@ -243,11 +264,11 @@
       // Sin cursor: empieza por el primer elemento visible en pantalla.
       const firstVisible = items.findIndex((el) => el.getBoundingClientRect().bottom > 40);
       index = firstVisible === -1 ? 0 : firstVisible;
-      setCursor(items[index]);
+      setCursor(items[index], items);
       return;
     }
     index = Math.max(0, Math.min(items.length - 1, index + delta));
-    setCursor(items[index]);
+    setCursor(items[index], items);
   };
 
   const jumpCursor = (toEnd) => {
@@ -257,7 +278,7 @@
       window.scrollTo({ top: toEnd ? document.body.scrollHeight : 0 });
       return;
     }
-    setCursor(items[toEnd ? items.length - 1 : 0]);
+    setCursor(items[toEnd ? items.length - 1 : 0], items);
   };
 
   // ───────────── temas ─────────────
@@ -492,7 +513,7 @@
   };
 
   const tickSession = () => {
-    const el = document.querySelector("#bte-statusline .bte-session");
+    const el = sl.session;
     if (!el) return;
     // En el login no hay sesión que vigilar (el token guardado es de la
     // sesión anterior).
@@ -601,7 +622,8 @@
       { group: "vistas", label: "agenda de pendientes", hint: "A", keywords: "app tui fechas vence", run: () => bte.showApp("agenda") },
       { group: "vistas", label: "cursos en columnas", keywords: "app tui actividades", run: () => bte.showApp("courses") },
       { group: "vistas", label: "pendientes por materia (miyu)", keywords: "app tui miyu", run: () => bte.showApp("miyu") },
-      { group: "vistas", label: "tareas calificadas", keywords: "app tui notas calificaciones promedio grades", run: () => bte.showApp("grades") }
+      { group: "vistas", label: "tareas calificadas", keywords: "app tui notas calificaciones promedio grades", run: () => bte.showApp("grades") },
+      { group: "vistas", label: "contenido por materia", keywords: "app tui modulos unidades archivos material descargar content", run: () => bte.showApp("content") }
     );
 
     if (bte.miyu.present()) {
@@ -631,6 +653,8 @@
       { group: "herramientas", label: (readingOn() ? "salir del" : "entrar al") + " modo lectura", hint: "z", keywords: "leer enfoque concentracion", run: () => toggleReading() },
       { group: "herramientas", label: "borradores guardados…", keywords: "draft recuperar texto perdido", run: () => bte.openPalette({ title: "borradores", sigil: "✎", items: draftItems() }) }
     );
+
+    if (bte.profileItems) items.push(...bte.profileItems());
 
     items.push({ group: "ayuda", label: "atajos de teclado", hint: "h", keywords: "help ayuda keys", run: () => bte.showHelp() });
 
@@ -886,10 +910,13 @@
   };
 
   // La app (app/app.html) se carga en un iframe que cubre el contenido de
-  // Eminus, bajo su encabezado y sobre la barra de estado. Se crea una vez y
-  // luego sólo se oculta: volver a Eminus es instantáneo y la página de
-  // detrás no se toca. Se habla con ella por postMessage, verificando origen.
-  const VIEWS = ["agenda", "courses", "miyu", "grades"];
+  // Eminus, bajo su encabezado y sobre la barra de estado. Se crea la primera
+  // vez que hace falta y luego sólo se oculta: volver a Eminus es instantáneo
+  // y la página de detrás no se toca. Es un documento aparte (con su propio
+  // proceso), así que si pasa un buen rato oculta se descarta; sus datos
+  // siguen en la caché de la sesión y al reabrirla salen de ahí. Se habla con
+  // ella por postMessage, verificando origen.
+  const VIEWS = ["agenda", "courses", "miyu", "grades", "content"];
   const EXT_ORIGIN = (() => {
     try {
       return new URL(chrome.runtime.getURL("/")).origin;
@@ -897,11 +924,13 @@
       return "";
     }
   })();
+  const APP_IDLE_MS = 10 * 60 * 1000;
   let appHost = null;
   let appFrame = null;
   let appReady = false;
   let appQueued = null;
   let appView = null;
+  let appIdleTimer = null;
 
   const postToApp = (msg) => {
     if (!appFrame) return;
@@ -930,7 +959,31 @@
     appFrame.src = chrome.runtime.getURL("app/app.html") + "#embedded";
     appHost.appendChild(appFrame);
     document.body.appendChild(appHost);
-    window.addEventListener("resize", placeAppHost);
+  };
+
+  const dropAppHost = () => {
+    clearTimeout(appIdleTimer);
+    appIdleTimer = null;
+    if (!appHost || !appHost.hidden) return;
+    appHost.remove();
+    appHost = appFrame = appQueued = null;
+    appReady = false;
+  };
+
+  // Mientras está oculta corre la cuenta para descartarla.
+  const idleApp = () => {
+    clearTimeout(appIdleTimer);
+    appIdleTimer = setTimeout(dropAppHost, APP_IDLE_MS);
+  };
+
+  // Carga la vista (oculta) justo antes de que se vaya a usar, para que al
+  // abrirla ya esté lista.
+  const warmApp = () => {
+    if (appHost || !enabled() || !runtimeAlive() || document.querySelector("m-auth")) return;
+    if (!localStorage.getItem("accessToken")) return;
+    relayToken();
+    ensureAppHost();
+    idleApp();
   };
 
   const updateHeaderLinkState = () => {
@@ -952,6 +1005,8 @@
     }
     relayToken();
     ensureAppHost();
+    clearTimeout(appIdleTimer);
+    appIdleTimer = null;
     appView = VIEWS.includes(view) ? view : "agenda";
     bte.closeOverlay();
     clearCursor();
@@ -991,6 +1046,9 @@
     if (!bte.appOpen()) return;
     appHost.hidden = true;
     document.documentElement.classList.remove("bte-app-open");
+    // Oculta no necesita relojes ni repintarse.
+    postToApp({ type: "hide" });
+    idleApp();
     appView = null;
     bte.setMode("normal");
     updateHeaderLinkState();
@@ -1073,6 +1131,9 @@
       scheduled = false;
       if (cursorEl && !cursorEl.isConnected) clearCursor();
       updateStatus();
+      // Entrar o salir de la sesión cambia la página: el token se revisa aquí
+      // en vez de cada pocos segundos.
+      relayToken();
     }, 250);
   };
 
@@ -1085,26 +1146,29 @@
       document.addEventListener("load", (e) => {
         if (e.target instanceof HTMLIFrameElement) scheduleUpdate();
       }, true);
-      setInterval(tickClock, 15000);
-      window.addEventListener("resize", fitActivityFrame);
+      runClock();
+      window.addEventListener("resize", () => {
+        fitActivityFrame();
+        placeAppHost();
+      });
+      // Un solo temporizador para la sesión y el token. Con la pestaña en
+      // segundo plano el aviso de sesión espera a que vuelvas; el token sí
+      // se sigue pasando (la vista tui puede estar en otra pestaña).
+      const tick = () => {
+        relayToken();
+        if (!document.hidden) tickSession();
+      };
       tickSession();
-      setInterval(tickSession, 15000);
+      relayToken();
+      setInterval(tick, 15000);
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) return;
+        tickClock();
+        tick();
+      });
       const hashView = bte.consumeHashTarget();
       bte.resumePending();
       if (hashView) bte.showApp(hashView);
-      relayToken();
-      setInterval(relayToken, 5000);
-      // Precarga la vista tui (oculta) cuando Eminus termina de cargar: al
-      // abrirla ya tiene los datos y aparece al instante.
-      setTimeout(() => {
-        const preload = () => {
-          if (!enabled() || appHost || !runtimeAlive() || document.querySelector("m-auth")) return;
-          if (!localStorage.getItem("accessToken")) return;
-          ensureAppHost();
-        };
-        if (window.requestIdleCallback) requestIdleCallback(preload, { timeout: 4000 });
-        else preload();
-      }, 1500);
     }
     document.addEventListener("bte:prefs", () => {
       if (!enabled()) {

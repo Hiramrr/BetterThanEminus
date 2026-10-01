@@ -294,7 +294,15 @@
     }
     if (card) {
       bte.toast("abriendo " + pending.name.toLowerCase());
-      card.click();
+      // Si el router de Eminus estaba a media navegación (p. ej. al cerrar
+      // la vista tui con atrás), descarta el clic: se reintenta.
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        const target = attempt === 0 ? card : findCourseCard(pending.name);
+        if (!target) break;
+        target.click();
+        const left = await bte.waitFor(() => !location.pathname.includes("/page/course/list"), 1500, 100);
+        if (left) break;
+      }
     } else if (location.pathname.includes("/page/course/list")) {
       bte.toast("no encontré «" + pending.name + "» en la lista (¿filtro de cursos?)");
     }
@@ -355,8 +363,126 @@
     return true;
   };
 
-  // Lleva a un destino desde la vista tui embebida, sin recargar si se puede.
+  // ── Ir directo a un curso por su id (como Miyu --pendientes) ──
+
+  // Eminus guarda en el servidor en qué curso y módulo estás; esto hace las
+  // mismas llamadas que su página al pulsar la tarjeta de un curso.
+  const API_OLD = "https://eminus.uv.mx/eminusapi/api";
+  const digits = (value, allowZero) => {
+    const raw = String(value == null ? "" : value).trim();
+    return /^\d{1,18}$/.test(raw) && (allowZero || Number(raw) > 0) ? String(Number(raw)) : "";
+  };
+
+  bte.setCourseContext = async (courseId, moduleId) => {
+    const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    if (!token || !digits(courseId)) return false;
+    const call = async (method, path, body) => {
+      const res = await fetch(API_OLD + path, {
+        method,
+        signal: AbortSignal.timeout(15000),
+        headers: { Authorization: "Bearer " + token, Accept: "application/json", "Content-Type": "application/json" },
+        body: body ? JSON.stringify(body) : undefined
+      });
+      return res.ok;
+    };
+    try {
+      const id = Number(courseId);
+      const steps = [
+        await call("PUT", "/global/accesoModulo", { idModulo: moduleId, idCurso: id }),
+        await call("POST", "/Bitacora/BTCursos", { idCurso: id, idModulo: 0 }),
+        await call("GET", "/Cursos/obtieneCurso/" + id),
+        await call("GET", "/Global/getModulosResumen/" + id + "/0/0")
+      ];
+      return steps.every(Boolean);
+    } catch (_) {
+      return false;
+    }
+  };
+
+  // El curso y el módulo que la página de Eminus abre al cargar.
+  const setLayoutCourse = (courseId, unitId) => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem("layoutConfigNavegation") || "null") || {};
+      const nav = (parsed.config && parsed.config.navegation) || {};
+      localStorage.setItem("layoutConfigNavegation", JSON.stringify({
+        ...parsed,
+        config: {
+          ...(parsed.config || {}),
+          navegation: { ...nav, course: { ...(nav.course || {}), id: Number(courseId), unit: Number(unitId) || 0 } }
+        }
+      }));
+    } catch (_) {
+    }
+  };
+
+  // El detalle de una actividad puede salir con datos viejos si el aplicativo
+  // de actividades no se ha cargado para ese curso: se limpia su caché y se
+  // carga una vez, oculto, antes de ir al detalle.
+  const primeActivities = async (courseId) => {
+    try {
+      if (window.caches && caches.keys) {
+        const keys = await caches.keys();
+        await Promise.all(keys.filter((key) => /eminus|aplicativo/i.test(key)).map((key) => caches.delete(key)));
+      }
+    } catch (_) {
+    }
+    await new Promise((resolve) => {
+      const frame = document.createElement("iframe");
+      frame.style.display = "none";
+      frame.src = location.origin + "/aplicativoEminus/actividad-principal/?courseId=" + encodeURIComponent(courseId) + "&_timestamp=" + Date.now();
+      const done = () => {
+        frame.remove();
+        resolve();
+      };
+      frame.onload = () => setTimeout(done, 500);
+      frame.onerror = done;
+      document.body.appendChild(frame);
+      setTimeout(done, 5000);
+    });
+  };
+
+  const goById = async (target, courseId) => {
+    const activity = target.activity && digits(target.activity.id) ? target.activity : null;
+    const unit = target.unit == null ? "" : digits(target.unit, true);
+    const section = bte.sectionById(target.section);
+    try {
+      if (typeof target.course === "string" && target.course) sessionStorage.setItem("bte:courseName", target.course.slice(0, 200));
+      for (const key of ["bte:pendingCourse", "bte:pendingSection", "bte:pendingActivity"]) sessionStorage.removeItem(key);
+    } catch (_) {
+    }
+    setLayoutCourse(courseId, unit);
+    if (activity) {
+      bte.toast("abriendo actividad…", 8000);
+      await bte.setCourseContext(courseId, 5);
+      await primeActivities(courseId);
+      const url = new URL(location.origin + "/aplicativoEminus/actividad-detalle/" + digits(activity.id));
+      url.searchParams.set("courseId", courseId);
+      url.searchParams.set("_cb", String(Date.now()));
+      location.assign(url.toString());
+      return;
+    }
+    bte.toast("abriendo " + (typeof target.course === "string" && target.course ? target.course.toLowerCase() : "curso") + "…", 8000);
+    await bte.setCourseContext(courseId, 1);
+    if (unit) {
+      location.assign(location.origin + "/eminus4/page/course/content/view/unit");
+      return;
+    }
+    // Otra sección: se entra al curso y se pulsa su menú al cargar.
+    if (section && section.id !== "content" && section.id !== "courses") {
+      try {
+        sessionStorage.setItem("bte:pendingSection", JSON.stringify({ id: section.id, ts: Date.now() }));
+      } catch (_) {
+      }
+    }
+    location.assign(location.origin + "/eminus4/page/course/content");
+  };
+
+  // Lleva a un destino {course, courseId, section, unit, activity}. Con el id
+  // del curso va directo; sólo con el nombre, pulsa su tarjeta en la lista.
   bte.goToTarget = async (target) => {
+    if (!target || typeof target !== "object") return;
+    const courseId = digits(target.courseId) || digits(target.activity && target.activity.courseId);
+    if (courseId) return goById(target, courseId);
     if (!bte.storeTarget(target)) return;
     if (!location.pathname.includes("/page/course/list")) {
       const home = asideLinkByIcon("home");
@@ -369,10 +495,10 @@
     await bte.resumePending();
   };
 
-  // Destinos por URL: #bte={...} (abrir algo) o #bte-app=agenda|courses|miyu
+  // Destinos por URL: #bte={...} (abrir algo) o #bte-app=agenda|courses|…
   // (abrir la vista tui). Devuelve la vista a abrir, si la hay.
   bte.consumeHashTarget = () => {
-    const app = location.hash.match(/^#bte-app=(agenda|courses|miyu)$/);
+    const app = location.hash.match(/^#bte-app=(agenda|courses|miyu|grades|content)$/);
     if (app) {
       history.replaceState(history.state, "", location.pathname + location.search);
       return app[1];
@@ -381,13 +507,20 @@
     if (!match) return null;
     history.replaceState(history.state, "", location.pathname + location.search);
     try {
-      bte.storeTarget(JSON.parse(decodeURIComponent(match[1])));
+      hashTarget = JSON.parse(decodeURIComponent(match[1]));
     } catch (_) {
     }
     return null;
   };
+  let hashTarget = null;
 
   bte.resumePending = async () => {
+    if (hashTarget) {
+      const target = hashTarget;
+      hashTarget = null;
+      await bte.goToTarget(target);
+      return;
+    }
     await bte.resumePendingCourse();
     await bte.resumePendingSection();
     await bte.resumePendingActivity();
@@ -410,11 +543,17 @@
   const inForeignUi = (el) =>
     !!el.closest("#eminus-pending-panel, [id^='ep-'], #bte-statusline, #bte-overlay, .cdk-overlay-container");
 
+  const NAV_SELECTOR = bte.NAV_TARGETS.map((t) => t.sel).join(", ");
+
   bte.navItems = () => {
-    const selector = bte.NAV_TARGETS.map((t) => t.sel).join(", ");
-    const all = [...document.querySelectorAll(selector)].filter((el) => !inForeignUi(el) && bte.isVisible(el));
-    // Si un navegable contiene a otro, gana el de fuera.
-    return all.filter((el) => !all.some((other) => other !== el && other.contains(el)));
+    const all = [...document.querySelectorAll(NAV_SELECTOR)].filter((el) => !inForeignUi(el) && bte.isVisible(el));
+    // Si un navegable contiene a otro, gana el de fuera. Se sube por los
+    // ancestros de cada uno en vez de compararlos todos contra todos.
+    const set = new Set(all);
+    return all.filter((el) => {
+      for (let up = el.parentElement; up; up = up.parentElement) if (set.has(up)) return false;
+      return true;
+    });
   };
 
   bte.openTarget = (el) => {

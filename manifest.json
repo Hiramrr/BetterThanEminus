@@ -2,9 +2,10 @@
   "manifest_version": 3,
   "name": "BetterThanEminus",
   "description": "Eminus mejorado: reskin con estilos (tui, moderno, enfoque, retro), paleta de comandos, navegación con teclado y vista de pendientes dentro de la misma página.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "permissions": [
-    "storage"
+    "storage",
+    "scripting"
   ],
   "host_permissions": [
     "https://eminus.uv.mx/*"
@@ -44,7 +45,8 @@
         "src/nav.js",
         "src/palette.js",
         "src/drafts.js",
-        "src/app.js"
+        "src/app.js",
+        "src/profiles.js"
       ],
       "run_at": "document_idle",
       "all_frames": true

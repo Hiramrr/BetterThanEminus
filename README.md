@@ -16,10 +16,12 @@ Es compatible con **Miyu --pendientes**: puedes tener las dos activas a la vez.
 ### Herramientas que Eminus no tiene
 
 - **Borradores automáticos**: lo que escribes en comentarios, foros o entregas se guarda mientras escribes (sólo en este navegador). Si la sesión vence o la página se recarga, al volver al campo aparece «✎ borrador · recuperar / descartar». Todos los borradores están en `:` → «borradores guardados» (enter copia el texto). Nunca se guardan contraseñas, búsquedas ni el login.
+- **Perfiles**: al iniciar sesión a mano la extensión ofrece guardar el perfil. Después, la pantalla de login es un selector (foto, nombre y usuario): entras con un clic, con `↑` `↓` + `enter` o con el número del perfil. Si la sesión vence sola, se vuelve a entrar sin preguntar; si la cierras tú, se queda en el selector. En `:` → *perfiles* cambias de cuenta, cierras sesión o quitas un perfil. «+ iniciar con otro perfil» muestra el formulario de siempre.
 - **Aviso de sesión**: el token de Eminus dura 2 horas desde que entras y Eminus no avisa. La barra muestra «sesión 12 min» cuando quedan menos de 20 minutos (amarillo a los 10, rojo a los 3) y avisa a los 10, a los 3 y al vencer.
 - **Búsqueda global de actividades** (`;`): todas las actividades de tus cursos actuales en una sola búsqueda; enter te lleva directo al detalle.
 - **Recientes** (`g r`): vuelve al curso y la sección donde estabas.
 - **Modo lectura** (`z`): oculta menú, pie, comentarios y «me gusta», y deja el contenido docente en una columna cómoda. `z` o `esc` para salir.
+- **Contenido por materia** (vista tui `5`, o `[ contenido ]` en el encabezado): los módulos y elementos publicados de tus cursos actuales, agrupados por materia, con su descripción y sus archivos; se descargan desde ahí mismo (`D` o clic en el archivo).
 - **Tareas calificadas** (vista tui `4`, o `[ tareas calificadas ]` en el encabezado): calificaciones por materia con promedio por materia y general; lo entregado sin calificar aparece como «en revisión».
 
 ### Estilos
@@ -52,7 +54,7 @@ Desde el popup (sección **fondo**) eliges una imagen que queda detrás de Eminu
 
 Puedes acomodar la imagen: *fondo: acomodar…* (en `:` o desde el popup) desvanece Eminus y te deja arrastrarla para moverla, hacer zoom con la rueda (o `+`/`-`), girarla con shift + rueda, `[` `]` o `r` (90°), voltearla con `h`/`v` y restablecer con `0`; `enter` guarda y `esc` cancela. Zoom, giro y volteos también están como deslizadores y comandos en `:` y en el popup. Al elegir otra imagen el encuadre vuelve a empezar.
 
-La foto también se ve en la vista tui (agenda, cursos, miyu, tareas calificadas), con los paneles translúcidos.
+La foto también se ve en la vista tui (agenda, cursos, miyu, tareas calificadas, contenido), con los paneles translúcidos.
 
 Se controla desde la paleta de comandos (`:` → *fondo: elegir imagen…*, tramado/liso, deslizadores de *intensidad* de la foto y *opacidad de eminus* en la misma lista —se mueven con ← →—, colores de la foto, quitar) o desde el popup. Como el diálogo de archivos cierra el popup, ahí *elegir…* abre el popup en una pestaña, donde también puedes arrastrar la imagen.
 
@@ -65,7 +67,7 @@ Se controla desde la paleta de comandos (`:` → *fondo: elegir imagen…*, tram
 
 ### Vista tui dentro de Eminus
 
-Se abre sobre el contenido de Eminus, debajo de su encabezado, sin cambiar de página. Se abre desde los botones del encabezado (`[ agenda ] [ cursos ] [ miyu ] [ tareas calificadas ]`), con `A`, desde la paleta o desde el popup (`❯ ver pendientes`). Se precarga en segundo plano al entrar a Eminus, así que aparece al instante y con los datos listos; si estuvo oculta más de 5 minutos, se actualiza sola al volver a abrirla.
+Se abre sobre el contenido de Eminus, debajo de su encabezado, sin cambiar de página. Se abre desde los botones del encabezado (`[ agenda ] [ cursos ] [ miyu ] [ tareas calificadas ] [ contenido ]`), con `A`, desde la paleta o desde el popup (`❯ ver pendientes`). Se carga la primera vez que la abres (o al acercar el ratón a sus botones) y después sólo se oculta, así que volver a ella es instantáneo; los cursos y actividades salen de la caché de la sesión y, si tienen más de 5 minutos, se actualizan solos. Mientras está oculta no gasta: sus relojes se detienen y, tras 10 minutos sin usarla, se descarga de memoria.
 
 Para volver a Eminus: `esc` (o `q`), el botón `← eminus` de la barra inferior, o pulsar otra vez el mismo botón del encabezado. La página de detrás no se recarga, así que vuelves justo donde estabas.
 
@@ -73,8 +75,9 @@ Para volver a Eminus: `esc` (o `q`), el botón `← eminus` de la barra inferior
 - **2 cursos**: tres columnas estilo ranger (cursos → actividades → detalle) con barra de progreso de entregas.
 - **3 miyu**: lo que hace Miyu --pendientes, en versión TUI. Siguiente entrega con cuenta regresiva en vivo, carga de la semana, avance por materia, movimiento reciente y pendientes agrupados por materia.
 - **4 tareas calificadas**: calificaciones por materia con promedio.
+- **5 contenido**: por materia, cada módulo seguido de sus elementos (mensajes y archivos). El detalle muestra la descripción y los archivos, que se descargan con un clic o con `D`. Se guarda en caché: abre al instante y se pone al día por detrás al abrir la vista si tiene más de 30 minutos, o cuando pulsas `r`. `enter` abre ese módulo en Eminus.
 - Los contadores (vencidas, hoy, 48 h, 7 días) están siempre en la barra inferior.
-- `enter` cierra la vista y lleva a esa actividad en Eminus: entra al curso, va a Actividades y carga el detalle.
+- `enter` cierra la vista y lleva a esa actividad en Eminus: fija el curso por su id (las mismas llamadas que hace Eminus al entrar a un curso) y abre directo el detalle, sin pasar por la lista de cursos.
 
 La vista siempre usa el estilo terminal con el tema elegido.
 
@@ -101,7 +104,7 @@ En Eminus (no se activan mientras escribes):
 | `h` o `F1` | Ayuda |
 | `alt ⇧ b` | Activar o desactivar el reskin |
 
-En la vista tui: `1`/`2`/`3`/`4` vistas (agenda, cursos, miyu, tareas calificadas), `j`/`k` mover, `h`/`l` o `tab` cambiar de panel, `enter` abrir, `O` abrir el curso, `/` filtrar, `a` mostrar entregadas o cursos anteriores, `r` actualizar, `c` tema, `?` ayuda, `esc`/`q` volver a Eminus.
+En la vista tui: `1`/`2`/`3`/`4`/`5` vistas (agenda, cursos, miyu, tareas calificadas, contenido), `j`/`k` mover, `h`/`l` o `tab` cambiar de panel, `enter` abrir, `O` abrir el curso, `/` filtrar, `a` mostrar entregadas o cursos anteriores, `D` descargar el archivo (en contenido), `r` actualizar, `c` tema, `?` ayuda, `esc`/`q` volver a Eminus.
 
 ## Compatibilidad con Miyu --pendientes
 
@@ -114,8 +117,10 @@ En la vista tui: `1`/`2`/`3`/`4` vistas (agenda, cursos, miyu, tareas calificada
 ## Datos y privacidad
 
 - Los borradores se guardan en el `localStorage` de eminus.uv.mx (sólo en este navegador, se borran solos a los 14 días). Los recientes, en `chrome.storage.local`.
+- El contenido de tus cursos (títulos de módulos y elementos, descripciones y nombres de archivo; no los archivos) se guarda en `chrome.storage.local`, por cuenta, para que la vista de contenido abra al instante.
 - La imagen de fondo se reduce a 1920px y se guarda en `chrome.storage.local` (sólo en este navegador).
 - Las preferencias (tema, fuente, zoom, detalles) se guardan en `chrome.storage.sync`, con un espejo en `localStorage` para pintar el tema sin parpadeo.
+- Los perfiles (usuario, nombre y contraseña) se guardan en `chrome.storage.local`: sólo en este navegador, nunca se sincronizan. La contraseña va cifrada (AES-GCM) con una llave no extraíble que vive en el IndexedDB de la extensión, fuera del alcance de la página de Eminus y de los content scripts; para entrar, el service worker llena el formulario él mismo. Lo que escribes al entrar a mano sólo pasa por `chrome.storage.session` (memoria) hasta que decides guardarlo. No equivale a un llavero del sistema: quien tenga acceso a tu perfil de Chrome en este equipo podría recuperarlas, así que no guardes perfiles en una computadora compartida.
 - La vista tui necesita tu sesión: el content script pasa el `accessToken` de Eminus al service worker, que lo guarda sólo en `chrome.storage.session` (en memoria, se borra al cerrar Chrome). También se cachean ahí los cursos y actividades de la sesión.
 - Sólo se consulta `https://eminus.uv.mx`. Las fuentes se cargan de Google Fonts.
 
@@ -124,7 +129,7 @@ En la vista tui: `1`/`2`/`3`/`4` vistas (agenda, cursos, miyu, tareas calificada
 | Archivo | Descripción |
 |---------|-------------|
 | `manifest.json` | Configuración de la extensión |
-| `background.js` | Relevo del token hacia la vista tui |
+| `background.js` | Relevo del token hacia la vista tui y almacén cifrado de perfiles |
 | `src/prefs.js` | Preferencias, temas y fuentes |
 | `src/boot.js` | Aplica el tema en `document_start` |
 | `src/bg.js` · `src/bg.css` | Fondo con foto: tramado y paleta tomada de la imagen |
@@ -135,6 +140,7 @@ En la vista tui: `1`/`2`/`3`/`4` vistas (agenda, cursos, miyu, tareas calificada
 | `src/palette.js` | Paleta de comandos y ayuda |
 | `src/app.js` | Barra de estado, atajos, sesión, recientes, modo lectura y comunicación entre marcos |
 | `src/drafts.js` | Borradores automáticos |
+| `src/profiles.js` | Perfiles: selector en el login, guardar, cambiar de cuenta y reentrar al vencer la sesión |
 | `app/` | Vista tui (se carga en un iframe dentro de Eminus) |
 | `popup/` | Popup de ajustes |
 | `icons/` | Iconos |

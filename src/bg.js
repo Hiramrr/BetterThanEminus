@@ -21,6 +21,9 @@
   const isAppView = location.protocol === "chrome-extension:" && location.pathname.endsWith("/app/app.html");
   const isPageTop = () => /^https?:$/.test(location.protocol) && window.top === window;
   const drawHere = isPageTop() || isAppView;
+  // Iframes de Eminus (actividades): no dibujan la foto, pero se vuelven
+  // transparentes para dejar ver la del marco superior (reglas en bg.css).
+  const isSubFrame = /^https?:$/.test(location.protocol) && window.top !== window;
 
   const BAYER = (() => {
     let m = [[0]];
@@ -32,7 +35,8 @@
       }
       m = next;
     }
-    return m.map((row) => row.map((v) => (v + 0.5) / 64));
+    // Plana (8×8 en fila) para el bucle de tramado.
+    return Float32Array.from(m.flat(), (v) => (v + 0.5) / 64);
   })();
 
   // ---------- color ----------
@@ -168,8 +172,14 @@
     return style.ownColors ? false : bte.themeById(prefs.theme).dark;
   };
 
+  // Sólo se tocan las variables si la paleta cambió: cada escritura en
+  // <html> obliga a recalcular los estilos de toda la página.
+  let paletteSig = "";
   function applyPalette() {
     const on = active() && prefs.bgPalette && meta.tone;
+    const sig = on ? meta.tone.h + "|" + meta.tone.s + "|" + isDark() : "";
+    if (sig === paletteSig) return;
+    paletteSig = sig;
     if (!on) {
       for (const v of PALETTE_VARS) root.style.removeProperty("--bte-" + v);
       return;
@@ -204,11 +214,27 @@
     };
   }
 
+  // Lo último que se tramó: si nada de lo que entra al dibujo cambió, no se
+  // repite (ni hace falta volver a cargar la foto).
+  let drawn = "";
+  let imgGen = 0;
+
   function draw() {
     frame = null;
-    if (!canvas || !img || !active()) return;
+    if (!canvas || !active()) return;
     const width = window.innerWidth, height = window.innerHeight;
     if (!width || !height) return;
+    const [br, bgG, bb] = bgColor();
+    const f = frame_();
+    const sig = [width, height, br, bgG, bb, prefs.bgStyle, f.bgX, f.bgY, f.bgZoom, f.bgRotate, f.bgFlipX, f.bgFlipY, imgGen].join("|");
+    if (sig === drawn) {
+      fitCanvas();
+      return;
+    }
+    if (!img) {
+      loadImage(); // vuelve aquí al terminar
+      return;
+    }
     const w = Math.ceil(width / CELL), h = Math.ceil(height / CELL);
     canvas.width = w;
     canvas.height = h;
@@ -217,13 +243,11 @@
     canvas.style.height = h * CELL + "px";
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
-    const [br, bgG, bb] = bgColor();
     // Lo que la imagen no cubra (al moverla, girarla o alejarla) queda del
     // color de fondo.
     ctx.fillStyle = `rgb(${br}, ${bgG}, ${bb})`;
     ctx.fillRect(0, 0, w, h);
 
-    const f = frame_();
     const g = geometry(f);
     ctx.save();
     ctx.scale(1 / CELL, 1 / CELL);
@@ -239,18 +263,22 @@
     const bgL = lum(br, bgG, bb);
     const dither = prefs.bgStyle !== "plain";
 
-    for (let y = 0; y < h; y++) {
+    for (let y = 0, i = 0; y < h; y++) {
       // Se ve entera arriba y se va tramando hacia abajo sin desaparecer.
       const v = 1 - 0.55 * smoothstep(0.2, 1, y / h);
-      const row = BAYER[y & 7];
-      for (let x = 0; x < w; x++) {
-        const i = (y * w + x) * 4;
+      // Lo que sólo depende de la fila se calcula una vez por fila.
+      const gain = v * 1.1, dot = 0.35 + 0.65 * v, shade = 0.25 * v * v * v;
+      const row = (y & 7) << 3;
+      for (let x = 0; x < w; x++, i += 4) {
         const r = px[i], g = px[i + 1], b = px[i + 2];
         let k = v;
         if (dither) {
           // Más puntos donde la imagen se aleja del fondo; donde se parece queda una sombra tenue.
-          const contrast = Math.min(1, Math.abs(lum(r, g, b) - bgL) * 1.6 + 0.1);
-          k = contrast * v * 1.1 > row[x & 7] ? 0.35 + 0.65 * v : 0.25 * v * v * v;
+          let contrast = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 - bgL;
+          if (contrast < 0) contrast = -contrast;
+          contrast = contrast * 1.6 + 0.1;
+          if (contrast > 1) contrast = 1;
+          k = contrast * gain > BAYER[row | (x & 7)] ? dot : shade;
         }
         px[i] = br + (r - br) * k;
         px[i + 1] = bgG + (g - bgG) * k;
@@ -259,10 +287,46 @@
       }
     }
     ctx.putImageData(data, 0, 0);
+    drawn = sig;
+    releaseSoon();
+  }
+
+  // Tamaño exacto del lienzo ya tramado (al cambiar el tamaño de la ventana
+  // se estira un momento, ver onResize).
+  function fitCanvas() {
+    canvas.style.width = canvas.width * CELL + "px";
+    canvas.style.height = canvas.height * CELL + "px";
   }
 
   const schedule = () => {
     if (drawHere) frame ??= requestAnimationFrame(draw);
+  };
+
+  // La foto decodificada (y su data URL) ocupan varios MB y sólo hacen falta
+  // para tramar: se sueltan al poco de dibujar y se vuelven a leer si cambia
+  // el tamaño de la ventana, el tema o el encuadre.
+  const RELEASE_MS = 4000;
+  let releaseTimer = null;
+  function releaseSoon() {
+    clearTimeout(releaseTimer);
+    releaseTimer = setTimeout(() => {
+      if (editor || framePreview || settleTimer) return releaseSoon();
+      img = null;
+      if (live) live.removeAttribute("src");
+    }, RELEASE_MS);
+  }
+
+  // Tramar en cada evento de «resize» traba el cambio de tamaño: se dibuja al
+  // empezar y al terminar, y entre medias el lienzo se estira.
+  let resizeTimer = null;
+  const onResize = () => {
+    if (!resizeTimer) schedule();
+    else if (canvas) canvas.style.width = canvas.style.height = "";
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      resizeTimer = null;
+      schedule();
+    }, 150);
   };
 
   // ---------- vista en vivo al acomodar ----------
@@ -319,7 +383,7 @@
     host.append(canvas, live);
     // Hijo de <html>, fuera de <body>: Angular no lo toca.
     root.appendChild(host);
-    window.addEventListener("resize", schedule);
+    window.addEventListener("resize", onResize);
   }
 
   async function loadImage() {
@@ -336,11 +400,18 @@
     } catch (_) {
     }
     imgLoading = false;
-    schedule();
+    if (img) {
+      releaseSoon();
+      schedule();
+    }
   }
 
   function render() {
     applyPalette();
+    if (isSubFrame) {
+      root.classList.toggle("bte-sub-bg", active());
+      root.style.setProperty("--bte-card-alpha", prefs.bgCard + "%");
+    }
     if (!drawHere) return;
     const on = active();
     root.classList.toggle("bte-has-bg", on);
@@ -349,7 +420,9 @@
     root.style.setProperty("--bte-bg-strength", String(prefs.bgStrength / 100));
     root.style.setProperty("--bte-panel-alpha", prefs.bgPanel + "%");
     root.style.setProperty("--bte-card-alpha", prefs.bgCard + "%");
-    loadImage();
+    // Primer dibujo: la foto se pide ya, sin esperar al siguiente cuadro. En
+    // una pestaña o un marco ocultos no se pide hasta que se vean.
+    if (!drawn && !document.hidden && window.innerWidth) loadImage();
     schedule();
   }
 
@@ -556,6 +629,7 @@
       await chrome.storage.local.set({ [IMG_KEY]: c.toDataURL("image/jpeg", 0.86), [META_KEY]: next });
       meta = next;
       img = null;
+      imgGen += 1;
       writeMirror();
       render();
       return meta;
@@ -589,6 +663,7 @@
       if (area !== "local" || !(META_KEY in changes || IMG_KEY in changes)) return;
       if (META_KEY in changes) meta = changes[META_KEY].newValue || null;
       img = null;
+      imgGen += 1;
       writeMirror();
       render();
     });
