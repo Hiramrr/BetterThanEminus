@@ -22,8 +22,9 @@ uso:
   eminus --help
 
 sesión:
-  Entra con tu usuario y contraseña de Eminus (la contraseña no se guarda)
-  o pega un token de sesión. También lo toma de la variable EMINUS_TOKEN.
+  Entra con tu usuario y contraseña de Eminus o pega un token de sesión
+  (también lo toma de EMINUS_TOKEN). Al entrar puedes guardar el perfil:
+  la contraseña queda en el llavero del sistema.
 ";
 
 fn run(terminal: &mut ratatui::DefaultTerminal) -> io::Result<()> {
@@ -135,4 +136,67 @@ fn pantallas() {
     settle(&mut app, "ayuda");
     press(&mut app, "?X");
     settle(&mut app, "login");
+}
+
+// Perfiles contra el Eminus falso. Usa el llavero de verdad con un usuario
+// de prueba, que quita al terminar. Sin EMINUS_TOKEN en el entorno.
+#[cfg(test)]
+#[test]
+#[ignore]
+fn perfiles() {
+    use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+    let mut app = app::App::new();
+    let mut terminal = ratatui::Terminal::new(ratatui::backend::TestBackend::new(100, 24)).unwrap();
+    let mut settle = |app: &mut app::App, label: &str| {
+        let until = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        loop {
+            while let Ok((epoch, msg)) = app.pool.inbox.try_recv() {
+                app.on_msg(epoch, msg);
+            }
+            app.tick();
+            if app.pool.pending == 0 || std::time::Instant::now() > until {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(20));
+        }
+        terminal.draw(|f| ui::draw(f, app)).unwrap();
+        let buffer = terminal.backend().buffer();
+        println!("\n══ {label} ══");
+        for y in 0..buffer.area.height {
+            let line: String = (0..buffer.area.width).map(|x| buffer[(x, y)].symbol()).collect();
+            if !line.trim().is_empty() {
+                println!("{}", line.trim_end());
+            }
+        }
+    };
+    let press = |app: &mut app::App, keys: &str| {
+        keys.chars().for_each(|c| {
+            let code = match c {
+                '\n' => KeyCode::Enter,
+                '\t' => KeyCode::Tab,
+                c => KeyCode::Char(c),
+            };
+            app.on_key(KeyEvent::new(code, KeyModifiers::NONE))
+        })
+    };
+    settle(&mut app, "sin perfiles: formulario");
+    press(&mut app, "prueba-eminus\tsecreta\n");
+    settle(&mut app, "tras entrar: oferta de guardar");
+    press(&mut app, "s");
+    settle(&mut app, "perfil guardado");
+    press(&mut app, "X");
+    settle(&mut app, "tras cerrar sesión: selector");
+    press(&mut app, "\n");
+    settle(&mut app, "entró con el perfil");
+    assert!(app.login.is_none(), "el perfil guardado no entró");
+    // Como si la sesión venciera sola: debe volver a entrar sin preguntar.
+    app.on_msg(u64::MAX, api::Msg::Courses(Ok(Vec::new())));
+    app.expiry = 1;
+    settle(&mut app, "tras vencer sola");
+    assert!(app.login.is_none(), "no volvió a entrar sola");
+    press(&mut app, "Xx");
+    settle(&mut app, "quitar: pide confirmar");
+    press(&mut app, "x");
+    settle(&mut app, "perfil quitado");
+    assert!(app.profiles.perfiles.is_empty());
 }

@@ -38,6 +38,9 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         if app.help {
             help(f, t, body);
         }
+        if let Some((user, _)) = &app.offer {
+            offer(f, t, body, user);
+        }
     }
     status(f, app, t, bottom);
 }
@@ -604,7 +607,7 @@ fn help(f: &mut Frame, t: &Theme, area: Rect) {
         ("D", "descargar archivos (contenido)"),
         ("r", "actualizar"),
         ("c", "siguiente tema"),
-        ("X", "cerrar sesión en este equipo"),
+        ("X", "cerrar sesión · cambiar de perfil"),
         ("q", "salir"),
         ("ratón", "clic selecciona · rueda desplaza"),
         ("", "shift/option + arrastrar para copiar texto"),
@@ -618,8 +621,60 @@ fn help(f: &mut Frame, t: &Theme, area: Rect) {
     f.render_widget(Paragraph::new(lines), inner);
 }
 
+fn offer(f: &mut Frame, t: &Theme, area: Rect, user: &str) {
+    let area = centered(area, 64, 11);
+    let block = pane(t, "perfiles".into(), true).style(Style::new().bg(t.bg).fg(t.fg));
+    let inner = block.inner(area).inner(ratatui::layout::Margin::new(2, 1));
+    f.render_widget(Clear, area);
+    f.render_widget(block, area);
+    let key = |k: &str| Span::styled(format!(" {k} "), Style::new().bg(t.sel).fg(t.accent).add_modifier(Modifier::BOLD));
+    let lines = vec![
+        Line::from(vec![Span::raw("¿Guardar el perfil de "), Span::styled(user.to_string(), Style::new().fg(t.accent).add_modifier(Modifier::BOLD)), Span::raw("?")]),
+        Line::raw(""),
+        Line::styled("La contraseña queda en el llavero del sistema y la próxima vez entras sin escribirla. No lo hagas en una computadora compartida.", Style::new().fg(t.dim)),
+        Line::raw(""),
+        Line::from(vec![key("s"), Span::raw(" guardar   "), key("n"), Span::raw(" ahora no")]),
+    ];
+    f.render_widget(Paragraph::new(lines).wrap(Wrap { trim: false }), inner);
+}
+
+fn picker(f: &mut Frame, app: &App, t: &Theme, area: Rect) {
+    let Some(login) = &app.login else { return };
+    let dim = Style::new().fg(t.dim);
+    let profiles = &app.profiles.perfiles;
+    let area = centered(area, 64, profiles.len() as u16 + 9);
+    let block = pane(t, "eminus · ¿quién entra?".into(), true);
+    let inner = block.inner(area).inner(ratatui::layout::Margin::new(2, 1));
+    f.render_widget(block, area);
+    let width = inner.width as usize;
+    let row = |index: usize, number: String, name: &str, user: &str| {
+        let active = login.pick == index;
+        let base = if active { Style::new().bg(t.sel).add_modifier(Modifier::BOLD) } else { Style::new() };
+        let user_w = text::width(user);
+        Line::from(vec![
+            Span::styled(if active { "▌ " } else { "  " }, base.fg(t.accent)),
+            Span::styled(text::fit(&number, 3), base.fg(t.accent)),
+            Span::styled(text::fit(name, width.saturating_sub(6 + user_w)), base),
+            Span::styled(format!("{user} "), if active { base } else { dim }),
+        ])
+    };
+    let mut lines: Vec<Line> = profiles.iter().enumerate().map(|(i, p)| row(i, (i + 1).to_string(), &p.name, if p.name == p.user { "" } else { &p.user })).collect();
+    lines.push(Line::raw(""));
+    lines.push(row(profiles.len(), "+".into(), "iniciar con otro perfil", ""));
+    lines.push(Line::raw(""));
+    if !login.note.is_empty() {
+        let prefix = if login.busy { format!("{} ", spinner()) } else { String::new() };
+        lines.push(Line::styled(format!("{prefix}{}", login.note), Style::new().fg(if login.busy { t.accent } else { t.yellow })));
+    }
+    lines.push(Line::styled("enter entrar · 1-9 directo · x quitar perfil · esc salir", dim));
+    f.render_widget(Paragraph::new(lines).wrap(Wrap { trim: false }), inner);
+}
+
 fn login(f: &mut Frame, app: &App, t: &Theme, area: Rect) {
     let Some(login) = &app.login else { return };
+    if login.picker {
+        return picker(f, app, t, area);
+    }
     let dim = Style::new().fg(t.dim);
     let area = centered(area, 72, 19);
     let block = pane(t, "eminus · iniciar sesión".into(), true);
@@ -653,13 +708,13 @@ fn login(f: &mut Frame, app: &App, t: &Theme, area: Rect) {
     lines.push(Line::raw(""));
     lines.push(Line::styled("  (en la consola del navegador: copy(localStorage.accessToken))", dim));
     lines.push(Line::raw(""));
-    lines.push(Line::styled("La contraseña no se guarda. La sesión dura 2 horas y queda sólo", dim));
-    lines.push(Line::styled("en este equipo.", dim));
+    lines.push(Line::styled("Al entrar puedes guardar el perfil (la contraseña va al llavero", dim));
+    lines.push(Line::styled("del sistema) para no volver a escribirla.", dim));
     lines.push(Line::raw(""));
     if !login.note.is_empty() {
         let prefix = if login.busy { format!("{} ", spinner()) } else { String::new() };
         lines.push(Line::styled(format!("{prefix}{}", login.note), Style::new().fg(if login.busy { t.accent } else { t.yellow })));
     }
-    lines.push(Line::styled("enter entrar · tab cambiar de campo · esc salir", dim));
+    lines.push(Line::styled(if app.profiles.perfiles.is_empty() { "enter entrar · tab cambiar de campo · esc salir" } else { "enter entrar · tab cambiar de campo · esc volver a los perfiles" }, dim));
     f.render_widget(Paragraph::new(lines).wrap(Wrap { trim: false }), inner);
 }

@@ -121,6 +121,66 @@ pub fn encrypt_password(password: &str, app_key: &str) -> Option<String> {
     Some(base64::engine::general_purpose::STANDARD.encode(out))
 }
 
+// ───────────── perfiles ─────────────
+
+// Hace aquí lo que el almacén cifrado de la extensión. En disco sólo va
+// quién tiene perfil; la contraseña vive en el Llavero del sistema.
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Profile {
+    pub user: String,
+    pub name: String,
+}
+
+#[derive(Default, Serialize, Deserialize)]
+pub struct Profiles {
+    // Con quién está abierta la sesión; vacío si la cerró el usuario.
+    #[serde(default)]
+    pub ultimo: String,
+    #[serde(default)]
+    pub perfiles: Vec<Profile>,
+}
+
+impl Profiles {
+    pub fn has(&self, user: &str) -> bool {
+        !user.is_empty() && self.perfiles.iter().any(|p| p.user == user)
+    }
+
+    pub fn save(&self) {
+        write_json(config_dir().join("perfiles.json"), self);
+    }
+}
+
+pub fn load_profiles() -> Profiles {
+    read_json(config_dir().join("perfiles.json")).unwrap_or_default()
+}
+
+fn secret(user: &str) -> Result<keyring::Entry, String> {
+    keyring::Entry::new("eminus", user).map_err(|_| "no se pudo abrir el llavero".to_string())
+}
+
+pub fn secret_get(user: &str) -> Result<String, String> {
+    secret(user)?.get_password().map_err(|err| match err {
+        keyring::Error::NoEntry => "este perfil ya no tiene contraseña en el llavero".to_string(),
+        _ => "el llavero no dio acceso a la contraseña".to_string(),
+    })
+}
+
+pub fn secret_set(user: &str, password: &str) -> Result<(), String> {
+    secret(user)?.set_password(password).map_err(|_| "no se pudo guardar en el llavero".to_string())
+}
+
+pub fn secret_delete(user: &str) {
+    if let Ok(entry) = secret(user) {
+        let _ = entry.delete_credential();
+    }
+}
+
+// Nombre para mostrar, si el token lo trae.
+pub fn name_of(token: &str) -> String {
+    let Some(claims) = claims(token) else { return String::new() };
+    ["name", "given_name", "nombre", "nombreCompleto"].iter().filter_map(|k| claims.get(k).and_then(Value::as_str)).map(str::trim).find(|v| !v.is_empty()).unwrap_or_default().to_string()
+}
+
 // ───────────── preferencias ─────────────
 
 #[derive(Default, Serialize, Deserialize)]

@@ -18,6 +18,8 @@ cbc = { version = "0.1", features = ["alloc"] }
 pbkdf2 = { version = "0.12", default-features = false, features = ["hmac"] }
 sha1 = "0.10"
 getrandom = "0.2"
+# Contraseñas de los perfiles: Llavero de macOS (o el almacén del sistema).
+keyring = { version = "3", features = ["apple-native", "windows-native", "linux-native"] }
 
 [profile.release]
 opt-level = 3

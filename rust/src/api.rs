@@ -90,6 +90,10 @@ impl Client {
         *self.token.write().unwrap() = token.to_string();
     }
 
+    pub fn token(&self) -> String {
+        self.token.read().unwrap().clone()
+    }
+
     fn api8(&self, path: &str) -> String {
         format!("{}/eminusapi8/api{path}", self.origin)
     }
@@ -266,6 +270,15 @@ impl Client {
         Ok(key.to_string())
     }
 
+    pub fn sign_in(&self, user: &str, password: &str) -> Res<String> {
+        let key = match crate::store::login_key() {
+            Some(key) => key,
+            None => self.login_key()?,
+        };
+        let sealed = crate::store::encrypt_password(password.trim(), &key).ok_or_else(|| ApiError::Other("no se pudo cifrar la contraseña".into()))?;
+        self.login(user, &sealed)
+    }
+
     // `password` ya viene cifrada como la manda el formulario de Eminus.
     pub fn login(&self, user: &str, password: &str) -> Res<String> {
         let sent = self.agent.post(&self.api_old("/auth")).send_json(json!({ "username": user, "password": password }));
@@ -301,7 +314,10 @@ pub enum Msg {
     // id del elemento, id del curso, archivos del curso recién leídos, detalle
     ContentDetail(String, String, Option<Arc<Vec<CFile>>>, Res<ContentDetail>),
     Downloaded(String, Res<PathBuf>),
-    Login(Res<String>),
+    // usuario, contraseña (sólo si se escribió a mano, para ofrecer guardarla)
+    // y el token o el error
+    Login(String, Option<String>, Res<String>),
+    ProfileSaved(crate::store::Profile, Result<(), String>),
 }
 
 type Job = Box<dyn FnOnce(&Client) -> Msg + Send>;

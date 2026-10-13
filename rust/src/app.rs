@@ -99,6 +99,10 @@ pub struct Login {
     pub field: usize, // 0 usuario · 1 contraseña · 2 token
     pub note: String,
     pub busy: bool,
+    // Selector de perfiles guardados; la última fila es «otro perfil».
+    pub picker: bool,
+    pub pick: usize,
+    confirm_remove: bool,
 }
 
 // Dónde quedó cada cosa en pantalla, para el ratón.
@@ -154,6 +158,10 @@ pub struct App {
     pub theme: usize,
     pub help: bool,
     pub login: Option<Login>,
+    pub profiles: store::Profiles,
+    // Usuario y contraseña recién usados, mientras se pregunta si guardarlos.
+    pub offer: Option<(String, String)>,
+    auto_tried: bool,
     pub pool: Pool,
     pub hit: Hit,
     pub dirty: bool,
@@ -242,6 +250,9 @@ impl App {
             theme: theme::index_of(&prefs.tema),
             help: false,
             login: None,
+            profiles: store::load_profiles(),
+            offer: None,
+            auto_tried: false,
             pool: Pool::new(Client::new("")),
             hit: Hit::default(),
             dirty: true,
@@ -249,9 +260,9 @@ impl App {
         };
         let expiry = store::expiry_of(&token);
         if token.is_empty() {
-            app.show_login("");
+            app.expire("");
         } else if expiry != 0 && expiry <= text::now() {
-            app.show_login("la sesión guardada ya venció");
+            app.expire("la sesión guardada ya venció");
         } else {
             app.adopt_token(&token, false);
         }
@@ -268,14 +279,41 @@ impl App {
             field: 0,
             note: note.to_string(),
             busy: false,
+            picker: !self.profiles.perfiles.is_empty(),
+            pick: self.profiles.perfiles.iter().position(|p| p.user == self.profiles.ultimo).unwrap_or(0),
+            confirm_remove: false,
         });
         self.help = false;
         self.filtering = false;
         self.dirty = true;
     }
 
-    // La sesión dejó de servir: lo que venga en camino ya no cuenta.
+    // La sesión venció sola: si es de un perfil guardado se vuelve a entrar
+    // sin preguntar (una vez; si eso falla, queda el selector).
     fn expire(&mut self, note: &str) {
+        let user = self.profiles.ultimo.clone();
+        if self.auto_tried || !self.profiles.has(&user) {
+            return self.end_session(note);
+        }
+        self.auto_tried = true;
+        self.end_session("");
+        self.login_profile(user, "la sesión venció: entrando de nuevo…");
+    }
+
+    // Entra con la contraseña que el perfil tiene en el llavero.
+    fn login_profile(&mut self, user: String, note: &str) {
+        if let Some(login) = &mut self.login {
+            login.busy = true;
+            login.note = note.to_string();
+        }
+        self.pool.spawn(self.epoch, move |c| {
+            let result = store::secret_get(&user).map_err(ApiError::Other).and_then(|pass| c.sign_in(&user, &pass));
+            Msg::Login(user, None, result)
+        });
+    }
+
+    // La sesión dejó de servir: lo que venga en camino ya no cuenta.
+    fn end_session(&mut self, note: &str) {
         self.epoch += 1;
         self.loading = false;
         self.content_loading = false;
@@ -336,7 +374,9 @@ impl App {
         self.account.clear();
         self.forget();
         store::clear_cache();
-        self.expire("sesión cerrada en este equipo");
+        self.profiles.ultimo.clear();
+        self.profiles.save();
+        self.end_session("sesión cerrada en este equipo");
     }
 
     pub fn session_left(&self) -> Option<i64> {
@@ -355,7 +395,7 @@ impl App {
         if !self.msg.is_empty() {
             return self.msg.clone();
         }
-        if self.loaded_at == 0 {
+        if self.loaded_at == 0 || self.login.is_some() {
             return String::new();
         }
         let mins = (text::now() - self.loaded_at + 30) / 60;
@@ -385,6 +425,7 @@ impl App {
     fn finish_refresh(&mut self) {
         self.loading = false;
         self.loaded_at = text::now();
+        self.auto_tried = false;
         self.msg.clear();
         store::save_courses(&self.account, self.loaded_at, &self.courses, &self.acts);
         self.ensure_content(self.refresh_manual);
@@ -522,11 +563,44 @@ impl App {
             }
             Msg::Downloaded(name, Err(ApiError::Other(note))) => self.say(format!("no se pudo descargar {name} ({note})"), 6),
             Msg::Downloaded(_, Err(err)) => self.fail(&err),
-            Msg::Login(Ok(token)) => match store::clean_token(&token) {
-                Some(token) => self.adopt_token(&token, true),
+            Msg::Login(user, pass, Ok(token)) => match store::clean_token(&token) {
+                Some(token) => {
+                    self.adopt_token(&token, true);
+                    self.profiles.ultimo = user.clone();
+                    self.profiles.save();
+                    match pass {
+                        // Perfil ya guardado y contraseña escrita a mano: se
+                        // pone al día en el llavero sin preguntar.
+                        Some(pass) if self.profiles.has(&user) => {
+                            let profile = self.profiles.perfiles.iter().find(|p| p.user == user).cloned();
+                            if let Some(profile) = profile {
+                                self.pool.spawn(self.epoch, move |_| Msg::ProfileSaved(profile.clone(), store::secret_set(&profile.user, &pass)));
+                            }
+                        }
+                        Some(pass) => self.offer = Some((user, pass)),
+                        None => {}
+                    }
+                }
                 None => self.login_note("eminus respondió algo inesperado"),
             },
-            Msg::Login(Err(err)) => self.login_note(err.message()),
+            Msg::Login(user, pass, Err(err)) => {
+                self.login_note(err.message());
+                // Falló un perfil guardado: queda el formulario con su usuario.
+                if let (None, Some(login)) = (pass, &mut self.login) {
+                    login.picker = false;
+                    login.user = user;
+                    login.field = 1;
+                }
+            }
+            Msg::ProfileSaved(profile, Ok(())) => {
+                if !self.profiles.has(&profile.user) {
+                    self.say(format!("perfil guardado: {}", profile.name), 4);
+                    self.profiles.perfiles.push(profile);
+                    self.profiles.perfiles.sort_by_key(|p| text::norm(&p.name));
+                }
+                self.profiles.save();
+            }
+            Msg::ProfileSaved(_, Err(note)) => self.say(note, 6),
         }
     }
 
@@ -843,7 +917,11 @@ impl App {
         if !login.token.trim().is_empty() {
             match store::clean_token(&login.token) {
                 Some(token) if store::expiry_of(&token) != 0 && store::expiry_of(&token) <= text::now() => login.note = "ese token ya venció: copia uno nuevo".into(),
-                Some(token) => self.adopt_token(&token, true),
+                Some(token) => {
+                    self.profiles.ultimo.clear();
+                    self.profiles.save();
+                    self.adopt_token(&token, true);
+                }
                 None => login.note = "eso no parece un token de eminus".into(),
             }
             return;
@@ -857,20 +935,27 @@ impl App {
         login.busy = true;
         login.note = "entrando…".into();
         self.pool.spawn(self.epoch, move |c| {
-            let sealed = match store::login_key() {
-                Some(key) => Ok(key),
-                None => c.login_key(),
-            }
-            .and_then(|key| store::encrypt_password(pass.trim(), &key).ok_or_else(|| ApiError::Other("no se pudo cifrar la contraseña".into())));
-            Msg::Login(sealed.and_then(|sealed| c.login(&user, &sealed)))
+            let result = c.sign_in(&user, &pass);
+            Msg::Login(user, Some(pass), result)
         });
     }
 
     fn login_key(&mut self, key: KeyEvent) {
         let Some(login) = &mut self.login else { return };
+        if login.busy {
+            self.quit = key.code == KeyCode::Esc;
+            return;
+        }
+        if login.picker {
+            return self.picker_key(key);
+        }
         let fields = [0, 1, 2];
         let at = login.field;
         match key.code {
+            KeyCode::Esc if !self.profiles.perfiles.is_empty() => {
+                login.picker = true;
+                login.note.clear();
+            }
             KeyCode::Esc => self.quit = true,
             KeyCode::Enter => self.submit_login(),
             KeyCode::Tab | KeyCode::Down => login.field = fields[(at + 1) % fields.len()],
@@ -882,6 +967,64 @@ impl App {
             KeyCode::Char('u') if key.modifiers.contains(KeyModifiers::CONTROL) => [&mut login.user, &mut login.pass, &mut login.token][login.field].clear(),
             KeyCode::Char(c) if !key.modifiers.contains(KeyModifiers::CONTROL) => [&mut login.user, &mut login.pass, &mut login.token][login.field].push(c),
             _ => {}
+        }
+    }
+
+    fn picker_key(&mut self, key: KeyEvent) {
+        let Some(login) = &mut self.login else { return };
+        let count = self.profiles.perfiles.len();
+        let removing = std::mem::take(&mut login.confirm_remove);
+        let mut chosen = None;
+        match key.code {
+            KeyCode::Esc | KeyCode::Char('q') => self.quit = true,
+            KeyCode::Char('j') | KeyCode::Down | KeyCode::Tab => login.pick = (login.pick + 1) % (count + 1),
+            KeyCode::Char('k') | KeyCode::Up | KeyCode::BackTab => login.pick = (login.pick + count) % (count + 1),
+            KeyCode::Char(c @ '1'..='9') if (c as usize - '1' as usize) < count => chosen = Some(c as usize - '1' as usize),
+            KeyCode::Enter | KeyCode::Char('l') => chosen = Some(login.pick),
+            KeyCode::Char('+') | KeyCode::Char('n') => chosen = Some(count),
+            KeyCode::Char('x') | KeyCode::Delete if login.pick < count => {
+                let profile = &self.profiles.perfiles[login.pick];
+                if removing {
+                    store::secret_delete(&profile.user);
+                    login.note = format!("perfil quitado: {}", profile.name);
+                    self.profiles.perfiles.remove(login.pick);
+                    self.profiles.save();
+                    login.pick = 0;
+                    login.picker = !self.profiles.perfiles.is_empty();
+                } else {
+                    login.confirm_remove = true;
+                    login.note = format!("pulsa x otra vez para quitar el perfil de {}", profile.name);
+                }
+            }
+            _ => {}
+        }
+        match chosen {
+            Some(i) if i < count => {
+                login.pick = i;
+                let user = self.profiles.perfiles[i].user.clone();
+                self.login_profile(user, "entrando…");
+            }
+            Some(_) => {
+                login.picker = false;
+                login.field = 0;
+                login.note.clear();
+            }
+            None => {}
+        }
+    }
+
+    // ¿Guardar como perfil lo que se acaba de escribir en el login?
+    fn offer_key(&mut self, key: KeyEvent) {
+        let Some((user, pass)) = self.offer.take() else { return };
+        match key.code {
+            KeyCode::Char('s' | 'S' | 'y') | KeyCode::Enter => {
+                let name = Some(store::name_of(&self.pool.client.token())).filter(|n| !n.is_empty()).unwrap_or_else(|| user.clone());
+                let profile = store::Profile { user, name };
+                // Aparte: el llavero puede abrir un diálogo del sistema.
+                self.pool.spawn(self.epoch, move |_| Msg::ProfileSaved(profile.clone(), store::secret_set(&profile.user, &pass)));
+            }
+            KeyCode::Char('n' | 'N') | KeyCode::Esc => self.say("perfil no guardado", 2),
+            _ => self.offer = Some((user, pass)),
         }
     }
 
@@ -914,6 +1057,9 @@ impl App {
         }
         if self.login.is_some() {
             return self.login_key(key);
+        }
+        if self.offer.is_some() {
+            return self.offer_key(key);
         }
         if self.help {
             self.help = false;
