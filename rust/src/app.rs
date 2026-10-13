@@ -647,6 +647,9 @@ impl App {
             self.mid.sel = self.mid.sel.min(item_count(&self.mid_rows).saturating_sub(1));
         }
         self.counts = model::counts(&self.courses, &self.acts, &self.clock);
+        // Lo seleccionado puede ser otro tras recalcular (o ser el primero al
+        // arrancar): su descripción se pide igual que al mover el cursor.
+        self.detail_due.get_or_insert_with(Instant::now);
     }
 
     // Lo que muestra el panel de detalle ahora mismo.
