@@ -238,6 +238,12 @@ fn id_json(id: &str) -> serde_json::Value {
     id.parse::<u64>().map_or_else(|_| json!(id), |n| json!(n))
 }
 
+impl Default for App {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl App {
     pub fn new() -> Self {
         let token = store::load_token();
@@ -916,7 +922,7 @@ impl App {
         self.delivery = Some(Delivery { act, info: Slot::Pending, files: Vec::new(), path: String::new(), text: String::new(), field: 0, note: String::new(), confirm: false, busy: false });
     }
 
-    fn add_delivery_file(&mut self, raw: &str) {
+    pub fn add_delivery_file(&mut self, raw: &str) {
         let Some(delivery) = &mut self.delivery else { return };
         match dropped_path(raw) {
             Some(path) if delivery.files.iter().any(|(p, _)| *p == path) => delivery.note = "ese archivo ya está en la lista".into(),
@@ -1042,7 +1048,26 @@ impl App {
 
     // ───────────── teclado ─────────────
 
-    fn set_view(&mut self, view: View) {
+    // Para la ventana: lo mismo que pulsar esa tecla en la terminal.
+    pub fn press(&mut self, code: KeyCode) {
+        self.on_key(KeyEvent::new(code, KeyModifiers::NONE));
+    }
+
+    // Clic en una fila: le da el foco a su panel y la selecciona.
+    pub fn select(&mut self, mid: bool, index: usize) {
+        self.set_focus(mid);
+        let current = if mid { self.mid.sel } else { self.list().sel };
+        self.move_in(mid, index as isize - current as isize);
+        self.dirty = true;
+    }
+
+    // El texto del filtro cambió desde fuera.
+    pub fn refilter(&mut self) {
+        self.model_dirty = true;
+        self.selection_changed();
+    }
+
+    pub fn set_view(&mut self, view: View) {
         if self.view != view {
             self.view = view;
             self.focus_mid = false;

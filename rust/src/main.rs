@@ -1,13 +1,7 @@
 // BetterThanEminus nativo: la vista tui de la extensión como programa de
 // terminal. Un solo hilo dibuja y atiende el teclado; la red va aparte.
 
-mod api;
-mod app;
-mod model;
-mod store;
-mod text;
-mod theme;
-mod ui;
+use eminus::{app, ui};
 
 use ratatui::crossterm::event::{self, DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture, Event, KeyEventKind};
 use ratatui::crossterm::execute;
@@ -190,7 +184,7 @@ fn perfiles() {
     settle(&mut app, "entró con el perfil");
     assert!(app.login.is_none(), "el perfil guardado no entró");
     // Como si la sesión venciera sola: debe volver a entrar sin preguntar.
-    app.on_msg(u64::MAX, api::Msg::Courses(Ok(Vec::new())));
+    app.on_msg(u64::MAX, eminus::api::Msg::Courses(Ok(Vec::new())));
     app.expiry = 1;
     settle(&mut app, "tras vencer sola");
     assert!(app.login.is_none(), "no volvió a entrar sola");

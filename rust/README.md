@@ -8,6 +8,16 @@ cargo run --release
 
 El binario queda en `target/release/eminus` (≈2.4 MB). Para tenerlo en el PATH: `cargo install --path .`
 
+## Con ventana
+
+```bash
+cargo run --release --bin eminus-gui
+```
+
+La misma app en una ventana (egui): pestañas, lista a la izquierda y detalle a la derecha, con botones para entregar, descargar, abrir en Eminus, actualizar, cambiar de tema y cerrar sesión. Comparte todo con la de terminal: sesión, perfiles, caché y tema. Para entregar se pueden elegir los archivos con el diálogo del sistema o soltarlos sobre la ventana. Las flechas (o `j` `k`) mueven la selección.
+
+Usa bastante más memoria que la de terminal (≈115 MB frente a ≈8.5 MB), porque dibuja con la GPU; en reposo no consume CPU.
+
 ## Sesión y perfiles
 
 Entra con tu **usuario y contraseña** de Eminus. La contraseña se cifra igual que en el formulario de Eminus (la app lee la llave de cifrado de la propia página de Eminus al entrar) y se manda sólo a eminus.uv.mx.
