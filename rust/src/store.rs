@@ -100,9 +100,9 @@ pub fn save_token(token: &str) {
 // ───────────── login con contraseña ─────────────
 
 // Eminus no recibe la contraseña tal cual: su formulario la cifra con una
-// llave de la propia aplicación web. Esa llave no viene incluida aquí; si
-// el usuario la configura (EMINUS_LOGIN_KEY o `llave_login` en
-// preferencias), la app puede entrar con usuario y contraseña.
+// llave de la propia aplicación web. La app la lee de la página de Eminus
+// al entrar; aquí sólo se puede fijar a mano (EMINUS_LOGIN_KEY o
+// `llave_login` en preferencias) por si esa lectura deja de funcionar.
 pub fn login_key() -> Option<String> {
     std::env::var("EMINUS_LOGIN_KEY").ok().or_else(|| load_prefs().llave_login).map(|k| k.trim().to_string()).filter(|k| !k.is_empty())
 }
@@ -226,4 +226,15 @@ mod tests {
         assert_eq!(out.len(), 16 + 16 + 16);
         assert_ne!(encrypt_password("secreto", "llave"), encrypt_password("secreto", "llave"));
     }
+}
+
+// Comprobaciones a mano (cargo test -- --ignored --nocapture): la llave se
+// puede leer de Eminus y el cifrado se puede abrir con otra herramienta.
+#[cfg(test)]
+#[test]
+#[ignore]
+fn llave_y_cifrado() {
+    let key = crate::api::Client::new("").login_key().map_err(|e| e.message().to_string());
+    println!("llave leída de eminus: {:?}", key.map(|k| k.len()));
+    println!("cifrado de prueba: {}", encrypt_password("secreto ñ", "llave").unwrap());
 }

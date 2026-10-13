@@ -22,8 +22,8 @@ uso:
   eminus --help
 
 sesión:
-  La app pide el token de tu sesión de Eminus la primera vez y lo guarda
-  sólo en este equipo. También lo toma de la variable EMINUS_TOKEN.
+  Entra con tu usuario y contraseña de Eminus (la contraseña no se guarda)
+  o pega un token de sesión. También lo toma de la variable EMINUS_TOKEN.
 ";
 
 fn run(terminal: &mut ratatui::DefaultTerminal) -> io::Result<()> {

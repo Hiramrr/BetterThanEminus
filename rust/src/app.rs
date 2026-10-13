@@ -99,7 +99,6 @@ pub struct Login {
     pub field: usize, // 0 usuario · 1 contraseña · 2 token
     pub note: String,
     pub busy: bool,
-    pub with_pass: bool,
 }
 
 // Dónde quedó cada cosa en pantalla, para el ratón.
@@ -262,15 +261,13 @@ impl App {
     // ───────────── sesión ─────────────
 
     fn show_login(&mut self, note: &str) {
-        let with_pass = store::login_key().is_some();
         self.login = Some(Login {
             user: String::new(),
             pass: String::new(),
             token: String::new(),
-            field: if with_pass { 0 } else { 2 },
+            field: 0,
             note: note.to_string(),
             busy: false,
-            with_pass,
         });
         self.help = false;
         self.filtering = false;
@@ -851,26 +848,28 @@ impl App {
             }
             return;
         }
-        if !login.with_pass {
-            return login.note = "pega tu token de eminus".into();
-        }
         let user = login.user.trim().to_string();
         if user.is_empty() || login.pass.is_empty() {
             return login.note = "escribe tu usuario y tu contraseña".into();
         }
-        // La contraseña no se guarda: sale cifrada y se borra de memoria.
-        let sealed = store::login_key().and_then(|key| store::encrypt_password(login.pass.trim(), &key));
-        login.pass.clear();
-        let Some(sealed) = sealed else { return login.note = "no se pudo cifrar la contraseña".into() };
+        // La contraseña no se guarda: sale de aquí cifrada, directo a Eminus.
+        let pass = std::mem::take(&mut login.pass);
         login.busy = true;
         login.note = "entrando…".into();
-        self.pool.spawn(self.epoch, move |c| Msg::Login(c.login(&user, &sealed)));
+        self.pool.spawn(self.epoch, move |c| {
+            let sealed = match store::login_key() {
+                Some(key) => Ok(key),
+                None => c.login_key(),
+            }
+            .and_then(|key| store::encrypt_password(pass.trim(), &key).ok_or_else(|| ApiError::Other("no se pudo cifrar la contraseña".into())));
+            Msg::Login(sealed.and_then(|sealed| c.login(&user, &sealed)))
+        });
     }
 
     fn login_key(&mut self, key: KeyEvent) {
         let Some(login) = &mut self.login else { return };
-        let fields: &[usize] = if login.with_pass { &[0, 1, 2] } else { &[2] };
-        let at = fields.iter().position(|f| *f == login.field).unwrap_or(0);
+        let fields = [0, 1, 2];
+        let at = login.field;
         match key.code {
             KeyCode::Esc => self.quit = true,
             KeyCode::Enter => self.submit_login(),

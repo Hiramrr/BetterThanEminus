@@ -621,7 +621,7 @@ fn help(f: &mut Frame, t: &Theme, area: Rect) {
 fn login(f: &mut Frame, app: &App, t: &Theme, area: Rect) {
     let Some(login) = &app.login else { return };
     let dim = Style::new().fg(t.dim);
-    let area = centered(area, 72, if login.with_pass { 19 } else { 17 });
+    let area = centered(area, 72, 19);
     let block = pane(t, "eminus · iniciar sesión".into(), true);
     let inner = block.inner(area).inner(ratatui::layout::Margin::new(2, 1));
     f.render_widget(block, area);
@@ -637,31 +637,29 @@ fn login(f: &mut Frame, app: &App, t: &Theme, area: Rect) {
             Span::styled(text::fit(&format!("{shown}{}", if active { "▏" } else { "" }), room), Style::new().bg(t.sel)),
         ])
     };
-    let mut lines = Vec::new();
-    if login.with_pass {
-        lines.push(field("usuario", login.user.clone(), 0));
-        lines.push(Line::raw(""));
-        lines.push(field("contraseña", "•".repeat(login.pass.chars().count()), 1));
-        lines.extend([Line::raw(""), Line::styled("  o pega un token de sesión:", dim), Line::raw("")]);
-    } else {
-        lines.push(Line::raw("Pega el token de tu sesión de Eminus:"));
-        lines.push(Line::raw(""));
-    }
+    let mut lines = vec![
+        field("usuario", login.user.clone(), 0),
+        Line::raw(""),
+        field("contraseña", "•".repeat(login.pass.chars().count()), 1),
+        Line::raw(""),
+        Line::styled("  o pega un token de sesión:", dim),
+        Line::raw(""),
+    ];
     let masked = match login.token.chars().count() {
         0 => String::new(),
         n => format!("{}… ({n} caracteres)", login.token.chars().take(12).collect::<String>()),
     };
     lines.push(field("token", masked, 2));
     lines.push(Line::raw(""));
-    lines.push(Line::styled("Cómo obtenerlo: entra a eminus.uv.mx en tu navegador, abre la", dim));
-    lines.push(Line::styled("consola (F12) y ejecuta:", dim));
-    lines.push(Line::styled("  copy(localStorage.accessToken)", Style::new().fg(t.accent)));
-    lines.push(Line::styled("Dura 2 horas. Se guarda sólo en este equipo.", dim));
+    lines.push(Line::styled("  (en la consola del navegador: copy(localStorage.accessToken))", dim));
+    lines.push(Line::raw(""));
+    lines.push(Line::styled("La contraseña no se guarda. La sesión dura 2 horas y queda sólo", dim));
+    lines.push(Line::styled("en este equipo.", dim));
     lines.push(Line::raw(""));
     if !login.note.is_empty() {
         let prefix = if login.busy { format!("{} ", spinner()) } else { String::new() };
         lines.push(Line::styled(format!("{prefix}{}", login.note), Style::new().fg(if login.busy { t.accent } else { t.yellow })));
     }
-    lines.push(Line::styled(if login.with_pass { "enter entrar · tab cambiar de campo · esc salir" } else { "enter entrar · esc salir" }, dim));
+    lines.push(Line::styled("enter entrar · tab cambiar de campo · esc salir", dim));
     f.render_widget(Paragraph::new(lines).wrap(Wrap { trim: false }), inner);
 }

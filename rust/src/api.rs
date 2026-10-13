@@ -253,6 +253,19 @@ impl Client {
         Ok(path)
     }
 
+    // El formulario de Eminus cifra la contraseña con una llave que viene en
+    // el código de su propia página; se lee de ahí, igual que el navegador.
+    pub fn login_key(&self) -> Res<String> {
+        let unreadable = || ApiError::Other("no se pudo leer el formulario de eminus; entra con un token".into());
+        let page = |url: &str| self.agent.get(url).call().ok().and_then(|res| res.into_string().ok());
+        let base = format!("{}/eminus4/", self.origin);
+        let index = page(&base).ok_or_else(|| ApiError::Other("sin conexión con eminus".into()))?;
+        let script = index.split('"').find(|part| part.starts_with("main.") && part.contains(".js")).ok_or_else(unreadable)?;
+        let code = page(&format!("{base}{script}")).ok_or_else(unreadable)?;
+        let key = code.split("hash:{key:\"").nth(1).and_then(|rest| rest.split('"').next()).filter(|key| !key.is_empty()).ok_or_else(unreadable)?;
+        Ok(key.to_string())
+    }
+
     // `password` ya viene cifrada como la manda el formulario de Eminus.
     pub fn login(&self, user: &str, password: &str) -> Res<String> {
         let sent = self.agent.post(&self.api_old("/auth")).send_json(json!({ "username": user, "password": password }));

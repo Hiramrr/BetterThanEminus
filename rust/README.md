@@ -10,9 +10,11 @@ El binario queda en `target/release/eminus` (≈2.4 MB). Para tenerlo en el PATH
 
 ## Sesión
 
-La app pide el **token** de tu sesión de Eminus y lo guarda sólo en este equipo (`~/.config/eminus/sesion`, permisos 0600). Para copiarlo: entra a eminus.uv.mx en el navegador, abre la consola y ejecuta `copy(localStorage.accessToken)`. También se puede pasar con la variable `EMINUS_TOKEN`. El token dura 2 horas; la barra avisa cuando quedan menos de 20 minutos y al vencer vuelve a pedirlo.
+Entra con tu **usuario y contraseña** de Eminus. La contraseña no se guarda: se cifra igual que en el formulario de Eminus (la app lee la llave de cifrado de la propia página de Eminus al entrar) y se manda sólo a eminus.uv.mx. Lo que queda en este equipo es el token de la sesión (`~/.config/eminus/sesion`, permisos 0600), que dura 2 horas; la barra avisa cuando quedan menos de 20 minutos y al vencer vuelve a pedir el login.
 
-**Usuario y contraseña**: el formulario de Eminus cifra la contraseña con una llave de su propia aplicación web antes de mandarla. Esa llave no viene incluida. Si la configuras (`EMINUS_LOGIN_KEY`, o `llave_login` en `~/.config/eminus/preferencias.json`), la pantalla de login muestra también usuario y contraseña. Esta ruta está escrita según el código del formulario pero **no se ha probado contra Eminus**. La contraseña nunca se guarda.
+También puedes pegar un **token** en vez de la contraseña: en la consola del navegador, `copy(localStorage.accessToken)`. O pasarlo con la variable `EMINUS_TOKEN`.
+
+Si Eminus cambia su página y la app ya no encuentra la llave, se puede fijar a mano con `EMINUS_LOGIN_KEY` o con `llave_login` en `~/.config/eminus/preferencias.json`.
 
 ## Atajos
 
