@@ -690,13 +690,27 @@ fn rows(ui: &mut egui::Ui, p: &Palette, rows: &[Row], selected: usize, scroll: b
                         if !course.is_empty() {
                             parts.push(part(&format!("   {course}"), p.dim));
                         }
-                        if !meta.is_empty() {
-                            parts.push(part(&format!("   {meta}"), p.dim));
+                        // El avance llega como barra de caracteres («███░░ 3/5»),
+                        // que la fuente de la ventana no tiene: aquí va el
+                        // conteo como texto y la barra se dibuja de verdad.
+                        let count = meta.trim_start_matches(['█', '░']).trim();
+                        let progress = count.split_once('/').and_then(|(done, total)| Some((done.parse::<f32>().ok()?, total.parse::<f32>().ok()?)));
+                        if !count.is_empty() {
+                            parts.push(part(&format!("   {count}"), p.dim));
                         }
                         for (text, format) in parts {
                             job.append(&text, 0.0, format);
                         }
                         let response = ui.selectable_label(index == selected, job);
+                        if let Some((done, total)) = progress {
+                            let rect = response.rect;
+                            let bar = egui::Rect::from_min_size(egui::pos2(rect.right() - 72.0, rect.center().y - 3.0), egui::vec2(60.0, 6.0));
+                            ui.painter().rect_filled(bar, 3.0, p.border);
+                            if total > 0.0 && done > 0.0 {
+                                let filled = egui::Rect::from_min_size(bar.min, egui::vec2(60.0 * (done / total).min(1.0), 6.0));
+                                ui.painter().rect_filled(filled, 3.0, p.green);
+                            }
+                        }
                         if response.clicked() {
                             clicked = Some(index);
                         }
