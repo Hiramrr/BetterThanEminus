@@ -200,3 +200,64 @@ fn perfiles() {
     settle(&mut app, "perfil quitado");
     assert!(app.profiles.perfiles.is_empty());
 }
+
+// Entregar y descargar contra el Eminus falso (con EMINUS_TOKEN).
+#[cfg(test)]
+#[test]
+#[ignore]
+fn entregas() {
+    use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+    let mut app = app::App::new();
+    let mut terminal = ratatui::Terminal::new(ratatui::backend::TestBackend::new(110, 30)).unwrap();
+    let mut settle = |app: &mut app::App, label: &str| {
+        let until = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        loop {
+            while let Ok((epoch, msg)) = app.pool.inbox.try_recv() {
+                app.on_msg(epoch, msg);
+            }
+            app.tick();
+            if app.pool.pending == 0 && app.wait() >= std::time::Duration::from_secs(1) || std::time::Instant::now() > until {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(20));
+        }
+        terminal.draw(|f| ui::draw(f, app)).unwrap();
+        let buffer = terminal.backend().buffer();
+        println!("\n══ {label} ══");
+        for y in 0..buffer.area.height {
+            let line: String = (0..buffer.area.width).map(|x| buffer[(x, y)].symbol()).collect();
+            if !line.trim().is_empty() {
+                println!("{}", line.trim_end());
+            }
+        }
+    };
+    let press = |app: &mut app::App, keys: &str| {
+        keys.chars().for_each(|c| {
+            let code = match c {
+                '\n' => KeyCode::Enter,
+                '\t' => KeyCode::Tab,
+                c => KeyCode::Char(c),
+            };
+            app.on_key(KeyEvent::new(code, KeyModifiers::NONE))
+        })
+    };
+    let file = std::env::temp_dir().join("tarea de prueba.txt");
+    std::fs::write(&file, "contenido de la tarea").unwrap();
+    settle(&mut app, "agenda");
+    press(&mut app, "jD");
+    settle(&mut app, "tras D en una actividad");
+    press(&mut app, "E");
+    settle(&mut app, "ventana de entrega");
+    press(&mut app, "\n\n");
+    settle(&mut app, "sin comentario no deja");
+    press(&mut app, "\t/no/existe.pdf\n");
+    settle(&mut app, "ruta que no existe");
+    app.on_key(KeyEvent::new(KeyCode::Char('u'), KeyModifiers::CONTROL));
+    app.on_paste(&file.to_string_lossy().replace(' ', "\\ "));
+    press(&mut app, "\tListo, profe <3\n");
+    settle(&mut app, "confirmación");
+    assert!(app.delivery.as_ref().is_some_and(|d| d.confirm && d.files.len() == 1), "no llegó a confirmar");
+    press(&mut app, "s");
+    settle(&mut app, "entregada");
+    assert!(app.delivery.is_none(), "la ventana debió cerrarse al entregar");
+}

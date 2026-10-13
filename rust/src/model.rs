@@ -34,9 +34,25 @@ pub struct Activity {
     pub value: Option<f64>,
 }
 
+pub struct AFile {
+    pub id: String,
+    pub name: String,
+    pub size: String,
+}
+
 pub struct Detail {
     pub text: String,
-    pub files: Vec<(String, String)>, // nombre, tamaño
+    pub files: Vec<AFile>,
+    // Por qué Eminus no aceptaría una entrega desde aquí, si es el caso.
+    pub blocked: Option<&'static str>,
+}
+
+// La entrega del estudiante tal como está en Eminus (borrador o enviada).
+pub struct DeliveryInfo {
+    pub id: i64,
+    pub text: String,
+    pub files: Vec<AFile>,
+    pub sent: bool,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -121,6 +137,11 @@ pub fn id_of(value: Option<&Value>, allow_zero: bool) -> String {
     }
 }
 
+// Los ids de Eminus son números; así los espera su API.
+pub fn id_json(id: &str) -> Value {
+    id.parse::<u64>().map_or_else(|_| Value::from(id), Value::from)
+}
+
 pub fn courses_from(rows: &[Value], now: i64) -> Vec<Course> {
     let mut courses: Vec<Course> = rows
         .iter()
@@ -195,15 +216,39 @@ pub fn detail_from(row: &Value) -> Detail {
         .map(|files| {
             files
                 .iter()
-                .filter_map(|f| {
-                    let name = string(pick(f, &["nombre", "nombreArchivo", "nombreOriginal", "name", "archivo"]));
-                    let size = num(pick(f, &["tamano", "tamanio", "size", "peso"])).unwrap_or(0.0);
-                    (!name.is_empty()).then(|| (name, file_size(size)))
-                })
+                .filter_map(|f| a_file(f, &["idArchivosActividades", "idArchivoActividad", "idArchivo"]))
                 .collect()
         })
         .unwrap_or_default();
-    Detail { text: text::html_to_text(&string(row.get("descripcion"))), files }
+    // Mismas condiciones que el botón «Entregar» de Eminus.
+    let state = |field: &str| row.get(field).filter(|v| !v.is_null()).map(|v| int(Some(v)));
+    let blocked = if truthy(row.get("porEquipos")) {
+        Some("es una actividad por equipos: entrégala desde eminus")
+    } else if state("estado") == Some(3) {
+        Some("ya está calificada: eminus no acepta otra entrega")
+    } else if state("estadoAct").is_some_and(|s| s != 2 && s != 4) {
+        Some("eminus no acepta entregas de esta actividad ahora (fuera de fecha)")
+    } else {
+        None
+    };
+    Detail { text: text::html_to_text(&string(row.get("descripcion"))), files, blocked }
+}
+
+fn a_file(f: &Value, id_fields: &[&str]) -> Option<AFile> {
+    let name = string(pick(f, &["nombreOriginal", "nombre", "nombreArchivo", "name", "archivo"]));
+    let size = num(pick(f, &["tamano", "tamanio", "size", "peso"])).unwrap_or(0.0);
+    (!name.is_empty()).then(|| AFile { id: id_of(pick(f, id_fields), false), name, size: file_size(size) })
+}
+
+pub fn delivery_from(row: &Value) -> DeliveryInfo {
+    let files = row.get("archivosEntregaConTamano").and_then(Value::as_array).map(|files| files.iter().filter_map(|f| a_file(f, &["idArchivosEntregas", "idArchivoEntrega", "idArchivo"])).collect()).unwrap_or_default();
+    let delivered = string(row.get("fechaEntrega"));
+    DeliveryInfo {
+        id: int(row.get("idActividadEntrega")),
+        text: text::html_to_text(&string(row.get("descEntrega"))),
+        files,
+        sent: int(row.get("idEstado")) == 1 || (!delivered.is_empty() && !delivered.starts_with("0001")),
+    }
 }
 
 // ── contenido de los cursos ──

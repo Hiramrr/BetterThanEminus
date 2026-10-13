@@ -1,7 +1,8 @@
 // Estado de la app y lo que pasa con cada tecla y cada respuesta de la red.
 
 use crate::api::{ApiError, Client, Msg, Pool};
-use crate::model::{self, Acts, CFile, Clock, Content, ContentDetail, ContentItem, Counts, Course, Detail, Entry, Row};
+use crate::model::{self, Activity, Acts, CFile, Clock, Content, ContentDetail, ContentItem, Counts, Course, DeliveryInfo, Detail, Entry, Row};
+use std::path::PathBuf;
 use crate::text::{self, Filter};
 use crate::{store, theme};
 use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
@@ -105,6 +106,39 @@ pub struct Login {
     confirm_remove: bool,
 }
 
+// Ventana para entregar una actividad.
+pub struct Delivery {
+    pub act: Arc<Activity>,
+    pub info: Slot<DeliveryInfo>,
+    pub files: Vec<(PathBuf, u64)>,
+    pub path: String,
+    pub text: String,
+    pub field: usize, // 0 archivo · 1 comentario
+    pub note: String,
+    pub confirm: bool,
+    pub busy: bool,
+}
+
+// Lo que deja una terminal al arrastrarle un archivo: entre comillas, con
+// los espacios escapados o como file://.
+fn dropped_path(raw: &str) -> Option<PathBuf> {
+    let raw = raw.trim();
+    let raw = raw.strip_prefix("file://").unwrap_or(raw);
+    let unquoted = raw.trim_matches(['"', '\'']);
+    let mut unescaped = String::new();
+    let mut chars = unquoted.chars();
+    while let Some(c) = chars.next() {
+        unescaped.push(if c == '\\' { chars.next().unwrap_or(c) } else { c });
+    }
+    [unquoted.to_string(), unescaped].into_iter().find_map(|candidate| {
+        let path = match candidate.strip_prefix("~/") {
+            Some(rest) => PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join(rest),
+            None => PathBuf::from(&candidate),
+        };
+        path.is_file().then_some(path)
+    })
+}
+
 // Dónde quedó cada cosa en pantalla, para el ratón.
 #[derive(Default)]
 pub struct Hit {
@@ -161,6 +195,7 @@ pub struct App {
     pub profiles: store::Profiles,
     // Usuario y contraseña recién usados, mientras se pregunta si guardarlos.
     pub offer: Option<(String, String)>,
+    pub delivery: Option<Delivery>,
     auto_tried: bool,
     pub pool: Pool,
     pub hit: Hit,
@@ -252,6 +287,7 @@ impl App {
             login: None,
             profiles: store::load_profiles(),
             offer: None,
+            delivery: None,
             auto_tried: false,
             pool: Pool::new(Client::new("")),
             hit: Hit::default(),
@@ -557,6 +593,46 @@ impl App {
                     }
                 }
             }
+            Msg::Delivery(key, res) => {
+                let Some(delivery) = self.delivery.as_mut().filter(|d| detail_key(&d.act.course_id, &d.act.id) == key) else { return };
+                match res {
+                    Ok(info) => {
+                        if delivery.text.is_empty() {
+                            delivery.text = info.text.replace('\n', " ");
+                        }
+                        delivery.info = Slot::Ready(info);
+                    }
+                    Err(ApiError::Other(note)) => delivery.info = Slot::Failed(note),
+                    Err(err) => self.fail(&err),
+                }
+            }
+            Msg::Delivered(course_id, title, Ok(())) => {
+                self.delivery = None;
+                self.say(format!("✓ entregada: {title}"), 8);
+                // La lista se vuelve a leer para que salga como entregada.
+                if let Some(course) = self.courses.iter().find(|c| c.id == course_id).cloned() {
+                    self.load_activities(&course);
+                }
+            }
+            Msg::Delivered(_, _, Err(ApiError::Other(note))) => {
+                if let Some(delivery) = &mut self.delivery {
+                    delivery.busy = false;
+                    delivery.confirm = false;
+                    delivery.files.clear();
+                    delivery.info = Slot::Pending;
+                    delivery.note = format!("NO se entregó: {note}");
+                    let act = delivery.act.clone();
+                    self.fetch_delivery(&act);
+                }
+            }
+            Msg::Delivered(_, _, Err(err)) => {
+                if let Some(delivery) = &mut self.delivery {
+                    delivery.busy = false;
+                    delivery.confirm = false;
+                    delivery.note = "NO se entregó: la sesión venció a medio envío".into();
+                }
+                self.fail(&err);
+            }
             Msg::Downloaded(name, Ok(path)) => {
                 let file = path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or(name);
                 self.say(format!("✓ descargado en ~/Downloads/{file}"), 8);
@@ -812,10 +888,129 @@ impl App {
         }
     }
 
-    // D: descarga a ~/Downloads los archivos del elemento seleccionado.
+    // ───────────── entregar ─────────────
+
+    fn fetch_delivery(&mut self, act: &Arc<Activity>) {
+        let (key, course_id, id) = (detail_key(&act.course_id, &act.id), act.course_id.clone(), act.id.clone());
+        self.pool.spawn(self.epoch, move |c| Msg::Delivery(key, c.delivery_info(&course_id, &id)));
+    }
+
+    // Por qué no se puede entregar desde aquí (None: sí se puede).
+    pub fn delivery_block(&self, act: &Activity) -> Option<&'static str> {
+        match self.details.get(&detail_key(&act.course_id, &act.id)) {
+            Some(Slot::Ready(detail)) => detail.blocked,
+            _ => None,
+        }
+    }
+
+    // E: abre la ventana de entrega de la actividad seleccionada.
+    fn open_delivery(&mut self) {
+        let Some(Entry::Act(act)) = self.target().cloned() else {
+            return self.say("E entrega la actividad seleccionada (elige una en agenda, cursos o miyu)", 4);
+        };
+        if let Some(reason) = self.delivery_block(&act) {
+            return self.say(reason, 6);
+        }
+        self.fetch_act_detail(&act.course_id, &act.id);
+        self.fetch_delivery(&act);
+        self.delivery = Some(Delivery { act, info: Slot::Pending, files: Vec::new(), path: String::new(), text: String::new(), field: 0, note: String::new(), confirm: false, busy: false });
+    }
+
+    fn add_delivery_file(&mut self, raw: &str) {
+        let Some(delivery) = &mut self.delivery else { return };
+        match dropped_path(raw) {
+            Some(path) if delivery.files.iter().any(|(p, _)| *p == path) => delivery.note = "ese archivo ya está en la lista".into(),
+            Some(path) => {
+                let size = path.metadata().map_or(0, |m| m.len());
+                delivery.files.push((path, size));
+                delivery.path.clear();
+                delivery.note.clear();
+            }
+            None => delivery.note = format!("no existe ese archivo: {}", raw.trim()),
+        }
+    }
+
+    fn confirm_delivery(&mut self) {
+        let Some(delivery) = &self.delivery else { return };
+        let (course_id, id) = (&delivery.act.course_id, &delivery.act.id);
+        let note = match (&delivery.info, self.details.get(&detail_key(course_id, id))) {
+            (_, Some(Slot::Ready(Detail { blocked: Some(reason), .. }))) => Some(*reason),
+            (Slot::Ready(_), Some(Slot::Ready(_))) if delivery.text.trim().is_empty() => Some("escribe un comentario: eminus no acepta entregas sin texto"),
+            (Slot::Ready(_), Some(Slot::Ready(_))) => None,
+            (Slot::Failed(_), _) | (_, Some(Slot::Failed(_))) => Some("no se pudo consultar la actividad en eminus: cierra (esc) e intenta de nuevo"),
+            _ => Some("espera un momento: consultando la actividad en eminus…"),
+        };
+        if let Some(delivery) = &mut self.delivery {
+            delivery.confirm = note.is_none();
+            delivery.note = note.unwrap_or_default().to_string();
+        }
+    }
+
+    fn send_delivery(&mut self) {
+        let Some(delivery) = &mut self.delivery else { return };
+        let Slot::Ready(info) = &delivery.info else { return };
+        delivery.busy = true;
+        delivery.note = "subiendo y entregando…".into();
+        let (act, text, id, attached) = (delivery.act.clone(), delivery.text.clone(), info.id, info.files.len());
+        let files: Vec<PathBuf> = delivery.files.iter().map(|(path, _)| path.clone()).collect();
+        self.pool.spawn(self.epoch, move |c| Msg::Delivered(act.course_id.clone(), act.title.clone(), c.deliver(&act.course_id, &act.id, id, &text, &files, attached)));
+    }
+
+    fn delivery_key(&mut self, key: KeyEvent) {
+        let Some(delivery) = &mut self.delivery else { return };
+        let ctrl = key.modifiers.contains(KeyModifiers::CONTROL);
+        if delivery.busy {
+            return;
+        }
+        if delivery.confirm {
+            match key.code {
+                KeyCode::Char('s' | 'S') => self.send_delivery(),
+                KeyCode::Char('n' | 'N') | KeyCode::Esc => delivery.confirm = false,
+                _ => {}
+            }
+            return;
+        }
+        match key.code {
+            KeyCode::Esc => self.delivery = None,
+            KeyCode::Tab | KeyCode::BackTab | KeyCode::Up | KeyCode::Down => delivery.field = 1 - delivery.field,
+            KeyCode::Char('s') if ctrl => self.confirm_delivery(),
+            KeyCode::Enter if delivery.field == 0 && !delivery.path.trim().is_empty() => {
+                let raw = delivery.path.clone();
+                self.add_delivery_file(&raw);
+            }
+            KeyCode::Enter if delivery.field == 0 => delivery.field = 1,
+            KeyCode::Enter => self.confirm_delivery(),
+            KeyCode::Backspace if delivery.field == 0 && delivery.path.is_empty() => {
+                delivery.files.pop();
+            }
+            KeyCode::Backspace => {
+                [&mut delivery.path, &mut delivery.text][delivery.field].pop();
+            }
+            KeyCode::Char('u') if ctrl => [&mut delivery.path, &mut delivery.text][delivery.field].clear(),
+            KeyCode::Char(c) if !ctrl => [&mut delivery.path, &mut delivery.text][delivery.field].push(c),
+            _ => {}
+        }
+    }
+
+    // D: descarga a ~/Downloads los archivos de lo seleccionado.
     fn download_selected(&mut self) {
+        if let Some(Entry::Act(act)) = self.target().cloned() {
+            let files: Vec<(String, String)> = match self.details.get(&detail_key(&act.course_id, &act.id)) {
+                Some(Slot::Ready(detail)) => detail.files.iter().filter(|f| !f.id.is_empty()).map(|f| (f.id.clone(), f.name.clone())).collect(),
+                _ => return self.say("la actividad aún se está cargando: pulsa D otra vez en un momento", 4),
+            };
+            if files.is_empty() {
+                return self.say(format!("«{}» no tiene archivos adjuntos", act.title), 4);
+            }
+            self.say(if files.len() == 1 { "descargando…".to_string() } else { format!("descargando {} archivos…", files.len()) }, 0);
+            for (file_id, name) in files {
+                let act = act.clone();
+                self.pool.spawn(self.epoch, move |c| Msg::Downloaded(name.clone(), c.download_activity_file(&act.course_id, &act.id, &file_id, &name)));
+            }
+            return;
+        }
         let Some(Entry::Content(item)) = self.target().cloned() else {
-            return self.say("D descarga archivos en la vista de contenido (5)", 4);
+            return self.say("D descarga los archivos de una actividad o de un elemento de contenido", 4);
         };
         let files = match self.content_details.get(&item.id) {
             Some(Slot::Ready(detail)) => detail.files.clone(),
@@ -899,6 +1094,16 @@ impl App {
 
     pub fn on_paste(&mut self, pasted: &str) {
         let clean: String = pasted.chars().filter(|c| !c.is_control()).collect();
+        if self.login.is_none() && self.delivery.as_ref().is_some_and(|d| !d.busy && !d.confirm) {
+            // Arrastrar archivos a la terminal los agrega a la entrega.
+            if self.delivery.as_ref().is_some_and(|d| d.field == 0) {
+                pasted.lines().filter(|l| !l.trim().is_empty()).for_each(|line| self.add_delivery_file(line));
+            } else if let Some(delivery) = &mut self.delivery {
+                delivery.text.push_str(&clean);
+            }
+            self.dirty = true;
+            return;
+        }
         if let Some(login) = &mut self.login {
             match login.field {
                 0 => login.user.push_str(clean.trim()),
@@ -1064,6 +1269,9 @@ impl App {
         if self.offer.is_some() {
             return self.offer_key(key);
         }
+        if self.delivery.is_some() {
+            return self.delivery_key(key);
+        }
         if self.help {
             self.help = false;
             return;
@@ -1112,6 +1320,7 @@ impl App {
                 self.say(note, 3);
             }
             KeyCode::Char('D') => self.download_selected(),
+            KeyCode::Char('E') => self.open_delivery(),
             KeyCode::Char('r') => {
                 if self.loading {
                     self.say("ya se está actualizando…", 2);
@@ -1133,7 +1342,7 @@ impl App {
     // ───────────── ratón ─────────────
 
     pub fn on_mouse(&mut self, mouse: MouseEvent) {
-        if self.login.is_some() || self.help {
+        if self.login.is_some() || self.help || self.delivery.is_some() || self.offer.is_some() {
             return;
         }
         let at = Position::new(mouse.column, mouse.row);

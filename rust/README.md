@@ -37,10 +37,23 @@ Si Eminus cambia su página y la app ya no encuentra la llave, se puede fijar a 
 | `O` | abrir el curso |
 | `/` | filtrar · `esc` quita el filtro |
 | `a` | mostrar entregadas o cursos anteriores |
-| `D` | descargar los archivos del elemento a `~/Downloads` |
+| `D` | descargar a `~/Downloads` los archivos de la actividad o del elemento de contenido |
+| `E` | entregar la actividad seleccionada |
 | `r` | actualizar · `c` tema · `?` ayuda · `X` cerrar sesión · `q` salir |
 
 El ratón también sirve: clic selecciona, la rueda desplaza. Para copiar texto, arrastra con shift (u option en macOS).
+
+## Entregar actividades
+
+`E` sobre una actividad abre la ventana de entrega:
+
+1. Agrega archivos arrastrándolos a la terminal (o escribe la ruta y `enter`). `⌫` con el campo vacío quita el último.
+2. `tab` y escribe el comentario. Eminus no acepta entregas sin texto.
+3. `enter` pide confirmación; `s` entrega.
+
+La app hace lo mismo que la página de Eminus: crea el borrador, sube los archivos y envía. Si algo falla antes del envío, la actividad **no** queda entregada (queda el borrador en Eminus con lo que sí subió) y la ventana lo dice. Si ya había una entrega, se actualiza el comentario y se agregan los archivos nuevos; para quitar archivos ya subidos hay que hacerlo en Eminus. Las actividades por equipos, las ya calificadas y las que Eminus tiene cerradas no se pueden entregar desde aquí.
+
+Después de entregar por primera vez, compruébalo en Eminus: esta función está probada contra un servidor de pruebas que imita a Eminus, no contra entregas reales.
 
 ## Por qué es rápida y ligera
 

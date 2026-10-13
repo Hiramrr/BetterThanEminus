@@ -41,6 +41,9 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         if let Some((user, _)) = &app.offer {
             offer(f, t, body, user);
         }
+        if app.delivery.is_some() {
+            delivery(f, app, t, body);
+        }
     }
     status(f, app, t, bottom);
 }
@@ -441,11 +444,20 @@ fn activity_detail(app: &App, t: &Theme, act: &Activity) -> Vec<Line<'static>> {
             }
             if !detail.files.is_empty() {
                 lines.extend([Line::raw(""), label(t, "archivos")]);
-                lines.extend(detail.files.iter().map(|(name, size)| Line::from(vec![Span::raw(format!("• {name} ")), Span::styled(size.clone(), dim)])));
+                lines.extend(detail.files.iter().map(|file| Line::from(vec![Span::styled("⬇ ", Style::new().fg(t.accent)), Span::raw(format!("{} ", file.name)), Span::styled(file.size.clone(), dim)])));
             }
         }
     }
-    hints(t, &mut lines, &[("enter", "abrir en eminus"), ("O", "ir al curso")]);
+    let mut keys = vec![("enter", "abrir en eminus")];
+    if let Some(Slot::Ready(detail)) = app.details.get(&detail_key(&act.course_id, &act.id)) {
+        if !detail.files.is_empty() {
+            keys.push(("D", "descargar"));
+        }
+        if detail.blocked.is_none() {
+            keys.push(("E", if act.delivered { "volver a entregar" } else { "entregar" }));
+        }
+    }
+    hints(t, &mut lines, &keys);
     lines
 }
 
@@ -593,7 +605,7 @@ fn centered(area: Rect, width: u16, height: u16) -> Rect {
 }
 
 fn help(f: &mut Frame, t: &Theme, area: Rect) {
-    const KEYS: [(&str, &str); 17] = [
+    const KEYS: [(&str, &str); 18] = [
         ("1 2 3 4 5", "agenda · cursos · miyu · calificadas · contenido"),
         ("j k  ↑ ↓", "mover"),
         ("g G", "primero · último"),
@@ -604,7 +616,8 @@ fn help(f: &mut Frame, t: &Theme, area: Rect) {
         ("O", "abrir el curso"),
         ("/", "filtrar (esc lo quita)"),
         ("a", "mostrar entregadas o cursos anteriores"),
-        ("D", "descargar archivos (contenido)"),
+        ("D", "descargar los archivos de lo seleccionado"),
+        ("E", "entregar la actividad seleccionada"),
         ("r", "actualizar"),
         ("c", "siguiente tema"),
         ("X", "cerrar sesión · cambiar de perfil"),
@@ -619,6 +632,76 @@ fn help(f: &mut Frame, t: &Theme, area: Rect) {
     f.render_widget(block, area);
     let lines: Vec<Line> = KEYS.iter().map(|(key, what)| Line::from(vec![Span::styled(text::fit(key, 13), Style::new().fg(t.accent).add_modifier(Modifier::BOLD)), Span::raw(*what)])).collect();
     f.render_widget(Paragraph::new(lines), inner);
+}
+
+fn delivery(f: &mut Frame, app: &App, t: &Theme, area: Rect) {
+    let Some(d) = &app.delivery else { return };
+    let dim = Style::new().fg(t.dim);
+    let warn = Style::new().fg(t.yellow);
+    let mut lines = vec![Line::styled(d.act.course_name.to_lowercase(), dim), Line::raw("")];
+    match &d.info {
+        Slot::Pending => lines.push(Line::styled(format!("{} consultando tu entrega en eminus…", spinner()), dim)),
+        Slot::Failed(note) => lines.push(Line::styled(format!("no se pudo consultar tu entrega ({note})"), warn)),
+        Slot::Ready(info) => {
+            let state = if info.sent {
+                "ya la entregaste: al enviar se actualiza el comentario y se agregan los archivos nuevos"
+            } else if info.id > 0 {
+                "tienes un borrador en eminus: se completa con lo de aquí"
+            } else {
+                "aún no hay entrega en eminus"
+            };
+            lines.push(Line::styled(state, if info.sent { warn } else { dim }));
+            lines.extend(info.files.iter().map(|file| Line::from(vec![Span::styled("  ✓ ", Style::new().fg(t.green)), Span::raw(format!("{} ", file.name)), Span::styled(format!("{} · ya en eminus", file.size), dim)])));
+        }
+    }
+    lines.extend([Line::raw(""), label(t, "archivos por subir")]);
+    if d.files.is_empty() {
+        lines.push(Line::styled("  ninguno todavía", dim));
+    }
+    lines.extend(d.files.iter().map(|(path, size)| {
+        let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+        Line::from(vec![Span::styled("  + ", Style::new().fg(t.accent)), Span::raw(format!("{name} ")), Span::styled(model::file_size(*size as f64), dim)])
+    }));
+    let area = centered(area, 84, lines.len() as u16 + 13);
+    let block = pane(t, format!("entregar · {}", text::clip(&d.act.title, 60)), true).style(Style::new().bg(t.bg).fg(t.fg));
+    let inner = block.inner(area).inner(ratatui::layout::Margin::new(2, 1));
+    f.render_widget(Clear, area);
+    f.render_widget(block, area);
+    let width = inner.width as usize;
+    let field = |name: &str, value: &str, index: usize| {
+        let active = d.field == index && !d.confirm && !d.busy;
+        let room = width.saturating_sub(15);
+        let shown: String = value.chars().rev().take(room.saturating_sub(1)).collect::<Vec<_>>().into_iter().rev().collect();
+        Line::from(vec![
+            Span::styled(if active { "▌ " } else { "  " }, Style::new().fg(t.accent)),
+            Span::styled(text::fit(name, 12), if active { Style::new().fg(t.accent).add_modifier(Modifier::BOLD) } else { dim }),
+            Span::styled(text::fit(&format!("{shown}{}", if active { "▏" } else { "" }), room), Style::new().bg(t.sel)),
+        ])
+    };
+    lines.push(Line::raw(""));
+    lines.push(field("archivo", &d.path, 0));
+    lines.push(Line::styled("              arrastra un archivo aquí o escribe su ruta · enter lo agrega", dim));
+    lines.push(Line::raw(""));
+    lines.push(field("comentario", &d.text, 1));
+    lines.push(Line::raw(""));
+    let key = |k: &str| Span::styled(format!(" {k} "), Style::new().bg(t.sel).fg(t.accent).add_modifier(Modifier::BOLD));
+    if d.busy {
+        lines.push(Line::styled(format!("{} {}", spinner(), d.note), Style::new().fg(t.accent)));
+    } else if d.confirm {
+        let files = match d.files.len() {
+            0 => "sin archivos nuevos".to_string(),
+            1 => "con 1 archivo".to_string(),
+            n => format!("con {n} archivos"),
+        };
+        lines.push(Line::styled(format!("¿Entregar {files}? Se envía a tu docente en eminus."), Style::new().fg(t.orange).add_modifier(Modifier::BOLD)));
+        lines.push(Line::from(vec![key("s"), Span::raw(" sí, entregar   "), key("n"), Span::raw(" volver")]));
+    } else {
+        if !d.note.is_empty() {
+            lines.push(Line::styled(d.note.clone(), warn));
+        }
+        lines.push(Line::styled("enter entregar · tab cambiar de campo · ⌫ quita un archivo · esc cancelar", dim));
+    }
+    f.render_widget(Paragraph::new(lines).wrap(Wrap { trim: false }), inner);
 }
 
 fn offer(f: &mut Frame, t: &Theme, area: Rect, user: &str) {

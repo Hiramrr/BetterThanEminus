@@ -1,7 +1,8 @@
 // Cliente de la API de Eminus y el grupo de hilos que la consulta. La
 // interfaz nunca espera a la red: encola trabajos y recibe mensajes.
 
-use crate::model::{self, Activity, CFile, ContentDetail, ContentItem, Course, Detail};
+use crate::model::{self, Activity, CFile, ContentDetail, ContentItem, Course, DeliveryInfo, Detail};
+use std::io::Read;
 use crate::text;
 use serde_json::{json, Value};
 use std::collections::HashSet;
@@ -228,14 +229,22 @@ impl Client {
         Ok(ContentDetail { text, files })
     }
 
-    // Va directo al disco, sin pasar el archivo por memoria.
     pub fn download(&self, course_id: &str, element_id: &str, file: &CFile) -> Res<PathBuf> {
-        let url = self.api_old(&format!("/contenido/descargaElementoArchivo/{}/{}/{}", enc(course_id), enc(element_id), enc(&file.id)));
-        let res = self.request(&url)?;
+        self.save(&self.api_old(&format!("/contenido/descargaElementoArchivo/{}/{}/{}", enc(course_id), enc(element_id), enc(&file.id))), &file.name)
+    }
+
+    // Archivo adjunto a una actividad por el docente.
+    pub fn download_activity_file(&self, course_id: &str, activity_id: &str, file_id: &str, name: &str) -> Res<PathBuf> {
+        self.save(&self.api_old(&format!("/actividad/descargaActividadArchivo/{}/{}/{}", enc(course_id), enc(activity_id), enc(file_id))), name)
+    }
+
+    // Va directo al disco, sin pasar el archivo por memoria.
+    fn save(&self, url: &str, name: &str) -> Res<PathBuf> {
+        let res = self.request(url)?;
         let fail = |e: io::Error| ApiError::Other(e.to_string());
         let dir = downloads_dir();
         std::fs::create_dir_all(&dir).map_err(fail)?;
-        let safe: String = file.name.chars().map(|c| if c == '/' || c == '\\' || c == ':' || c.is_control() { '_' } else { c }).collect();
+        let safe: String = name.chars().map(|c| if c == '/' || c == '\\' || c == ':' || c.is_control() { '_' } else { c }).collect();
         let safe = safe.trim_matches(['.', ' ']);
         let safe = if safe.is_empty() { "archivo" } else { safe };
         let (stem, ext) = match safe.rfind('.') {
@@ -255,6 +264,91 @@ impl Client {
             return Err(fail(err));
         }
         Ok(path)
+    }
+
+    // ── entregas ──
+
+    fn post(&self, url: &str, body: Value) -> Res<Value> {
+        let token = self.token();
+        match self.agent.post(url).set("Authorization", &format!("Bearer {token}")).send_json(body) {
+            Ok(res) => Ok(res.into_json().unwrap_or(Value::Null)),
+            Err(ureq::Error::Status(401 | 403, _)) => Err(ApiError::Auth("sesión expirada".into())),
+            Err(ureq::Error::Status(code, _)) => Err(ApiError::Other(format!("eminus respondió HTTP {code}"))),
+            Err(_) => Err(ApiError::Other("la conexión con eminus se cortó".into())),
+        }
+    }
+
+    // La entrega que ya exista (borrador o enviada), o una vacía.
+    pub fn delivery_info(&self, course_id: &str, activity_id: &str) -> Res<DeliveryInfo> {
+        let url = self.api_old(&format!("/Actividad/getActUsuarioMiRevision/{}/{}/0", enc(course_id), enc(activity_id)));
+        // Sin entrega previa Eminus responde vacío, que no es JSON.
+        let json = self.request(&url)?.into_json::<Value>().unwrap_or(Value::Null);
+        Ok(model::delivery_from(rows_of_old(json).first().unwrap_or(&Value::Null)))
+    }
+
+    // Los mismos tres pasos que la página de Eminus: borrador, adjuntos y
+    // envío. Si algo falla antes del último, la actividad NO queda entregada
+    // (queda el borrador con lo que sí se subió).
+    pub fn deliver(&self, course_id: &str, activity_id: &str, delivery_id: i64, text: &str, files: &[PathBuf], attached: usize) -> Res<()> {
+        let ids = |id: i64| json!({ "idCurso": model::id_json(course_id), "idActividad": model::id_json(activity_id), "idActividadEntrega": id, "idEquipo": 0 });
+        let endpoint = self.api_old("/Actividad/InsertaActividadEntrega");
+        let id = if delivery_id > 0 {
+            delivery_id
+        } else {
+            let made = self.post(&endpoint, ids(0))?;
+            let made = match made {
+                Value::Array(mut rows) if !rows.is_empty() => rows.swap_remove(0),
+                other => other,
+            };
+            match model::int(made.get("salida")) {
+                id if id > 0 => id,
+                _ => return Err(ApiError::Other("eminus no creó el borrador de la entrega".into())),
+            }
+        };
+        for path in files {
+            self.attach(course_id, activity_id, id, path)?;
+        }
+        let escaped = text.trim().replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('\n', "<br>");
+        let mut body = ids(id);
+        body["texto"] = json!(format!("<p>{escaped}</p>"));
+        body["fechaEntrega"] = Value::Null;
+        body["tieneAdjuntos"] = json!(i32::from(attached + files.len() > 0));
+        body["visible"] = json!(1);
+        self.post(&endpoint, body).map(|_| ())
+    }
+
+    // Sube un archivo a la entrega, leyéndolo del disco por partes.
+    fn attach(&self, course_id: &str, activity_id: &str, delivery_id: i64, path: &std::path::Path) -> Res<()> {
+        let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| "archivo".into());
+        let fail = |what: &str| ApiError::Other(format!("{what}: {name}"));
+        let file = std::fs::File::open(path).map_err(|_| fail("no se pudo leer"))?;
+        let size = file.metadata().map_err(|_| fail("no se pudo leer"))?.len();
+        let mut random = [0u8; 12];
+        let _ = getrandom::getrandom(&mut random);
+        let boundary = format!("----eminus{}", random.iter().map(|b| format!("{b:02x}")).collect::<String>());
+        let head = format!(
+            "--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{}\"\r\nContent-Type: application/octet-stream\r\n\r\n",
+            name.replace(['"', '\r', '\n'], "_")
+        );
+        let tail = format!("\r\n--{boundary}--\r\n");
+        let length = head.len() as u64 + size + tail.len() as u64;
+        let body = io::Cursor::new(head.into_bytes()).chain(file).chain(io::Cursor::new(tail.into_bytes()));
+        let sent = self
+            .agent
+            .post(&self.api_old("/actividad/adjuntarEntrega"))
+            .query("idCurso", course_id)
+            .query("idActividad", activity_id)
+            .query("idActividadEntregas", &delivery_id.to_string())
+            .set("Authorization", &format!("Bearer {}", self.token()))
+            .set("Content-Type", &format!("multipart/form-data; boundary={boundary}"))
+            .set("Content-Length", &length.to_string())
+            .send(body);
+        match sent {
+            Ok(_) => Ok(()),
+            Err(ureq::Error::Status(401 | 403, _)) => Err(ApiError::Auth("sesión expirada".into())),
+            Err(ureq::Error::Status(413, _)) => Err(fail("eminus dice que es demasiado grande")),
+            Err(_) => Err(fail("no se pudo subir")),
+        }
     }
 
     // El formulario de Eminus cifra la contraseña con una llave que viene en
@@ -314,6 +408,10 @@ pub enum Msg {
     // id del elemento, id del curso, archivos del curso recién leídos, detalle
     ContentDetail(String, String, Option<Arc<Vec<CFile>>>, Res<ContentDetail>),
     Downloaded(String, Res<PathBuf>),
+    // clave de la actividad y su entrega actual
+    Delivery(String, Res<DeliveryInfo>),
+    // id del curso, título de la actividad y resultado del envío
+    Delivered(String, String, Res<()>),
     // usuario, contraseña (sólo si se escribió a mano, para ofrecer guardarla)
     // y el token o el error
     Login(String, Option<String>, Res<String>),
