@@ -1,0 +1,48 @@
+# eminus (Rust)
+
+La vista tui de BetterThanEminus como programa nativo de terminal: agenda, cursos, miyu, tareas calificadas y contenido, leídos directo de la API de Eminus. Sin navegador.
+
+```bash
+cargo run --release
+```
+
+El binario queda en `target/release/eminus` (≈2.4 MB). Para tenerlo en el PATH: `cargo install --path .`
+
+## Sesión
+
+La app pide el **token** de tu sesión de Eminus y lo guarda sólo en este equipo (`~/.config/eminus/sesion`, permisos 0600). Para copiarlo: entra a eminus.uv.mx en el navegador, abre la consola y ejecuta `copy(localStorage.accessToken)`. También se puede pasar con la variable `EMINUS_TOKEN`. El token dura 2 horas; la barra avisa cuando quedan menos de 20 minutos y al vencer vuelve a pedirlo.
+
+**Usuario y contraseña**: el formulario de Eminus cifra la contraseña con una llave de su propia aplicación web antes de mandarla. Esa llave no viene incluida. Si la configuras (`EMINUS_LOGIN_KEY`, o `llave_login` en `~/.config/eminus/preferencias.json`), la pantalla de login muestra también usuario y contraseña. Esta ruta está escrita según el código del formulario pero **no se ha probado contra Eminus**. La contraseña nunca se guarda.
+
+## Atajos
+
+| Tecla | Acción |
+|-------|--------|
+| `1`–`5` | agenda · cursos · miyu · calificadas · contenido |
+| `j` `k` / flechas | mover · `g` `G` primero y último · `ctrl d` `ctrl u` media página |
+| `h` `l` / `tab` | cambiar de panel (cursos) |
+| `J` `K` | desplazar el detalle |
+| `enter` / `o` | abrir en Eminus (con la extensión instalada llega directo al detalle) |
+| `O` | abrir el curso |
+| `/` | filtrar · `esc` quita el filtro |
+| `a` | mostrar entregadas o cursos anteriores |
+| `D` | descargar los archivos del elemento a `~/Downloads` |
+| `r` | actualizar · `c` tema · `?` ayuda · `X` cerrar sesión · `q` salir |
+
+El ratón también sirve: clic selecciona, la rueda desplaza. Para copiar texto, arrastra con shift (u option en macOS).
+
+## Por qué es rápida y ligera
+
+- Un hilo dibuja; seis hilos fijos hablan con la red. La interfaz nunca espera una respuesta.
+- Sólo se pinta cuando algo cambió, y a la terminal sólo van las celdas distintas. En reposo no escribe nada ni usa CPU.
+- Cursos, actividades y contenido se guardan en caché (`~/Library/Caches/eminus` o `~/.cache/eminus`): abre al instante y se pone al día por detrás (5 min actividades, 30 min contenido).
+- Las descripciones se convierten de HTML a texto al llegar (las imágenes incrustadas se descartan) y sólo se conservan las 60 más recientes. Las descargas van directo al disco.
+- Medido con datos de prueba: ≈8.5 MB de memoria residente y primer cuadro en ≈60 ms.
+
+## Pruebas
+
+```bash
+cargo test
+```
+
+`cargo test -- --ignored --nocapture` pinta todas las vistas contra un servidor que imite a Eminus (`EMINUS_ORIGIN=http://127.0.0.1:8765` y un `EMINUS_TOKEN` que ese servidor acepte).
