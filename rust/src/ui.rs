@@ -193,7 +193,7 @@ fn two_panes(f: &mut Frame, app: &mut App, t: &Theme, area: Rect) {
     } else {
         Layout::vertical([Constraint::Percentage(55), Constraint::Min(0)]).areas(area)
     };
-    let filter = Filter::new(&app.filter);
+    let filter = &app.compiled_filter;
     let suffix = filter_suffix(app, true);
     let (title, empty) = match app.view {
         View::Agenda => (
@@ -214,7 +214,7 @@ fn two_panes(f: &mut Frame, app: &mut App, t: &Theme, area: Rect) {
         ),
     };
     let mut state = app.list();
-    app.hit.list = list(f, t, left, ListView { rows: &app.rows, title, focused: true, filter: &filter, empty }, &mut state);
+    app.hit.list = list(f, t, left, ListView { rows: &app.rows, title, focused: true, filter, empty }, &mut state);
     app.lists[app.view as usize] = state;
     detail(f, app, t, right);
 }
@@ -227,14 +227,14 @@ fn courses(f: &mut Frame, app: &mut App, t: &Theme, area: Rect) {
         let [left, mid] = Layout::horizontal([Constraint::Percentage(42), Constraint::Min(0)]).areas(top);
         [left, mid, bottom]
     };
-    let filter = Filter::new(&app.filter);
+    let filter = &app.compiled_filter;
     let none = Filter::default();
     let mut state = app.list();
     let view = ListView {
         rows: &app.rows,
         title: format!("cursos{}", filter_suffix(app, !app.focus_mid)),
         focused: !app.focus_mid,
-        filter: if app.focus_mid { &none } else { &filter },
+        filter: if app.focus_mid { &none } else { filter },
         empty: no_match(app).unwrap_or_else(|| if app.loading { "cargando cursos…".into() } else { "sin cursos".into() }),
     };
     app.hit.list = list(f, t, left, view, &mut state);
@@ -245,7 +245,7 @@ fn courses(f: &mut Frame, app: &mut App, t: &Theme, area: Rect) {
         rows: &app.mid_rows,
         title: format!("{}{}", course.map_or("actividades".into(), |c| model::short_course(&c.name)), filter_suffix(app, app.focus_mid)),
         focused: app.focus_mid,
-        filter: if app.focus_mid { &filter } else { &none },
+        filter: if app.focus_mid { filter } else { &none },
         empty: match course {
             None => String::new(),
             Some(c) if app.acts_pending(&c.id) => "cargando actividades…".into(),
@@ -275,12 +275,12 @@ fn miyu(f: &mut Frame, app: &mut App, t: &Theme, area: Rect) {
         f.render_widget(block, left);
         f.render_widget(Paragraph::new(dash(app, t, inner.width as usize)), inner);
     }
-    let filter = Filter::new(&app.filter);
+    let filter = &app.compiled_filter;
     let view = ListView {
         rows: &app.rows,
         title: format!("pendientes por materia{}", filter_suffix(app, true)),
         focused: true,
-        filter: &filter,
+        filter,
         empty: no_match(app).or(Some(loading_note(app)).filter(|n| !n.is_empty())).unwrap_or_else(|| "✓ todo entregado.".into()),
     };
     let mut state = app.list();
@@ -420,7 +420,7 @@ fn activity_detail(app: &App, t: &Theme, act: &Activity) -> Vec<Line<'static>> {
         _ => "● pendiente".into(),
     };
     let mut lines = vec![
-        Line::styled(act.title.clone(), Style::new().fg(t.accent).add_modifier(Modifier::BOLD)),
+        Line::styled(act.title.to_string(), Style::new().fg(t.accent).add_modifier(Modifier::BOLD)),
         Line::styled(act.course_name.to_lowercase(), dim),
         Line::raw(""),
         kv(t, "estado", vec![Span::styled(status, Style::new().fg(t.tone(tone)))]),
@@ -444,11 +444,45 @@ fn activity_detail(app: &App, t: &Theme, act: &Activity) -> Vec<Line<'static>> {
             }
             if !detail.files.is_empty() {
                 lines.extend([Line::raw(""), label(t, "archivos")]);
-                lines.extend(detail.files.iter().map(|file| Line::from(vec![Span::styled("⬇ ", Style::new().fg(t.accent)), Span::raw(format!("{} ", file.name)), Span::styled(file.size.clone(), dim)])));
+                lines.extend(detail.files.iter().map(|file| Line::from(vec![Span::styled(format!("[{}] ", crate::files::kind(&file.name).badge()), Style::new().fg(t.accent)), Span::raw(format!("{} ", file.name)), Span::styled(file.size.clone(), dim)])));
             }
         }
     }
-    let mut keys = vec![("enter", "abrir en eminus")];
+    lines.extend([Line::raw(""), label(t, "mi entrega")]);
+    match app.deliveries.get(&detail_key(&act.course_id, &act.id)) {
+        None | Some(Slot::Pending) => lines.push(Line::styled(format!("{} consultando entrega…", spinner()), dim)),
+        Some(Slot::Failed(note)) => {
+            lines.push(Line::styled(format!("no se pudo consultar: {note}"), Style::new().fg(t.yellow)));
+            lines.push(Line::styled("V vuelve a consultar", dim));
+        }
+        Some(Slot::Ready(info)) => {
+            lines.push(Line::styled(if info.sent { "entrega enviada" } else if info.id > 0 { "borrador en eminus, pendiente de enviar" } else { "sin entrega" }, if info.sent { Style::new().fg(t.green) } else { dim }));
+            if !info.text.is_empty() {
+                body(&mut lines, &info.text);
+            }
+            lines.extend(info.files.iter().map(|file| Line::from(vec![Span::styled(format!("[{}] ", crate::files::kind(&file.name).badge()), Style::new().fg(t.accent)), Span::raw(format!("{} ", file.name)), Span::styled(file.size.clone(), dim)])));
+            lines.extend([Line::raw(""), label(t, "retroalimentación")]);
+            if let Some(grade) = info.grade {
+                lines.push(kv(t, "calificación", plain(model::fmt_num(grade))));
+            }
+            if info.reviewed_at != 0 {
+                lines.push(kv(t, "revisada", plain(text::full_date(info.reviewed_at))));
+            }
+            if info.feedback.is_empty() {
+                lines.push(Line::styled("sin comentarios del docente", dim));
+            } else {
+                body(&mut lines, &info.feedback);
+            }
+            if !info.review_files.is_empty() {
+                lines.push(label(t, "archivos de la revisión"));
+                lines.extend(info.review_files.iter().map(|file| Line::from(vec![Span::styled(format!("[{}] ", crate::files::kind(&file.name).badge()), Style::new().fg(t.accent)), Span::raw(format!("{} ", file.name)), Span::styled(file.size.clone(), dim)])));
+            }
+        }
+    }
+    let mut keys = vec![("V", "actualizar entrega"), ("w", "abrir web")];
+    if matches!(app.deliveries.get(&detail_key(&act.course_id, &act.id)), Some(Slot::Ready(info)) if !info.files.is_empty() || !info.review_files.is_empty()) {
+        keys.push(("B", "descargar mi entrega"));
+    }
     if let Some(Slot::Ready(detail)) = app.details.get(&detail_key(&act.course_id, &act.id)) {
         if !detail.files.is_empty() {
             keys.push(("D", "descargar"));
@@ -471,7 +505,7 @@ fn content_detail(app: &App, t: &Theme, item: &ContentItem) -> Vec<Line<'static>
         _ => (item.text.as_str(), item.files.as_slice()),
     };
     let mut lines = vec![
-        Line::styled(item.title.clone(), Style::new().fg(t.accent).add_modifier(Modifier::BOLD)),
+        Line::styled(item.title.to_string(), Style::new().fg(t.accent).add_modifier(Modifier::BOLD)),
         Line::styled(item.course_name.to_lowercase(), dim),
         Line::raw(""),
         kv(t, "tipo", plain(model::content_label(item.unit, files.len(), item.has_files))),
@@ -491,8 +525,8 @@ fn content_detail(app: &App, t: &Theme, item: &ContentItem) -> Vec<Line<'static>
         let note = if loading { "buscando archivos…" } else if matches!(slot, Some(Slot::Failed(_))) { "no se pudieron cargar los archivos" } else { "sin archivos" };
         lines.push(Line::styled(note, dim));
     }
-    lines.extend(files.iter().map(|file| Line::from(vec![Span::styled("⬇ ", Style::new().fg(t.accent)), Span::raw(format!("{} ", file.name)), Span::styled(file.size.clone(), dim)])));
-    let mut keys = vec![("enter", "abrir en eminus")];
+    lines.extend(files.iter().map(|file| Line::from(vec![Span::styled(format!("[{}] ", crate::files::kind(&file.name).badge()), Style::new().fg(t.accent)), Span::raw(format!("{} ", file.name)), Span::styled(file.size.clone(), dim)])));
+    let mut keys = vec![("enter", "ver detalle"), ("w", "abrir web")];
     if !files.is_empty() {
         keys.push(("D", "descargar"));
     }
@@ -519,9 +553,9 @@ fn course_detail(app: &App, t: &Theme, course: &Course) -> Vec<Line<'static>> {
     ];
     if !pending.is_empty() {
         lines.extend([Line::raw(""), label(t, "lo próximo")]);
-        lines.extend(pending.iter().take(5).map(|a| Line::from(vec![Span::styled(text::fit(&text::rel_due(a.deadline, now, app.clock.today), 14), Style::new().fg(t.tone(model::urgency(a, now)))), Span::raw(a.title.clone())])));
+        lines.extend(pending.iter().take(5).map(|a| Line::from(vec![Span::styled(text::fit(&text::rel_due(a.deadline, now, app.clock.today), 14), Style::new().fg(t.tone(model::urgency(a, now)))), Span::raw(a.title.to_string())])));
     }
-    hints(t, &mut lines, &[("enter", "abrir en eminus"), ("l", "ver actividades")]);
+    hints(t, &mut lines, &[("enter", "ver actividades"), ("w", "abrir web")]);
     lines
 }
 
@@ -605,18 +639,21 @@ fn centered(area: Rect, width: u16, height: u16) -> Rect {
 }
 
 fn help(f: &mut Frame, t: &Theme, area: Rect) {
-    const KEYS: [(&str, &str); 18] = [
+    const KEYS: [(&str, &str); 21] = [
         ("1 2 3 4 5", "agenda · cursos · miyu · calificadas · contenido"),
         ("j k  ↑ ↓", "mover"),
         ("g G", "primero · último"),
         ("ctrl d / u", "media página"),
         ("h l  tab", "cambiar de panel (cursos)"),
         ("J K", "desplazar el detalle"),
-        ("enter  o", "abrir en eminus"),
-        ("O", "abrir el curso"),
+        ("enter  o", "ver detalle o explorar el curso"),
+        ("O", "ir al curso dentro de la app"),
+        ("w / W", "abrir la web / el curso en la web"),
+        ("V", "consultar entrega y retroalimentación"),
         ("/", "filtrar (esc lo quita)"),
         ("a", "mostrar entregadas o cursos anteriores"),
         ("D", "descargar los archivos de lo seleccionado"),
+        ("B", "descargar los archivos de mi entrega"),
         ("E", "entregar la actividad seleccionada"),
         ("r", "actualizar"),
         ("c", "siguiente tema"),
@@ -651,7 +688,7 @@ fn delivery(f: &mut Frame, app: &App, t: &Theme, area: Rect) {
                 "aún no hay entrega en eminus"
             };
             lines.push(Line::styled(state, if info.sent { warn } else { dim }));
-            lines.extend(info.files.iter().map(|file| Line::from(vec![Span::styled("  ✓ ", Style::new().fg(t.green)), Span::raw(format!("{} ", file.name)), Span::styled(format!("{} · ya en eminus", file.size), dim)])));
+            lines.extend(info.files.iter().map(|file| Line::from(vec![Span::styled(format!("  [{}] ", crate::files::kind(&file.name).badge()), Style::new().fg(t.green)), Span::raw(format!("{} ", file.name)), Span::styled(format!("{} · ya en eminus", file.size), dim)])));
         }
     }
     lines.extend([Line::raw(""), label(t, "archivos por subir")]);
@@ -660,7 +697,7 @@ fn delivery(f: &mut Frame, app: &App, t: &Theme, area: Rect) {
     }
     lines.extend(d.files.iter().map(|(path, size)| {
         let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-        Line::from(vec![Span::styled("  + ", Style::new().fg(t.accent)), Span::raw(format!("{name} ")), Span::styled(model::file_size(*size as f64), dim)])
+        Line::from(vec![Span::styled(format!("  [{}] ", crate::files::kind(&name).badge()), Style::new().fg(t.accent)), Span::raw(format!("{name} ")), Span::styled(model::file_size(*size as f64), dim)])
     }));
     let area = centered(area, 84, lines.len() as u16 + 13);
     let block = pane(t, format!("entregar · {}", text::clip(&d.act.title, 60)), true).style(Style::new().bg(t.bg).fg(t.fg));
@@ -699,7 +736,7 @@ fn delivery(f: &mut Frame, app: &App, t: &Theme, area: Rect) {
         if !d.note.is_empty() {
             lines.push(Line::styled(d.note.clone(), warn));
         }
-        lines.push(Line::styled("enter entregar · tab cambiar de campo · ⌫ quita un archivo · esc cancelar", dim));
+        lines.push(Line::styled("enter entregar · tab campo · ctrl r reintentar · esc guardar borrador y cerrar", dim));
     }
     f.render_widget(Paragraph::new(lines).wrap(Wrap { trim: false }), inner);
 }

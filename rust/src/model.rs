@@ -4,10 +4,29 @@
 use crate::text::{self, Filter};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 pub const OVERDUE_WINDOW: i64 = 21 * 24 * 3600;
+
+#[derive(Default)]
+pub struct UserInfo {
+    pub name: String,
+    pub username: String,
+    pub photo: Option<Arc<image::RgbaImage>>,
+}
+
+pub fn user_info_from(row: &Value) -> UserInfo {
+    let name = ["paterno", "materno", "nombre"].iter()
+        .filter_map(|key| row.get(key).and_then(Value::as_str))
+        .flat_map(str::split_whitespace).collect::<Vec<_>>().join(" ").to_uppercase();
+    let username = row.get("idUsuario").and_then(Value::as_str).unwrap_or_default().trim();
+    let username = if row.get("perteneceUV").and_then(Value::as_i64) == Some(1) {
+        username.split('@').next().unwrap_or_default()
+    } else { username };
+    UserInfo { name, username: username.to_string(), photo: None }
+}
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Course {
@@ -24,7 +43,7 @@ pub struct Activity {
     pub id: String,
     pub course_id: String,
     pub course_name: Arc<str>,
-    pub title: String,
+    pub title: Arc<str>,
     pub start: i64,
     pub extension: i64,
     pub deadline: i64,
@@ -34,25 +53,37 @@ pub struct Activity {
     pub value: Option<f64>,
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct AFile {
     pub id: String,
     pub name: String,
     pub size: String,
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Detail {
     pub text: String,
     pub files: Vec<AFile>,
     // Por qué Eminus no aceptaría una entrega desde aquí, si es el caso.
-    pub blocked: Option<&'static str>,
+    pub blocked: Option<String>,
 }
 
-// La entrega del estudiante tal como está en Eminus (borrador o enviada).
+// La entrega del estudiante tal como está en Eminus (borrador o enviada),
+// con lo que el docente haya respondido.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct DeliveryInfo {
     pub id: i64,
     pub text: String,
     pub files: Vec<AFile>,
     pub sent: bool,
+    // Retroalimentación del docente, ya sin HTML.
+    pub feedback: String,
+    pub grade: Option<f64>,
+    // Cuándo la revisó el docente; 0 si no la ha revisado.
+    pub reviewed_at: i64,
+    // Archivos que el docente adjuntó a su revisión.
+    pub review_files: Vec<AFile>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -73,7 +104,7 @@ pub struct ContentItem {
     pub unit_id: String,
     pub unit_name: String,
     pub element_id: String,
-    pub title: String,
+    pub title: Arc<str>,
     pub text: String,
     pub files: Vec<CFile>,
     pub has_files: bool,
@@ -130,9 +161,17 @@ pub fn truthy(value: Option<&Value>) -> bool {
 }
 
 pub fn id_of(value: Option<&Value>, allow_zero: bool) -> String {
-    let raw = string(value);
-    match raw.parse::<u64>() {
-        Ok(n) if raw.bytes().all(|b| b.is_ascii_digit()) && (allow_zero || n > 0) => n.to_string(),
+    // Sin pasar por un String intermedio: el id ya viene como texto o número.
+    let valid = |n: u64| allow_zero || n > 0;
+    match value {
+        Some(Value::String(s)) => {
+            let raw = s.trim();
+            match raw.parse::<u64>() {
+                Ok(n) if raw.bytes().all(|b| b.is_ascii_digit()) && valid(n) => n.to_string(),
+                _ => String::new(),
+            }
+        }
+        Some(Value::Number(n)) => n.as_u64().filter(|n| valid(*n)).map(|n| n.to_string()).unwrap_or_default(),
         _ => String::new(),
     }
 }
@@ -143,21 +182,21 @@ pub fn id_json(id: &str) -> Value {
 }
 
 pub fn courses_from(rows: &[Value], now: i64) -> Vec<Course> {
-    let mut courses: Vec<Course> = rows
-        .iter()
-        .map(|r| r.get("curso").filter(|c| c.is_object()).unwrap_or(r))
-        .filter(|c| truthy(c.get("idCurso")) && !truthy(c.get("archivado")))
-        .map(|c| {
-            let end = int(c.get("fechaTerminoEpoch"));
-            Course {
-                id: string(c.get("idCurso")),
-                name: string(c.get("nombre")).into(),
-                end,
-                favorite: truthy(c.get("esFavorito")),
-                current: end == 0 || end >= now,
-            }
-        })
-        .collect();
+    let mut courses: Vec<Course> = Vec::with_capacity(rows.len());
+    for r in rows {
+        let c = r.get("curso").filter(|c| c.is_object()).unwrap_or(r);
+        if !truthy(c.get("idCurso")) || truthy(c.get("archivado")) {
+            continue;
+        }
+        let end = int(c.get("fechaTerminoEpoch"));
+        courses.push(Course {
+            id: string(c.get("idCurso")),
+            name: string(c.get("nombre")).into(),
+            end,
+            favorite: truthy(c.get("esFavorito")),
+            current: end == 0 || end >= now,
+        });
+    }
     sort_courses(&mut courses);
     courses
 }
@@ -171,32 +210,38 @@ pub fn sort_courses(courses: &mut [Course]) {
 // Mismo criterio que Miyu --pendientes: hay entrega si fechaEntrega existe y
 // no es la propia fecha límite.
 fn is_delivered(raw: &Value) -> bool {
-    let entrega = string(raw.get("fechaEntrega"));
-    !entrega.is_empty() && !entrega.starts_with("0001") && entrega != string(raw.get("fechaTermino"))
+    let text_of = |field: &str| match raw.get(field) {
+        Some(Value::String(s)) => Cow::Borrowed(s.trim()),
+        other => Cow::Owned(string(other)),
+    };
+    let entrega = text_of("fechaEntrega");
+    !entrega.is_empty() && !entrega.starts_with("0001") && entrega != text_of("fechaTermino")
 }
 
 pub fn activities_from(rows: &[Value], course: &Course) -> Vec<Arc<Activity>> {
-    rows.iter()
-        .filter(|r| truthy(r.get("idActividad")) && r.get("visible").and_then(Value::as_f64) != Some(0.0))
-        .map(|r| {
-            let end = int(r.get("fechaTerminoEpoch"));
-            let extension = int(r.get("fechaProrrogaEpoch"));
-            let title = string(r.get("titulo"));
-            Arc::new(Activity {
-                id: string(r.get("idActividad")),
-                course_id: course.id.clone(),
-                course_name: course.name.clone(),
-                title: if title.is_empty() { "sin título".into() } else { title },
-                start: int(r.get("fechaInicioEpoch")),
-                extension,
-                deadline: if extension != 0 { extension } else { end },
-                delivered: is_delivered(r),
-                delivered_at: int(r.get("fechaEntregaEpoch")),
-                grade: num(r.get("calificacion")),
-                value: num(r.get("valor")),
-            })
-        })
-        .collect()
+    let mut out: Vec<Arc<Activity>> = Vec::with_capacity(rows.len());
+    for r in rows {
+        if !truthy(r.get("idActividad")) || r.get("visible").and_then(Value::as_f64) == Some(0.0) {
+            continue;
+        }
+        let end = int(r.get("fechaTerminoEpoch"));
+        let extension = int(r.get("fechaProrrogaEpoch"));
+        let title = string(r.get("titulo"));
+        out.push(Arc::new(Activity {
+            id: string(r.get("idActividad")),
+            course_id: course.id.clone(),
+            course_name: course.name.clone(),
+            title: if title.is_empty() { "sin título".into() } else { title.into() },
+            start: int(r.get("fechaInicioEpoch")),
+            extension,
+            deadline: if extension != 0 { extension } else { end },
+            delivered: is_delivered(r),
+            delivered_at: int(r.get("fechaEntregaEpoch")),
+            grade: num(r.get("calificacion")),
+            value: num(r.get("valor")),
+        }));
+    }
+    out
 }
 
 pub fn file_size(bytes: f64) -> String {
@@ -231,7 +276,18 @@ pub fn detail_from(row: &Value) -> Detail {
     } else {
         None
     };
-    Detail { text: text::html_to_text(&string(row.get("descripcion"))), files, blocked }
+    Detail { text: text::html_to_text(&string(row.get("descripcion"))), files, blocked: blocked.map(String::from) }
+}
+
+// Un detalle de actividad trae al menos uno de estos campos; lo demás (un
+// aviso de error, una lista vacía) no lo es.
+pub fn is_activity_row(row: &Value) -> bool {
+    ["idActividad", "descripcion", "titulo", "archivosActsConTamano"].iter().any(|f| row.get(f).is_some())
+}
+
+// Lo mismo para la entrega del estudiante.
+pub fn is_delivery_row(row: &Value) -> bool {
+    ["idActividadEntrega", "idEstado", "descEntrega", "fechaEntrega", "archivosEntregaConTamano", "descRevision", "calificacion"].iter().any(|f| row.get(f).is_some())
 }
 
 fn a_file(f: &Value, id_fields: &[&str]) -> Option<AFile> {
@@ -241,13 +297,22 @@ fn a_file(f: &Value, id_fields: &[&str]) -> Option<AFile> {
 }
 
 pub fn delivery_from(row: &Value) -> DeliveryInfo {
-    let files = row.get("archivosEntregaConTamano").and_then(Value::as_array).map(|files| files.iter().filter_map(|f| a_file(f, &["idArchivosEntregas", "idArchivoEntrega", "idArchivo"])).collect()).unwrap_or_default();
+    let files_of = |field: &str, ids: &[&str]| -> Vec<AFile> { row.get(field).and_then(Value::as_array).map(|files| files.iter().filter_map(|f| a_file(f, ids)).collect()).unwrap_or_default() };
     let delivered = string(row.get("fechaEntrega"));
+    let feedback = text::html_to_text(&string(row.get("descRevision")));
+    let revised = string(row.get("fechaRevision"));
+    let reviewed_at = if revised.starts_with("0001") { 0 } else { text::parse_eminus_date(&revised).max(0) };
+    // Sin revisión Eminus manda 0 (o nada) en vez de dejarla sin calificar.
+    let reviewed = reviewed_at != 0 || !feedback.is_empty() || int(row.get("idActividadRevision")) > 0;
     DeliveryInfo {
         id: int(row.get("idActividadEntrega")),
         text: text::html_to_text(&string(row.get("descEntrega"))),
-        files,
+        files: files_of("archivosEntregaConTamano", &["idArchivosEntregas", "idArchivoEntrega", "idArchivo"]),
         sent: int(row.get("idEstado")) == 1 || (!delivered.is_empty() && !delivered.starts_with("0001")),
+        feedback,
+        grade: num(row.get("calificacion")).filter(|g| reviewed || *g != 0.0),
+        reviewed_at,
+        review_files: files_of("archivosRevisionConTamano", &["idArchivoActividadRevision", "idArchivosActividadesRevision", "idArchivo"]),
     }
 }
 
@@ -318,7 +383,7 @@ pub fn unit_from(unit: &Value, course: &Course) -> Option<ContentItem> {
         course_id: course.id.clone(),
         course_name: course.name.clone(),
         unit_id,
-        title: unit_name.clone(),
+        title: unit_name.clone().into(),
         unit_name,
         element_id: String::new(),
         text: desc_of(unit),
@@ -344,7 +409,7 @@ pub fn element_from(el: &Value, unit: &ContentItem) -> Option<ContentItem> {
         unit_id: unit.unit_id.clone(),
         unit_name: unit.unit_name.clone(),
         element_id,
-        title,
+        title: title.into(),
         text: desc_of(el),
         has_files: !files.is_empty() || !["", "0", "false", "no"].contains(&flagged.as_str()),
         files,
@@ -439,7 +504,7 @@ pub enum Entry {
 
 pub enum Row {
     Group { label: String, count: String, tone: Tone },
-    Item { glyph: &'static str, tone: Tone, due: String, course: String, title: String, meta: String, entry: Entry },
+    Item { glyph: &'static str, tone: Tone, due: String, course: String, title: Arc<str>, meta: String, entry: Entry },
 }
 
 pub struct Clock {
@@ -474,10 +539,18 @@ fn by_deadline(a: &Arc<Activity>, b: &Arc<Activity>) -> std::cmp::Ordering {
 }
 
 fn act_matches(filter: &Filter, act: &Activity) -> bool {
-    filter.is_empty() || filter.matches(&format!("{} {}", act.title, act.course_name))
+    filter.is_empty() || filter.matches_fields(&[&act.title, &act.course_name])
 }
 
 pub fn agenda(courses: &[Course], acts: &Acts, filter: &Filter, show_all: bool, clock: &Clock) -> Vec<Row> {
+    let mut rows = Vec::new();
+    agenda_into(&mut rows, courses, acts, filter, show_all, clock);
+    rows
+}
+
+// Rellena `rows` reutilizando su capacidad: la app reconstruye las vistas
+// seguido y no tiene que soltar y reservar la lista en cada reconstrucción.
+pub fn agenda_into(rows: &mut Vec<Row>, courses: &[Course], acts: &Acts, filter: &Filter, show_all: bool, clock: &Clock) {
     let Clock { now, today } = *clock;
     let labels = ["vencidas", "hoy", "mañana", "próximos 7 días", "después", "sin fecha", "entregadas"];
     let mut groups: [Vec<&Arc<Activity>>; 7] = Default::default();
@@ -512,12 +585,11 @@ pub fn agenda(courses: &[Course], acts: &Acts, filter: &Filter, show_all: bool, 
     groups[0].sort_by_key(|a| std::cmp::Reverse(a.deadline));
     groups[1..6].iter_mut().for_each(|g| g.sort_by(|a, b| by_deadline(a, b)));
     groups[6].sort_by_key(|a| std::cmp::Reverse(a.delivered_at));
-    let mut rows = Vec::new();
+    rows.clear();
     for (i, items) in groups.iter().enumerate().filter(|(_, g)| !g.is_empty()) {
         rows.push(Row::Group { label: labels[i].into(), count: items.len().to_string(), tone: if i == 0 { Tone::Overdue } else { Tone::Plain } });
         rows.extend(items.iter().map(|a| act_row(a, clock, true)));
     }
-    rows
 }
 
 // Agrupa por materia conservando el orden de aparición.
@@ -536,13 +608,19 @@ fn by_course<'a>(acts: impl Iterator<Item = &'a Arc<Activity>>) -> Vec<(Arc<str>
 
 // Pendientes agrupados por materia, como el panel de Miyu.
 pub fn miyu(courses: &[Course], acts: &Acts, filter: &Filter, clock: &Clock) -> Vec<Row> {
+    let mut rows = Vec::new();
+    miyu_into(&mut rows, courses, acts, filter, clock);
+    rows
+}
+
+pub fn miyu_into(rows: &mut Vec<Row>, courses: &[Course], acts: &Acts, filter: &Filter, clock: &Clock) {
     let now = clock.now;
     let pending = current_acts(courses, acts)
         .filter(|a| !a.delivered && !(a.deadline != 0 && a.deadline < now && now - a.deadline > OVERDUE_WINDOW) && act_matches(filter, a));
     let mut groups = by_course(pending);
     groups.iter_mut().for_each(|(_, items)| items.sort_by(|a, b| by_deadline(a, b)));
     groups.sort_by(|a, b| by_deadline(a.1[0], b.1[0]));
-    let mut rows = Vec::new();
+    rows.clear();
     for (name, items) in groups {
         rows.push(group(short_course(&name), items.len()));
         for act in items {
@@ -562,17 +640,22 @@ pub fn miyu(courses: &[Course], acts: &Acts, filter: &Filter, clock: &Clock) -> 
             });
         }
     }
-    rows
 }
 
 // Calificaciones por materia con promedio; devuelve también el general.
 pub fn grades(courses: &[Course], acts: &Acts, filter: &Filter) -> (Vec<Row>, Option<f64>) {
+    let mut rows = Vec::new();
+    let average = grades_into(&mut rows, courses, acts, filter);
+    (rows, average)
+}
+
+pub fn grades_into(rows: &mut Vec<Row>, courses: &[Course], acts: &Acts, filter: &Filter) -> Option<f64> {
     let listed = current_acts(courses, acts).filter(|a| (a.grade.is_some() || a.delivered) && act_matches(filter, a));
     let mut groups = by_course(listed);
     groups.sort_by_cached_key(|(name, _)| short_course(name));
     let average = |grades: &[f64]| (!grades.is_empty()).then(|| grades.iter().sum::<f64>() / grades.len() as f64);
     let mut all = Vec::new();
-    let mut rows = Vec::new();
+    rows.clear();
     for (name, mut items) in groups {
         let graded: Vec<f64> = items.iter().filter_map(|a| a.grade).collect();
         let avg = average(&graded);
@@ -601,15 +684,21 @@ pub fn grades(courses: &[Course], acts: &Acts, filter: &Filter) -> (Vec<Row>, Op
             });
         }
     }
-    (rows, average(&all))
+    average(&all)
 }
 
 // Contenido por materia: cada módulo seguido de sus elementos.
 pub fn content(courses: &[Course], content: &Content, filter: &Filter) -> Vec<Row> {
     let mut rows = Vec::new();
+    content_into(&mut rows, courses, content, filter);
+    rows
+}
+
+pub fn content_into(rows: &mut Vec<Row>, courses: &[Course], content: &Content, filter: &Filter) {
+    rows.clear();
     for course in courses.iter().filter(|c| c.current) {
         let Some(all) = content.get(&course.id) else { continue };
-        let items: Vec<_> = all.iter().filter(|it| filter.is_empty() || filter.matches(&format!("{} {} {}", it.title, it.unit_name, course.name))).collect();
+        let items: Vec<_> = all.iter().filter(|it| filter.is_empty() || filter.matches_fields(&[&it.title, &it.unit_name, &course.name])).collect();
         if items.is_empty() {
             continue;
         }
@@ -626,7 +715,6 @@ pub fn content(courses: &[Course], content: &Content, filter: &Filter) -> Vec<Ro
             });
         }
     }
-    rows
 }
 
 pub fn progress_bar(done: usize, total: usize, width: usize) -> (String, String, String) {
@@ -638,8 +726,14 @@ pub fn progress_bar(done: usize, total: usize, width: usize) -> (String, String,
 }
 
 pub fn course_rows(courses: &[Course], acts: &Acts, loading: impl Fn(&str) -> bool, filter: &Filter, show_all: bool) -> Vec<Row> {
-    let visible: Vec<&Course> = courses.iter().filter(|c| (show_all || c.current) && filter.matches(&c.name)).collect();
     let mut rows = Vec::new();
+    course_rows_into(&mut rows, courses, acts, loading, filter, show_all);
+    rows
+}
+
+pub fn course_rows_into(rows: &mut Vec<Row>, courses: &[Course], acts: &Acts, loading: impl Fn(&str) -> bool, filter: &Filter, show_all: bool) {
+    let visible: Vec<&Course> = courses.iter().filter(|c| (show_all || c.current) && filter.matches(&c.name)).collect();
+    rows.clear();
     let mut last = None;
     for c in &visible {
         if last != Some(c.current) {
@@ -660,18 +754,24 @@ pub fn course_rows(courses: &[Course], acts: &Acts, loading: impl Fn(&str) -> bo
             tone: Tone::Plain,
             due: String::new(),
             course: String::new(),
-            title: c.name.to_lowercase(),
+            title: c.name.to_lowercase().into(),
             meta,
             entry: Entry::Course((*c).clone()),
         });
     }
-    rows
 }
 
 pub fn course_acts(list: &[Arc<Activity>], filter: &Filter, clock: &Clock) -> Vec<Row> {
+    let mut rows = Vec::new();
+    course_acts_into(&mut rows, list, filter, clock);
+    rows
+}
+
+pub fn course_acts_into(rows: &mut Vec<Row>, list: &[Arc<Activity>], filter: &Filter, clock: &Clock) {
     let mut sorted: Vec<&Arc<Activity>> = list.iter().filter(|a| filter.matches(&a.title)).collect();
     sorted.sort_by_key(|a| std::cmp::Reverse(a.start));
-    sorted.into_iter().map(|a| act_row(a, clock, false)).collect()
+    rows.clear();
+    rows.extend(sorted.into_iter().map(|a| act_row(a, clock, false)));
 }
 
 #[derive(Default)]
@@ -702,6 +802,17 @@ mod tests {
     use super::*;
     use serde_json::json;
 
+    #[test]
+    fn user_info_matches_eminus_name_order_and_identity() {
+        let info = user_info_from(&json!({ "paterno": " Pérez ", "materno": null, "nombre": " Ana  María ", "idUsuario": " zs123@estudiantes.uv.mx ", "perteneceUV": 1 }));
+        assert_eq!(info.name, "PÉREZ ANA MARÍA");
+        assert_eq!(info.username, "zs123");
+        assert!(info.photo.is_none());
+        let external = user_info_from(&json!({ "nombre": "Ana", "idUsuario": "ana@example.org", "perteneceUV": 0 }));
+        assert_eq!(external.username, "ana@example.org");
+        assert!(user_info_from(&Value::Null).name.is_empty());
+    }
+
     fn fixture(now: i64) -> (Vec<Course>, Acts) {
         let courses = courses_from(
             &[
@@ -727,9 +838,34 @@ mod tests {
         rows.iter()
             .map(|r| match r {
                 Row::Group { label, count, .. } => format!("# {label} {count}"),
-                Row::Item { title, .. } => title.clone(),
+                Row::Item { title, .. } => title.to_string(),
             })
             .collect()
+    }
+
+    #[test]
+    fn delivery_dates_keep_the_previous_normalization() {
+        for delivered in [Value::Null, json!(""), json!(" 0001-01-01 "), json!(" fecha "), json!(123), json!(true)] {
+            for deadline in [Value::Null, json!(""), json!("fecha"), json!(123), json!("123")] {
+                let row = json!({"fechaEntrega": delivered, "fechaTermino": deadline});
+                let expected = string(row.get("fechaEntrega"));
+                assert_eq!(is_delivered(&row), !expected.is_empty() && !expected.starts_with("0001") && expected != string(row.get("fechaTermino")));
+            }
+        }
+    }
+
+    #[test]
+    fn rebuilt_rows_share_titles_and_reuse_the_row_buffer() {
+        let clock = Clock { now: text::start_of_today() + 3 * 3600, today: text::start_of_today() };
+        let (courses, acts) = fixture(clock.now);
+        let filter = Filter::new("pronto");
+        let mut rows = agenda(&courses, &acts, &filter, false, &clock);
+        let buffer = rows.as_ptr();
+        agenda_into(&mut rows, &courses, &acts, &filter, false, &clock);
+        assert_eq!(rows.as_ptr(), buffer);
+        let Some(Row::Item { title, entry: Entry::Act(act), .. }) = rows.get(1) else { panic!("falta la actividad") };
+        assert!(Arc::ptr_eq(title, &act.title));
+        assert_eq!(title.as_ref(), "Pronto");
     }
 
     #[test]
@@ -774,5 +910,52 @@ mod tests {
         assert_eq!(content_label(false, 1, true), "archivo");
         assert_eq!(short_course("Redes de Datos (98765) "), "redes de datos");
         assert_eq!(short_course("Cálculo (a)"), "cálculo (a)");
+    }
+
+    #[test]
+    fn delivery_parsing() {
+        // Los nombres de campo son los que lee la página de Eminus.
+        let reviewed = delivery_from(&json!({
+            "idActividadEntrega": 41, "idEstado": 2, "descEntrega": "<p>Mi tarea</p>", "fechaEntrega": "2026-03-01T10:00:00",
+            "archivosEntregaConTamano": [{ "idArchivosEntregas": 9, "nombreOriginal": "tarea.pdf", "tamano": 2048 }, { "tamano": 1 }],
+            "idActividadRevision": 5, "descRevision": "<p>Bien &amp; claro</p>", "calificacion": "8,5", "fechaRevision": "2026-03-02T12:30:00",
+            "archivosRevisionConTamano": [{ "idArchivoActividadRevision": 3, "nombreOriginal": "notas.docx", "tamano": 4096 }],
+        }));
+        assert_eq!((reviewed.id, reviewed.text.as_str(), reviewed.sent), (41, "Mi tarea", true));
+        assert_eq!(reviewed.files, [AFile { id: "9".into(), name: "tarea.pdf".into(), size: "2 KB".into() }]);
+        assert_eq!((reviewed.feedback.as_str(), reviewed.grade), ("Bien & claro", Some(8.5)));
+        assert!(reviewed.reviewed_at > 0);
+        assert_eq!((reviewed.review_files[0].id.as_str(), reviewed.review_files[0].name.as_str()), ("3", "notas.docx"));
+
+        // Enviada y sin revisar: el 0 de relleno no es una calificación.
+        let waiting = delivery_from(&json!({ "idActividadEntrega": 42, "idEstado": 1, "calificacion": 0, "descRevision": null, "fechaRevision": null }));
+        assert!(waiting.sent);
+        assert_eq!((waiting.grade, waiting.reviewed_at, waiting.feedback.as_str()), (None, 0, ""));
+        // Un cero puesto por el docente sí cuenta.
+        assert_eq!(delivery_from(&json!({ "calificacion": 0, "idActividadRevision": 7 })).grade, Some(0.0));
+        assert_eq!(delivery_from(&json!({ "calificacion": 0, "fechaRevision": "0001-01-01T00:00:00" })).grade, None);
+
+        let draft = delivery_from(&json!({ "idActividadEntrega": 43, "idEstado": 0, "fechaEntrega": null }));
+        assert!(!draft.sent && draft.id == 43);
+        assert_eq!(delivery_from(&Value::Null), DeliveryInfo::default());
+    }
+
+    #[test]
+    fn detail_parsing_and_cache() {
+        let detail = detail_from(&json!({
+            "idActividad": 3, "descripcion": "<p>Lee</p>", "estado": 3,
+            "archivosActsConTamano": [{ "idArchivosActividades": 4, "nombreOriginal": "guia.pdf", "tamano": 3_145_728 }],
+        }));
+        assert_eq!((detail.text.as_str(), detail.files[0].size.as_str()), ("Lee", "3.0 MB"));
+        assert!(detail.blocked.as_deref().is_some_and(|b| b.contains("calificada")));
+        assert_eq!(detail_from(&json!({ "descripcion": "x", "estadoAct": 2 })).blocked, None);
+        assert!(is_activity_row(&json!({ "idActividad": 3 })) && !is_activity_row(&json!({ "mensaje": "no" })) && !is_activity_row(&Value::Null));
+
+        // Lo que se guarda en disco se lee igual, y un caché viejo sin los
+        // campos nuevos sigue sirviendo.
+        let back: Detail = serde_json::from_str(&serde_json::to_string(&detail).unwrap()).unwrap();
+        assert_eq!(back, detail);
+        let old: DeliveryInfo = serde_json::from_value(json!({ "id": 1, "text": "t", "files": [], "sent": true })).unwrap();
+        assert_eq!((old.id, old.sent, old.grade, old.reviewed_at), (1, true, None, 0));
     }
 }

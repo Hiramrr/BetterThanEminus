@@ -3,7 +3,12 @@
 
 pub mod api;
 pub mod app;
+pub mod background;
+pub mod files;
+pub mod fonts;
 pub mod model;
+pub mod native_shortcuts;
+pub mod personalization;
 pub mod store;
 pub mod text;
 pub mod theme;

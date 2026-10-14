@@ -161,6 +161,9 @@ pub fn parse_eminus_date(text: &str) -> i64 {
 // Minúscula sin acento, carácter por carácter: los índices del texto
 // normalizado coinciden con los del original y así se puede resaltar.
 pub fn fold(c: char) -> char {
+    if c.is_ascii() {
+        return c.to_ascii_lowercase();
+    }
     match c {
         'á' | 'à' | 'ä' | 'â' | 'ã' | 'Á' | 'À' | 'Ä' | 'Â' | 'Ã' => 'a',
         'é' | 'è' | 'ë' | 'ê' | 'É' | 'È' | 'Ë' | 'Ê' => 'e',
@@ -182,6 +185,19 @@ pub struct Filter {
     words: Vec<Vec<char>>,
 }
 
+// ¿Está `word` (ya plegada) dentro de `text`, comparando carácter a carácter
+// con fold? No reserva memoria: los textos que se filtran son títulos y
+// nombres cortos, así que la búsqueda simple basta.
+fn contains_folded(text: &str, word: &[char]) -> bool {
+    if word.is_empty() {
+        return true;
+    }
+    text.char_indices().any(|(at, _)| {
+        let mut rest = text[at..].chars();
+        word.iter().all(|&b| rest.next().is_some_and(|a| fold(a) == b))
+    })
+}
+
 impl Filter {
     pub fn new(text: &str) -> Self {
         Filter { words: norm(text).split_whitespace().map(|w| w.chars().collect()).collect() }
@@ -192,11 +208,14 @@ impl Filter {
     }
 
     pub fn matches(&self, text: &str) -> bool {
-        if self.words.is_empty() {
-            return true;
-        }
-        let hay: Vec<char> = text.chars().map(fold).collect();
-        self.words.iter().all(|w| hay.windows(w.len()).any(|win| win == w.as_slice()))
+        self.matches_fields(&[text])
+    }
+
+    // Como buscar en los campos unidos por un espacio, sin construir ese
+    // texto: ninguna palabra del filtro trae espacios, así que ninguna
+    // coincidencia puede cruzar de un campo a otro.
+    pub fn matches_fields(&self, fields: &[&str]) -> bool {
+        self.words.iter().all(|w| fields.iter().any(|f| contains_folded(f, w)))
     }
 
     // Qué caracteres de `text` coinciden con alguna palabra del filtro.
@@ -446,6 +465,20 @@ mod tests {
         assert!(!f.matches("Tarea de redes"));
         assert_eq!(Filter::new("ción").marks("Acción"), [false, false, true, true, true, true]);
         assert!(Filter::new("").matches("x"));
+        // Buscar por campos separados equivale a buscar en el texto unido.
+        let f = Filter::new("redes tarea");
+        assert!(f.matches_fields(&["Tarea 1", "Redes de datos"]));
+        assert!(!f.matches_fields(&["Tarea 1", "Cálculo"]));
+        assert!(!Filter::new("destarea").matches_fields(&["Redes", "Tarea"]));
+        for query in ["á", "acción", "ñ 中文", "tarea", "acción acción", "acciónlarga", ""] {
+            let f = Filter::new(query);
+            for fields in [["Acción", "niño 中文"], ["Tarea", "de redes"], ["ac", "ción"], ["", ""]] {
+                assert_eq!(f.matches_fields(&fields), f.matches(&fields.join(" ")), "{query:?}, {fields:?}");
+            }
+        }
+        assert!(!Filter::new("tareas").matches("tarea"));
+        assert_eq!(Filter::new("aa").marks("aaaa"), [true; 4]);
+        assert_eq!(Filter::new("ñ 中文").marks("niño 中文"), [true, false, true, false, false, true, true]);
     }
 
     #[test]
