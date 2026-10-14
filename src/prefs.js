@@ -28,7 +28,7 @@
   ];
 
   // Estilo = forma (tipografía, bordes, espaciado). Tema = colores. Se
-  // combinan libremente, salvo retro, que trae su propia paleta.
+  // combinan libremente, salvo los que traen su propia paleta (ownColors).
   bte.STYLES = [
     { id: "tui", name: "tui", desc: "terminal: monoespaciada, 1px, atajos a la vista", font: "", google: [] },
     { id: "nube", name: "nube", desc: "claro y suave: cielo pálido, serif para leer, botón azul vidrio", font: '"Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif', google: ["Instrument+Sans:wght@400;500;600", "Source+Serif+4:opsz,wght@8..60,400;8..60,600"], ownColors: true },
@@ -36,7 +36,8 @@
     { id: "compacto", name: "compacto", desc: "densidad: ves el doble sin desplazarte", font: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif', google: [] },
     { id: "editorial", name: "editorial", desc: "periódico: titulares serif, versalitas y números romanos", font: '"Libre Franklin", "Helvetica Neue", Arial, sans-serif', google: ["Libre+Franklin:wght@400;600;700", "Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,600;1,6..72,700"] },
     { id: "neo", name: "neo", desc: "neobrutalismo: bordes gruesos, sombras duras, botones que se hunden", font: '"Archivo", "Helvetica Neue", Arial, sans-serif', google: ["Archivo:wght@500;600;700;800"], ownColors: true },
-    { id: "retro", name: "retro 95", desc: "ventanas, biseles y barra de título azul", font: 'Tahoma, "MS Sans Serif", Verdana, "Segoe UI", sans-serif', google: [], ownColors: true }
+    { id: "retro", name: "retro 95", desc: "ventanas, biseles y barra de título azul", font: 'Tahoma, "MS Sans Serif", Verdana, "Segoe UI", sans-serif', google: [], ownColors: true },
+    { id: "minecraft", name: "minecraft", desc: "bloques: tierra y pasto, paneles de inventario, botones de piedra y fuente de píxeles", font: '"Pixelify Sans", "Press Start 2P", ui-monospace, Menlo, Consolas, monospace', google: ["Pixelify+Sans:wght@400;500;600;700"], ownColors: true }
   ];
 
   bte.FONTS = [

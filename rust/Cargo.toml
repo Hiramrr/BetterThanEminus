@@ -1,0 +1,45 @@
+[package]
+name = "eminus"
+version = "0.1.0"
+edition = "2021"
+default-run = "eminus"
+description = "BetterThanEminus nativo: agenda, cursos, miyu, calificaciones y contenido de Eminus en la terminal"
+
+[dependencies]
+ratatui = "0.29"
+ureq = { version = "2", features = ["json"] }
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+unicode-width = "0.2"
+base64 = "0.22"
+# Sólo para el login con contraseña (mismo cifrado que el formulario de Eminus).
+aes = "0.8"
+cbc = { version = "0.1", features = ["alloc"] }
+pbkdf2 = { version = "0.12", default-features = false, features = ["hmac"] }
+sha1 = "0.10"
+getrandom = "0.2"
+# Contraseñas de los perfiles: Llavero de macOS (o el almacén del sistema).
+keyring = { version = "3", features = ["apple-native", "windows-native", "linux-native"] }
+# Sólo para la versión con ventana (eminus-gui).
+eframe = { version = "0.29", default-features = false, features = ["wgpu", "default_fonts", "x11", "wayland"] }
+rfd = "0.15"
+# Fondo de la ventana y GIF del logo.
+image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
+# Nombres de las fuentes instaladas; es el mismo analizador que ya usa egui.
+ttf-parser = { version = "0.25.1", default-features = false, features = ["std"] }
+
+[[bin]]
+name = "eminus"
+path = "src/main.rs"
+
+[[bin]]
+name = "eminus-gui"
+path = "src/gui.rs"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true

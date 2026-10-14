@@ -37,6 +37,7 @@ El estilo cambia la forma y el tema cambia los colores. Se combinan como quieras
 | **editorial** | Periódico: mancheta en cursiva, doble filete, titulares en Newsreader, etiquetas en versalitas y módulos en números romanos |
 | **neo** | Neobrutalismo: bordes negros de 2px, sombras duras, bloques de color y botones que se hunden al pulsarlos. Usa sus propios colores (contraste verificado) |
 | **retro 95** | Ventanas, barras de título azules, botones con bisel y barra de tareas. Usa sus propios colores |
+| **minecraft** | Bloques: fondo de tierra, encabezado de pasto, paneles grises de inventario, botones de piedra y fuente de píxeles (Pixelify Sans). La barra de estado es la hotbar y los avisos salen como logros. Usa sus propios colores (contraste verificado) |
 
 ### Temas de color
 
@@ -135,7 +136,7 @@ En la vista tui: `1`/`2`/`3`/`4`/`5` vistas (agenda, cursos, miyu, tareas califi
 | `src/bg.js` · `src/bg.css` | Fondo con foto: tramado y paleta tomada de la imagen |
 | `src/themes.css` | Paletas |
 | `src/tui.css` | Reskin de Eminus y UI propia |
-| `src/styles.css` | Estilos nube, enfoque, compacto, editorial, neo y retro 95 |
+| `src/styles.css` | Estilos nube, enfoque, compacto, editorial, neo, retro 95 y minecraft |
 | `src/nav.js` | Contexto, secciones, cursos, cursor j/k e integración con Miyu |
 | `src/palette.js` | Paleta de comandos y ayuda |
 | `src/app.js` | Barra de estado, atajos, sesión, recientes, modo lectura y comunicación entre marcos |

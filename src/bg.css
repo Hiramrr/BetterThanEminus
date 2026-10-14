@@ -63,7 +63,7 @@ html.bte:is(.bte-has-bg, .bte-sub-bg) {
   --bte-card-head: var(--bte-bg1);
 }
 
-html.bte:is(.bte-has-bg, .bte-sub-bg):is([data-bte-style="nube"], [data-bte-style="neo"], [data-bte-style="retro"], [data-bte-style="compacto"]) {
+html.bte:is(.bte-has-bg, .bte-sub-bg):is([data-bte-style="nube"], [data-bte-style="neo"], [data-bte-style="retro"], [data-bte-style="compacto"], [data-bte-style="minecraft"]) {
   --bte-card-base: var(--bte-surface);
   --bte-card-head: transparent;
 }
@@ -84,6 +84,17 @@ html.bte:is(.bte-has-bg, .bte-sub-bg):not(#bte-z):not(#bte-y) :where(m-pages, ap
 /* En neo la cabecera es de color (amarillo, rosa…): se conserva el tono. */
 html.bte:is(.bte-has-bg, .bte-sub-bg)[data-bte-style="neo"]:not(#bte-z):not(#bte-y) mat-card.CourseCard .CardHeader {
   background-color: color-mix(in oklab, var(--nb-card) var(--bte-card-alpha, 85%), transparent) !important;
+}
+
+/* En minecraft la cabecera de curso es un bloque (pasto, madera…) y el
+   encabezado y el pie llevan texto blanco: se conserva un tono oscuro de
+   tierra en vez del gris del panel. */
+html.bte:is(.bte-has-bg, .bte-sub-bg)[data-bte-style="minecraft"]:not(#bte-z):not(#bte-y) mat-card.CourseCard .CardHeader {
+  background-color: color-mix(in oklab, var(--mc-block) var(--bte-card-alpha, 85%), transparent) !important;
+}
+
+html.bte.bte-has-bg[data-bte-style="minecraft"]:not(#bte-z):not(#bte-y) :where(m-header header, m-pages > footer) {
+  background-color: color-mix(in oklab, #3a2a1d var(--bte-panel-alpha, 65%), transparent) !important;
 }
 
 /* ─── acomodar la imagen (bte.bg.edit) ─── */

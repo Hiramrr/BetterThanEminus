@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "BetterThanEminus",
-  "description": "Eminus mejorado: reskin con estilos (tui, moderno, enfoque, retro), paleta de comandos, navegación con teclado y vista de pendientes dentro de la misma página.",
+  "description": "Eminus mejorado: reskin con estilos (tui, moderno, enfoque, retro, minecraft), paleta de comandos, navegación con teclado y vista de pendientes dentro de la misma página.",
   "version": "1.2.0",
   "permissions": [
     "storage",

@@ -1,5 +1,6 @@
 /*
- * Estilos alternativos al TUI: nube, enfoque y retro 95.
+ * Estilos alternativos al TUI: nube, enfoque, retro 95, compacto, editorial,
+ * neo y minecraft.
  *
  * tui.css pone la base (colores del tema, bordes, alcance a los contenedores
  * de Eminus). Aquí se cambia la forma. Cada bloque usa
@@ -3180,5 +3181,722 @@ html.bte[data-bte-style="neo"] #bte-toast {
 @media (prefers-reduced-motion: reduce) {
   html.bte[data-bte-style="neo"]:not(#bte-z) :where(m-pages, app-root) * {
     transform: none !important;
+  }
+}
+
+/* ═══════════════════════════════ MINECRAFT ═══════════════════════════════
+ * Interfaz de bloques: fondo de tierra, cabecera de pasto, paneles grises
+ * de inventario con bisel de 2px, botones de piedra con texto blanco
+ * sombreado y fuente de píxeles (Pixelify Sans). Las texturas son SVG de
+ * 16×16 en data URI, sin imágenes externas. Trae su propia paleta
+ * (contraste verificado: texto 9.6:1 sobre el panel, estados ≥ 5.2:1,
+ * texto blanco sobre piedra, pasto, madera y diamante ≥ 4.5:1).
+ */
+
+html.bte[data-bte-style="minecraft"] {
+  --bte-bg: #c6c6c6;
+  --bte-bg0: #dedede;
+  --bte-bg1: #c6c6c6;
+  --bte-bg2: #b0b0b0;
+  --bte-surface: #c6c6c6;
+  --bte-fg: #1f1f1f;
+  --bte-fg-strong: #000000;
+  --bte-dim: #404040;
+  --bte-border: #555555;
+  --bte-accent: #1d5a11;
+  --bte-accent-fg: #ffffff;
+  --bte-link: #0000aa;
+  --bte-red: #8f0000;
+  --bte-green: #0a520a;
+  --bte-yellow: #5e4200;
+  --bte-blue: #0000aa;
+  --bte-purple: #6a006a;
+  --bte-aqua: #005252;
+  --bte-orange: #7a3300;
+  --bte-glow: none;
+  --bte-scheme: light;
+
+  --mc-panel: #c6c6c6;
+  --mc-stone: #6f6f6f;
+  --mc-dirt: #866043;
+  --mc-grass-btn: #3c8527;
+  --mc-line: 2px solid #000000;
+  --mc-raised: inset 2px 2px 0 #ffffff, inset -2px -2px 0 #555555;
+  --mc-sunken: inset 2px 2px 0 #373737, inset -2px -2px 0 #ffffff;
+  --mc-btn: inset 2px 2px 0 rgba(255, 255, 255, 0.35), inset -2px -2px 0 rgba(0, 0, 0, 0.4);
+  --mc-btn-down: inset 2px 2px 0 rgba(0, 0, 0, 0.4), inset -2px -2px 0 rgba(255, 255, 255, 0.25);
+  --mc-text-shadow: 2px 2px 0 #3f3f3f;
+  --mc-dark: linear-gradient(rgba(0, 0, 0, 0.58), rgba(0, 0, 0, 0.58));
+  --mc-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Cpath fill='%23000' fill-opacity='.2' d='M6 0h1v1h-1zM12 0h1v1h-1zM14 0h1v1h-1zM9 1h1v1h-1zM4 2h1v1h-1zM7 2h1v1h-1zM9 2h1v1h-1zM1 3h1v1h-1zM7 3h1v1h-1zM9 3h1v1h-1zM6 4h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM11 5h1v1h-1zM1 6h1v1h-1zM6 6h1v1h-1zM7 7h1v1h-1zM12 7h1v1h-1zM13 7h1v1h-1zM0 8h1v1h-1zM3 8h1v1h-1zM6 8h1v1h-1zM15 8h1v1h-1zM4 9h1v1h-1zM5 10h1v1h-1zM12 10h1v1h-1zM1 11h1v1h-1zM8 11h1v1h-1zM15 11h1v1h-1zM5 12h1v1h-1zM2 13h1v1h-1zM7 13h1v1h-1zM4 14h1v1h-1zM11 14h1v1h-1zM1 15h1v1h-1zM6 15h1v1h-1zM7 15h1v1h-1z'/%3E%3Cpath fill='%23000' fill-opacity='.09' d='M1 0h1v1h-1zM3 0h1v1h-1zM5 0h1v1h-1zM8 0h1v1h-1zM15 0h1v1h-1zM0 1h1v1h-1zM5 1h1v1h-1zM8 1h1v1h-1zM13 1h1v1h-1zM15 1h1v1h-1zM0 2h1v1h-1zM6 2h1v1h-1zM13 2h1v1h-1zM14 2h1v1h-1zM0 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM0 4h1v1h-1zM3 4h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM13 4h1v1h-1zM4 5h1v1h-1zM13 5h1v1h-1zM14 5h1v1h-1zM0 6h1v1h-1zM2 6h1v1h-1zM5 6h1v1h-1zM8 6h1v1h-1zM11 6h1v1h-1zM14 6h1v1h-1zM15 6h1v1h-1zM0 7h1v1h-1zM4 7h1v1h-1zM9 7h1v1h-1zM11 7h1v1h-1zM15 7h1v1h-1zM1 8h1v1h-1zM4 8h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM11 8h1v1h-1zM7 9h1v1h-1zM10 9h1v1h-1zM11 9h1v1h-1zM15 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM15 10h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM7 11h1v1h-1zM2 12h1v1h-1zM7 12h1v1h-1zM10 12h1v1h-1zM15 12h1v1h-1zM0 13h1v1h-1zM8 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM1 14h1v1h-1zM12 14h1v1h-1zM13 14h1v1h-1zM14 14h1v1h-1zM15 14h1v1h-1zM2 15h1v1h-1zM5 15h1v1h-1zM12 15h1v1h-1zM13 15h1v1h-1zM14 15h1v1h-1z'/%3E%3Cpath fill='%23fff' fill-opacity='.08' d='M0 0h1v1h-1zM2 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM1 2h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM9 4h1v1h-1zM8 5h1v1h-1zM12 5h1v1h-1zM3 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM10 7h1v1h-1zM14 7h1v1h-1zM7 8h1v1h-1zM14 8h1v1h-1zM0 9h1v1h-1zM1 9h1v1h-1zM3 9h1v1h-1zM5 9h1v1h-1zM12 9h1v1h-1zM13 9h1v1h-1zM8 10h1v1h-1zM14 10h1v1h-1zM3 11h1v1h-1zM11 11h1v1h-1zM1 12h1v1h-1zM13 12h1v1h-1zM14 12h1v1h-1zM5 13h1v1h-1zM6 13h1v1h-1zM9 13h1v1h-1zM12 13h1v1h-1zM2 14h1v1h-1zM7 14h1v1h-1zM0 15h1v1h-1zM8 15h1v1h-1z'/%3E%3C/svg%3E");
+  --mc-grass: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 5' shape-rendering='crispEdges'%3E%3Cpath fill='%235d9b3a' d='M0 3h1v1h-1zM1 0h1v1h-1zM1 2h1v1h-1zM1 3h1v1h-1zM1 4h1v1h-1zM2 1h1v1h-1zM2 2h1v1h-1zM2 3h1v1h-1zM3 0h1v1h-1zM3 1h1v1h-1zM3 3h1v1h-1zM3 4h1v1h-1zM5 0h1v1h-1zM5 1h1v1h-1zM5 2h1v1h-1zM6 0h1v1h-1zM7 0h1v1h-1zM7 1h1v1h-1zM7 2h1v1h-1zM7 4h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM9 3h1v1h-1zM9 4h1v1h-1zM10 0h1v1h-1zM10 1h1v1h-1zM10 2h1v1h-1zM11 1h1v1h-1zM12 0h1v1h-1zM12 1h1v1h-1zM12 2h1v1h-1zM13 0h1v1h-1zM13 3h1v1h-1zM14 0h1v1h-1zM14 2h1v1h-1zM15 1h1v1h-1zM15 3h1v1h-1z'/%3E%3Cpath fill='%234a7f2d' d='M0 1h1v1h-1zM0 2h1v1h-1zM2 4h1v1h-1zM4 0h1v1h-1zM4 1h1v1h-1zM6 1h1v1h-1zM6 3h1v1h-1zM8 0h1v1h-1zM9 0h1v1h-1zM11 0h1v1h-1zM11 2h1v1h-1zM11 3h1v1h-1zM13 1h1v1h-1zM13 2h1v1h-1zM15 0h1v1h-1zM15 2h1v1h-1z'/%3E%3Cpath fill='%2374b84a' d='M0 0h1v1h-1zM1 1h1v1h-1zM2 0h1v1h-1zM3 2h1v1h-1zM4 2h1v1h-1zM6 2h1v1h-1zM7 3h1v1h-1zM8 2h1v1h-1zM9 2h1v1h-1zM10 3h1v1h-1zM10 4h1v1h-1zM14 1h1v1h-1zM15 4h1v1h-1z'/%3E%3C/svg%3E");
+  --bte-header-h: 48px;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) {
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(:not(svg, svg *, img, video, canvas, iframe)) {
+  border-color: #555555 !important;
+  border-radius: 0 !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, app-root) :where(h1, h2, h3, h4) {
+  font-weight: 700 !important;
+  color: #404040 !important;
+}
+
+/* Fondo de tierra oscurecida (como el menú de opciones); el contenido va en
+   paneles de inventario. La textura sólo se pinta en <html> para que las
+   losetas no se desalineen entre capas. */
+html.bte.bte-top[data-bte-style="minecraft"]:not(#bte-z) {
+  background-color: var(--mc-dirt) !important;
+  background-image: var(--mc-dark), var(--mc-noise) !important;
+  background-size: auto, 64px 64px !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) body,
+html.bte[data-bte-style="minecraft"]:not(#bte-z) main.layout-main,
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .ContentFromMain {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-course-list > .container, .m-content-sub > .container, #activity-content > div) {
+  margin-top: 14px !important;
+  margin-bottom: 18px !important;
+  padding: 14px 18px !important;
+  background-color: var(--mc-panel) !important;
+  border: var(--mc-line) !important;
+  box-shadow: var(--mc-raised) !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) app-root,
+html.bte[data-bte-style="minecraft"]:not(#bte-z) iframe.app-b-frame {
+  background-color: var(--mc-panel) !important;
+}
+
+/* Encabezado: una fila de bloques de pasto */
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-header header {
+  height: 48px !important;
+  background-color: var(--mc-dirt) !important;
+  background-image: var(--mc-grass), var(--mc-noise) !important;
+  background-repeat: repeat-x, repeat !important;
+  background-size: 48px 15px, 48px 48px !important;
+  border-bottom: var(--mc-line) !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-header :where(.m-container, .m-stack, m-topbar, .m-topbar, .m-brand__tools),
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-header a.m-brand__logo-wrapper,
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-header a.m-brand__logo-wrapper + #bte-header-links {
+  height: 46px !important;
+  background-color: transparent !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-header a.m-brand__logo-wrapper::before {
+  content: "Eminus";
+  height: 32px;
+  margin-left: 8px;
+  padding: 0 12px;
+  background: var(--mc-stone);
+  color: #ffffff;
+  font-weight: 700;
+  border: var(--mc-line);
+  box-shadow: var(--mc-btn);
+  text-shadow: var(--mc-text-shadow);
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-header a.m-brand__logo-wrapper:hover::before {
+  color: #ffffa0;
+  outline: 2px solid #ffffff;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-header a.m-brand__logo-wrapper:active::before {
+  box-shadow: var(--mc-btn-down);
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-header a.m-brand__logo-wrapper::after {
+  color: #ffffff;
+  text-shadow: var(--mc-text-shadow);
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) #bte-header-links {
+  gap: 6px;
+  align-items: center !important;
+  padding-left: 8px;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) #bte-header-links button {
+  height: 32px;
+  min-width: 72px;
+  justify-content: center;
+  padding: 0 10px !important;
+  background-color: var(--mc-stone) !important;
+  color: #ffffff !important;
+  border: var(--mc-line) !important;
+  box-shadow: var(--mc-btn);
+  text-shadow: var(--mc-text-shadow);
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) #bte-header-links button:hover,
+html.bte[data-bte-style="minecraft"]:not(#bte-z) #bte-header-links button:focus-visible {
+  background-color: var(--mc-stone) !important;
+  color: #ffffa0 !important;
+  outline: 2px solid #ffffff !important;
+  outline-offset: 0 !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) #bte-header-links button[aria-pressed="true"] {
+  background-color: var(--mc-grass-btn) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) #bte-header-links button:active {
+  box-shadow: var(--mc-btn-down);
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-header :where(m-user-profile) .h5,
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-header m-notification i {
+  color: #ffffff !important;
+  text-shadow: var(--mc-text-shadow);
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-header :where(m-user-profile) img {
+  outline: 2px solid #000000;
+  image-rendering: pixelated;
+}
+
+/* Menú lateral: panel de inventario; el elemento activo es la casilla
+   seleccionada */
+@media (min-width: 900px) {
+  html.bte[data-bte-style="minecraft"]:not(#bte-z) main.layout-main > m-aside-left.m-aside-left {
+    top: 48px !important;
+    height: calc((100vh - 24px) / var(--bte-vz) - 48px) !important;
+    flex-basis: 212px;
+    width: 212px !important;
+    padding: 6px !important;
+    background-color: var(--mc-panel) !important;
+    border-right: var(--mc-line) !important;
+    box-shadow: var(--mc-raised) !important;
+  }
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) #m_ver_menu .m-menu__link {
+  margin-bottom: 2px;
+  padding: 6px 8px !important;
+  color: #1f1f1f !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) #m_ver_menu .m-menu__link-icon {
+  color: #404040 !important;
+  font-size: 18px !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) #m_ver_menu .m-menu__item:hover > .m-menu__link {
+  background-color: #e2e2e2 !important;
+  color: #000000 !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) #m_ver_menu .m-menu__item--active > .m-menu__link {
+  background-color: #555555 !important;
+  color: #ffffff !important;
+  box-shadow: var(--mc-sunken);
+  text-shadow: 2px 2px 0 #1f1f1f;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) #m_ver_menu .m-menu__item--active .m-menu__link-icon {
+  color: #ffffff !important;
+}
+
+/* Cabecera de curso: bloque de pasto */
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .EMINUSPleca {
+  margin: 14px 16px 0 !important;
+  background-color: var(--mc-dirt) !important;
+  background-image: var(--mc-grass), var(--mc-noise) !important;
+  background-repeat: repeat-x, repeat !important;
+  background-size: 48px 15px, 48px 48px !important;
+  border: var(--mc-line) !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .EMINUSPleca :where(.PlecaOverlay, .PlecaOverlayChange) {
+  padding: 20px 14px 10px !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .EMINUSPleca :where(.g-font-size-18, .TittlePleca, span, div, i) {
+  color: #ffffff !important;
+  text-shadow: var(--mc-text-shadow);
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .EMINUSPleca .g-font-size-18 {
+  font-size: 1.35em !important;
+  font-weight: 700 !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .EMINUSPleca input {
+  background-color: #dedede !important;
+  color: #1f1f1f !important;
+  text-shadow: none;
+}
+
+/* Portada */
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-course-list > .container > div::before {
+  margin: 8px 0 14px;
+  font-size: 1.8em;
+  color: #404040;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-course-list .container_courses > div > span.h4 {
+  font-weight: 700 !important;
+  color: #404040 !important;
+}
+
+/* Tarjetas: paneles con bisel; la cabecera de cada curso es un bloque */
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, app-root, .modal) :where(mat-card, .mat-card, .mat-mdc-card, .card, .m-portlet, .kt-portlet, .m-alert, .alert, .cardInContent, .list-group-item, .mat-expansion-panel) {
+  padding: 2px !important;
+  background-color: var(--mc-panel) !important;
+  border: var(--mc-line) !important;
+  box-shadow: var(--mc-raised) !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) mat-card.CourseCard {
+  --mc-block: #4a7a2a;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-course-list .container_courses > .d-flex > div:nth-of-type(4n + 2) mat-card.CourseCard { --mc-block: #6b4f2a; }
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-course-list .container_courses > .d-flex > div:nth-of-type(4n + 3) mat-card.CourseCard { --mc-block: #6f6f6f; }
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-course-list .container_courses > .d-flex > div:nth-of-type(4n + 4) mat-card.CourseCard { --mc-block: #1f7a74; }
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) mat-card.CourseCard:hover {
+  border-color: #ffffff !important;
+  outline: 2px solid #000000;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) mat-card.CourseCard .CardHeader,
+html.bte[data-bte-style="minecraft"]:not(#bte-z) mat-card.CourseCard:hover .CardHeader {
+  background-color: var(--mc-block) !important;
+  background-image: var(--mc-noise) !important;
+  background-size: 48px 48px !important;
+  border: 0 !important;
+  border-bottom: var(--mc-line) !important;
+  box-shadow: var(--mc-btn);
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) mat-card.CourseCard .CardHeaderContainer {
+  padding: 10px 12px !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) mat-card.CourseCard .CardHeaderContainer b {
+  color: #ffffff !important;
+  font-size: 1.05em !important;
+  font-weight: 700 !important;
+  text-shadow: var(--mc-text-shadow);
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) mat-card.CourseCard .CardBody {
+  padding: 8px 10px !important;
+  border: 0 !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) mat-card.CourseCard .CardBody > span {
+  color: #1f1f1f !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) mat-card.CourseCard .CardFooter i,
+html.bte[data-bte-style="minecraft"]:not(#bte-z) mat-card.CourseCard .hiddebutton mat-icon {
+  color: #404040 !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .m-kt-portlet-unit {
+  padding: 8px 12px !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .m-kt-portlet-unit:hover {
+  background-color: #e2e2e2 !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .m-kt-portlet-unit .m-alert__icon {
+  display: flex !important;
+  color: var(--bte-accent) !important;
+}
+
+/* Texto del docente: página de libro */
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, app-root) :where(.fr-view, .kt-portlet__body-editor) {
+  padding: 10px 12px;
+  background-color: #f3ead0 !important;
+  color: #1f1f1f !important;
+  line-height: 1.6;
+  box-shadow: inset 2px 2px 0 #8a7a55, inset -2px -2px 0 #fffaf0;
+}
+
+/* Botones de piedra; los principales, verdes */
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-button, .mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .mat-mdc-outlined-button, .btn, .input-group-text.btn-success) {
+  padding: 5px 14px !important;
+  border: var(--mc-line) !important;
+  background-color: var(--mc-stone) !important;
+  color: #ffffff !important;
+  font-weight: 400 !important;
+  box-shadow: var(--mc-btn) !important;
+  text-shadow: var(--mc-text-shadow);
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-button, .mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .mat-mdc-outlined-button, .btn, .input-group-text.btn-success)
+  :where(span, i, b, mat-icon, .mat-icon) {
+  color: inherit !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-button, .mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-raised-button, .mat-mdc-outlined-button, .btn, .input-group-text.btn-success):hover {
+  background-color: var(--mc-stone) !important;
+  color: #ffffa0 !important;
+  outline: 2px solid #ffffff !important;
+  outline-offset: 0 !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal)
+  :where(.mat-stroked-button, .mat-flat-button, .mat-raised-button, .mat-button, .mat-mdc-button, .btn):active {
+  box-shadow: var(--mc-btn-down) !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z):not(#bte-y) :where(m-pages, m-auth, app-root) :where(.btn-success, .mat-stroked-button-green),
+html.bte[data-bte-style="minecraft"]:not(#bte-z):not(#bte-y) :where(m-pages, m-auth, app-root) :where(.btn-success, .mat-stroked-button-green):hover,
+html.bte[data-bte-style="minecraft"]:not(#bte-z):not(#bte-y) m-auth .mat-stroked-button,
+html.bte[data-bte-style="minecraft"]:not(#bte-z):not(#bte-y) m-auth .mat-stroked-button:hover {
+  background-color: var(--mc-grass-btn) !important;
+  font-weight: 700 !important;
+}
+
+/* Campos: casillas hundidas */
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, m-auth, app-root, .cdk-overlay-container, .modal) :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]), textarea, select, .form-control) {
+  background-color: #dedede !important;
+  color: #1f1f1f !important;
+  border: 0 !important;
+  box-shadow: var(--mc-sunken) !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-course-list .SEARCH_BAR_BOX .input-group,
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-course-list .FILTER_BOX > div {
+  border: 0 !important;
+  background-color: var(--mc-panel) !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, m-auth, app-root) :where(.mat-form-field-infix input, .mat-mdc-form-field-infix input, .mat-input-element) {
+  box-shadow: none !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, m-auth, app-root) :where(.mat-form-field-flex, .mat-mdc-text-field-wrapper, .mat-select, .mat-mdc-select) {
+  padding: 2px 8px !important;
+  background-color: #dedede !important;
+  box-shadow: var(--mc-sunken) !important;
+}
+
+/* Pestañas de inventario */
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-header, .mat-mdc-tab-header) {
+  border-bottom: var(--mc-line) !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-label, .mat-mdc-tab) {
+  margin-right: 2px;
+  background-color: #9a9a9a !important;
+  color: #1f1f1f !important;
+  border: var(--mc-line) !important;
+  border-bottom: 0 !important;
+  box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.45), inset -2px 0 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, app-root) :where(.mat-tab-label-active, .mdc-tab--active) {
+  background-color: var(--mc-panel) !important;
+  font-weight: 700;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, app-root) :where(.mdc-tab--active .mdc-tab__text-label, .mat-tab-label-active .mat-tab-label-content) {
+  color: #000000 !important;
+}
+
+/* Actividades: franja del color de su estado */
+html.bte[data-bte-style="minecraft"]:not(#bte-z) app-root .principal-card {
+  box-shadow: none !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) app-root .activity-card[style*="border-color"] {
+  border: var(--mc-line) !important;
+  box-shadow: inset 8px 0 0 var(--bte-st, #8b8b8b), var(--mc-raised) !important;
+  padding-left: 16px !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) app-root .activity-card :where(.detail-label strong, .activity-time, .activity-time strong) {
+  color: #404040 !important;
+}
+
+/* Menús, diálogos, tooltips */
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .cdk-overlay-container :where(.mat-menu-panel, .mat-mdc-menu-panel, .mat-select-panel, .mat-mdc-select-panel, .mdc-menu-surface, .mat-autocomplete-panel),
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, app-root) .dropdown-menu {
+  padding: 4px !important;
+  border: var(--mc-line) !important;
+  background-color: var(--mc-panel) !important;
+  box-shadow: var(--mc-raised), 4px 4px 0 rgba(0, 0, 0, 0.4) !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .cdk-overlay-container :where(.mat-menu-item, .mat-mdc-menu-item, .mat-option, .mat-mdc-option):hover,
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .cdk-overlay-container :where(.mat-option.mat-active, .mat-mdc-option.mat-mdc-option-active) {
+  background-color: #555555 !important;
+  color: #ffffff !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .cdk-overlay-container :where(.mat-dialog-container, .mat-mdc-dialog-surface, .mdc-dialog__surface),
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .modal .modal-content {
+  padding: 4px !important;
+  border: var(--mc-line) !important;
+  background-color: var(--mc-panel) !important;
+  box-shadow: var(--mc-raised), 6px 6px 0 rgba(0, 0, 0, 0.4) !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .cdk-overlay-container :where(.mat-dialog-title, .mdc-dialog__title, .mat-mdc-dialog-title),
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .modal .modal-header {
+  padding: 6px 10px !important;
+  background-color: transparent !important;
+  color: #404040 !important;
+  font-size: 1.1em !important;
+  font-weight: 700 !important;
+}
+
+/* Tooltip de objeto: fondo casi negro y borde morado */
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .cdk-overlay-container :where(.mat-tooltip, .mdc-tooltip__surface) {
+  background-color: #100010 !important;
+  color: #ffffff !important;
+  border: 2px solid #2d0a63 !important;
+  text-shadow: var(--mc-text-shadow);
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-pages > footer {
+  background-color: transparent !important;
+  color: #e0e0e0 !important;
+  border-top: 0 !important;
+  text-shadow: var(--mc-text-shadow);
+}
+
+/* Login: panel sobre la tierra, botón verde */
+html.bte[data-bte-style="minecraft"] m-auth {
+  --bte-field-bg: #dedede;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-auth,
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-auth .m-login__wrapper {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-auth .m-login__body {
+  padding: 4px !important;
+  border: var(--mc-line) !important;
+  background-color: var(--mc-panel) !important;
+  box-shadow: var(--mc-raised), 6px 6px 0 rgba(0, 0, 0, 0.4) !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-auth .m-login__title h1 {
+  color: #404040 !important;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z) m-auth .mat-stroked-button {
+  min-height: 40px !important;
+}
+
+/* Scrollbars de bloque */
+html.bte[data-bte-style="minecraft"]:not(#bte-z)::-webkit-scrollbar-track,
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, app-root, #bte-overlay) ::-webkit-scrollbar-track {
+  background: #373737;
+}
+
+html.bte[data-bte-style="minecraft"]:not(#bte-z)::-webkit-scrollbar-thumb,
+html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-pages, app-root, #bte-overlay) ::-webkit-scrollbar-thumb {
+  background: #c6c6c6;
+  border: 2px solid #000000;
+  box-shadow: var(--mc-raised);
+}
+
+/* Cursor j/k: el marco de la casilla seleccionada */
+html.bte[data-bte-style="minecraft"]:not(#bte-z) .bte-cursor {
+  outline: 2px solid #000000 !important;
+  outline-offset: 0 !important;
+  background-color: #e2e2e2 !important;
+  box-shadow: inset 0 0 0 2px #ffffff !important;
+}
+
+/* UI propia: la paleta es un inventario y la barra de estado, la hotbar */
+html.bte[data-bte-style="minecraft"] .bte-window {
+  padding: 6px;
+  border: var(--mc-line);
+  background: var(--mc-panel);
+  box-shadow: var(--mc-raised), 6px 6px 0 rgba(0, 0, 0, 0.4);
+  color: #1f1f1f;
+  animation-timing-function: steps(2);
+}
+
+html.bte[data-bte-style="minecraft"] .bte-titlebar {
+  padding: 2px 6px 6px;
+  background: transparent;
+  color: #404040;
+}
+
+/* Campo de texto del juego: negro con borde gris y letras blancas */
+html.bte[data-bte-style="minecraft"] .bte-prompt {
+  padding: 8px 10px;
+  border: 2px solid #a0a0a0;
+  background: #000000;
+}
+
+html.bte[data-bte-style="minecraft"] .bte-prompt input {
+  color: #ffffff !important;
+  caret-color: #ffffff;
+}
+
+html.bte[data-bte-style="minecraft"] .bte-prompt input::placeholder,
+html.bte[data-bte-style="minecraft"] .bte-prompt .bte-count {
+  color: #a0a0a0;
+}
+
+html.bte[data-bte-style="minecraft"] .bte-prompt-sigil {
+  color: #ffff55;
+}
+
+html.bte[data-bte-style="minecraft"] .bte-list,
+html.bte[data-bte-style="minecraft"] .bte-help {
+  margin-top: 6px;
+}
+
+html.bte[data-bte-style="minecraft"] .bte-item:hover {
+  background: #e2e2e2;
+}
+
+html.bte[data-bte-style="minecraft"] .bte-item[aria-selected="true"] {
+  background: #555555;
+  color: #ffffff;
+  box-shadow: var(--mc-sunken);
+}
+
+html.bte[data-bte-style="minecraft"] .bte-item[aria-selected="true"] :is(.bte-item-meta, .bte-item-mark) {
+  color: #e0e0e0;
+}
+
+html.bte[data-bte-style="minecraft"] .bte-item[aria-selected="true"] mark {
+  color: #ffff55;
+}
+
+html.bte[data-bte-style="minecraft"] .bte-footer {
+  border: 0;
+  background: transparent;
+  color: #404040;
+}
+
+html.bte[data-bte-style="minecraft"] #bte-overlay {
+  background: rgba(16, 16, 16, 0.6);
+}
+
+html.bte[data-bte-style="minecraft"] #bte-statusline {
+  height: 30px;
+  padding: 2px;
+  gap: 2px;
+  background: #212121;
+  border-top: 2px solid #000000;
+  color: #ffffff;
+}
+
+html.bte[data-bte-style="minecraft"] #bte-statusline .bte-seg {
+  background: #555555;
+  color: #ffffff;
+  box-shadow: var(--mc-sunken);
+  text-shadow: var(--mc-text-shadow);
+}
+
+html.bte[data-bte-style="minecraft"] #bte-statusline .bte-mode {
+  background: var(--mc-grass-btn);
+  box-shadow: var(--mc-btn);
+}
+
+html.bte[data-bte-style="minecraft"] #bte-statusline .bte-mode[data-mode="cmd"] { background: #6a2c8f; }
+html.bte[data-bte-style="minecraft"] #bte-statusline .bte-mode[data-mode="nav"] { background: #1f7a74; }
+html.bte[data-bte-style="minecraft"] #bte-statusline .bte-mode[data-mode="g"] { background: #9c4f18; }
+
+html.bte[data-bte-style="minecraft"] #bte-statusline :is(.bte-msg, .bte-hint) {
+  background: transparent;
+  color: #e0e0e0;
+  box-shadow: none;
+}
+
+html.bte[data-bte-style="minecraft"] #bte-statusline .bte-miyu {
+  border: 0;
+}
+
+html.bte[data-bte-style="minecraft"] #bte-statusline .bte-theme {
+  background: var(--mc-stone);
+  box-shadow: var(--mc-btn);
+}
+
+html.bte[data-bte-style="minecraft"] #bte-statusline .bte-clock {
+  background: #000000;
+  border: 0;
+  box-shadow: none;
+}
+
+html.bte[data-bte-style="minecraft"] #bte-statusline .bte-clickable:hover {
+  color: #ffffa0;
+}
+
+html.bte[data-bte-style="minecraft"] #bte-statusline kbd {
+  color: #ffff55;
+}
+
+/* Aviso: como un logro desbloqueado */
+html.bte[data-bte-style="minecraft"] #bte-toast {
+  bottom: 40px;
+  padding: 8px 12px;
+  background: #212121;
+  border: 2px solid #555555;
+  outline: 2px solid #000000;
+  color: #ffff55;
+  box-shadow: inset 2px 2px 0 #3a3a3a;
+  text-shadow: 2px 2px 0 #3f3f15;
+}
+
+html.bte.bte-top[data-bte-style="minecraft"] body {
+  padding-bottom: 30px !important;
+}
+
+@media (max-width: 899px) {
+  html.bte[data-bte-style="minecraft"]:not(#bte-z) main.layout-main > m-aside-left.m-aside-left {
+    background-color: var(--mc-panel) !important;
+    border-right: var(--mc-line) !important;
+  }
+
+  html.bte[data-bte-style="minecraft"]:not(#bte-z) .EMINUSPleca {
+    margin: 10px 10px 0 !important;
+  }
+
+  html.bte[data-bte-style="minecraft"]:not(#bte-z) :where(m-course-list > .container, .m-content-sub > .container, #activity-content > div) {
+    padding: 10px 12px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  html.bte[data-bte-style="minecraft"]:not(#bte-z) m-header a.m-brand__logo-wrapper::before {
+    content: "E";
+    padding: 0 10px;
+  }
+
+  html.bte[data-bte-style="minecraft"]:not(#bte-z) #bte-header-links {
+    gap: 4px;
+    padding-left: 4px;
+  }
+
+  html.bte[data-bte-style="minecraft"]:not(#bte-z) #bte-header-links button {
+    min-width: 0;
+    height: 30px;
+    padding: 0 6px !important;
+    font-size: 0.88em;
   }
 }
