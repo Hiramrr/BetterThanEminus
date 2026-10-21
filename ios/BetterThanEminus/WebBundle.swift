@@ -15,7 +15,7 @@ struct WebBundle {
         "app/app.html", "app/app.css", "app/app.js",
         "popup/popup.html", "popup/popup.css", "popup/popup.js",
         "src/prefs.js", "src/boot.js", "src/bg.js", "src/themes.css", "src/bg.css",
-        "web/shim.js", "web/app-prefs.js", "web/app-mobile.css", "web/app-mobile.js", "web/popup-mobile.css"
+        "web/shim.js", "web/app-prefs.js", "web/app-mobile.css", "web/app-mobile.js", "web/popup-mobile.css", "web/popup-mobile.js"
     ]
 
     let files: [String: String]

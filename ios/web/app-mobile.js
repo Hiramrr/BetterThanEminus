@@ -24,8 +24,10 @@
     const text = btn && btn.lastChild;
     if (text && text.nodeType === Node.TEXT_NODE) text.textContent = " " + label;
   };
-  renameTab("miyu", "resumen");
-  renameTab("grades", "notas");
+  renameTab("agenda", "Agenda");
+  renameTab("courses", "Cursos");
+  renameTab("miyu", "Resumen");
+  renameTab("grades", "Notas");
 
   const ICONS = {
     filter: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',
@@ -39,7 +41,11 @@
     ["all", "a", "Mostrar entregadas y cursos anteriores"],
     ["refresh", "r", "Actualizar"]
   ].map(([id, k, label]) => `<button type="button" data-k="${k}" data-tool="${id}" aria-label="${label}" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[id]}</svg></button>`).join("");
-  document.querySelector(".topbar").appendChild(tools);
+  const heading = document.createElement("div");
+  heading.className = "m-page-heading";
+  heading.innerHTML = '<div class="m-page-date"></div><div class="m-page-title"><h1>Agenda</h1></div><p class="m-page-summary"></p>';
+  heading.querySelector(".m-page-title").appendChild(tools);
+  document.querySelector(".topbar").prepend(heading);
   tools.querySelector('[data-tool="refresh"]').removeAttribute("aria-pressed");
 
   tools.addEventListener("click", (e) => {
@@ -63,7 +69,7 @@
   document.body.insertBefore(filterWrap, main);
   const filterInput = $("filter");
   filterInput.setAttribute("enterkeyhint", "done");
-  filterInput.setAttribute("placeholder", "filtrar…");
+  filterInput.setAttribute("placeholder", "Buscar una tarea o un curso");
 
   // Mientras carga, el botón de actualizar gira.
   const mode = $("mode");
@@ -215,37 +221,64 @@
   new MutationObserver(fixEmpty).observe($("list"), { childList: true });
   fixEmpty();
 
-  // Resumen: fecha de hoy y pendientes. Los números salen de los contadores
-  // que app.js calcula desde la caché, así que no se toca la red ni la
-  // sesión. renderDash reescribe el panel: se vuelve a poner arriba.
-  const dashHead = document.createElement("div");
-  dashHead.className = "m-dash-head";
-  dashHead.innerHTML = '<div class="m-dash-date"></div><div class="m-dash-counts"></div>';
+  // El encabezado usa los mismos contadores que la agenda.
   const dateFmt = new Intl.DateTimeFormat("es", { weekday: "long", day: "numeric", month: "long" });
-  const ensureDashHead = () => {
-    const dash = $("dash");
-    if (!dash || !dash.childNodes.length) return;
-    if (dash.firstChild !== dashHead) dash.insertBefore(dashHead, dash.firstChild);
-    dashHead.children[0].textContent = dateFmt.format(new Date());
+  const syncHeading = () => {
+    const view = document.querySelector('.views button[aria-current="page"]');
+    heading.querySelector("h1").textContent = viewName();
+    heading.querySelector(".m-page-date").textContent = dateFmt.format(new Date());
     const num = (sel) => {
       const el = document.querySelector("#counters " + sel + " b");
-      return el ? el.textContent.trim() : "";
+      return el ? Number(el.textContent.trim()) : 0;
     };
-    const parts = [];
-    const overdue = num(".c-overdue");
-    const today = num(".c-today");
-    const week = num(".c-week");
-    if (overdue !== "") parts.push(overdue + " vencidas");
-    if (today !== "") parts.push(today + " hoy");
-    if (week !== "") parts.push(week + " en 7 días");
-    dashHead.children[1].textContent = parts.join(" · ");
-    dashHead.children[1].hidden = !parts.length;
+    let summary;
+    if (view?.dataset.view === "courses") summary = "Tus materias y el avance de tus entregas";
+    else if (view?.dataset.view === "grades") summary = $("list-title").textContent.replace(/^tareas calificadas · /, "");
+    else {
+      const parts = [];
+      const today = num(".c-today");
+      const overdue = num(".c-overdue");
+      if (today) parts.push(today + (today === 1 ? " entrega hoy" : " entregas hoy"));
+      if (overdue) parts.push(overdue + (overdue === 1 ? " vencida" : " vencidas"));
+      summary = parts.join(" · ") || "Tus próximas entregas, en un solo lugar";
+    }
+    heading.querySelector(".m-page-summary").textContent = summary;
   };
-  if ($("dash")) {
-    new MutationObserver(ensureDashHead).observe($("dash"), { childList: true });
-    ensureDashHead();
-  }
-  if ($("counters")) new MutationObserver(ensureDashHead).observe($("counters"), { childList: true, subtree: true, characterData: true });
+  new MutationObserver(syncHeading).observe(document.querySelector(".views"), { attributes: true, subtree: true, attributeFilter: ["aria-current"] });
+  new MutationObserver(syncHeading).observe($("list-title"), { childList: true });
+  new MutationObserver(syncHeading).observe($("counters"), { childList: true, subtree: true, characterData: true });
+  syncHeading();
+
+  // Las barras conservan los datos del render compartido con escritorio.
+  const decorateProgress = () => {
+    for (const group of main.querySelectorAll(".group:not([data-mobile])")) {
+      group.dataset.mobile = "true";
+      const text = group.firstChild;
+      if (text?.nodeType === Node.TEXT_NODE) text.textContent = text.textContent.replace(/^\p{L}/u, (c) => c.toUpperCase());
+    }
+    for (const bar of main.querySelectorAll(".bar[data-total]:not([data-mobile])")) {
+      bar.dataset.mobile = "true";
+      const done = Number(bar.dataset.done);
+      const total = Number(bar.dataset.total);
+      const progress = document.createElement("progress");
+      progress.max = total || 1;
+      progress.value = done;
+      progress.setAttribute("aria-label", `${done} de ${total} actividades entregadas`);
+      const label = document.createElement("span");
+      label.textContent = `${done} de ${total} entregadas`;
+      bar.replaceChildren(progress, label);
+    }
+    for (const row of main.querySelectorAll(".load-row:not([data-mobile])")) {
+      row.dataset.mobile = "true";
+      const progress = document.createElement("progress");
+      progress.max = Math.max(5, ...Array.from(main.querySelectorAll(".load-row .n"), (n) => Number(n.textContent)));
+      progress.value = Number(row.querySelector(".n").textContent);
+      progress.setAttribute("aria-label", `${row.querySelector(".day").textContent}: ${progress.value} entregas`);
+      row.querySelector(".blocks").replaceChildren(progress);
+    }
+  };
+  new MutationObserver(decorateProgress).observe(main, { childList: true, subtree: true });
+  decorateProgress();
 
   // La línea de estado lleva carga y errores: se anuncia a VoiceOver.
   if ($("msg")) $("msg").setAttribute("aria-live", "polite");

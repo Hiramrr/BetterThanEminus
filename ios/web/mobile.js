@@ -58,8 +58,9 @@
     html = html.replace("<head>", "<head>" + head);
     const extraCss = files[kind === "app" ? "web/app-mobile.css" : "web/popup-mobile.css"] || "";
     html = html.replace("</head>", "<style>" + extraCss + "</style></head>");
-    if (kind === "app" && files["web/app-mobile.js"]) {
-      html = html.replace("</body>", "<script>" + safeJs(files["web/app-mobile.js"]) + "</script></body>");
+    const mobileScript = files[kind === "app" ? "web/app-mobile.js" : "web/popup-mobile.js"];
+    if (mobileScript) {
+      html = html.replace("</body>", "<script>" + safeJs(mobileScript) + "</script></body>");
     }
     return html;
   };
@@ -515,9 +516,9 @@
       settings = document.createElement("div");
       settings.id = "bte-settings";
       settings.hidden = true;
-      settings.innerHTML = `<div class="m-sheet" role="dialog" aria-label="ajustes">
-        <div class="m-sheet-head"><span>ajustes</span><button type="button" class="m-close" aria-label="Cerrar">✕</button></div>
-        <iframe title="ajustes"></iframe>
+      settings.innerHTML = `<div class="m-sheet" role="dialog" aria-label="Ajustes">
+        <div class="m-sheet-head"><span>Ajustes</span><button type="button" class="m-close" aria-label="Cerrar">✕</button></div>
+        <iframe title="Ajustes"></iframe>
       </div>`;
       settings.addEventListener("click", (e) => {
         if (e.target === settings || e.target.closest(".m-close")) closeSettings();
@@ -805,18 +806,18 @@
       return;
     }
     const html =
-      '<div class="m-profiles-brand">better than eminus</div>' +
-      '<div class="m-profiles-title">' + (profiles.length === 1 ? "tu perfil" : "elige un perfil") + "</div>" +
+      '<div class="m-profiles-brand">Eminus</div>' +
+      '<div class="m-profiles-title">' + (profiles.length === 1 ? "Continúa con tu perfil" : "Elige un perfil") + "</div>" +
       profiles.map((p) => {
         const photo = avatarOf(p.user);
         const busy = tryingUser === p.user;
         const initial = esc((p.name || p.user).trim().charAt(0).toUpperCase());
         return `<button type="button" class="m-profile" data-user="${esc(p.user)}"${busy ? ' aria-busy="true"' : ""}>` +
           `<span class="m-avatar">${photo ? `<img src="${esc(photo)}" alt="" />` : initial}</span>` +
-          `<span class="m-who"><b>${esc(p.name.toLowerCase())}</b><i>${busy ? "entrando…" : esc(p.user)}</i></span>` +
-          '<span class="m-go">❯</span></button>';
+          `<span class="m-who"><b>${esc(p.name)}</b><i>${busy ? "Entrando…" : esc(p.user)}</i></span>` +
+          '<span class="m-go">›</span></button>';
       }).join("") +
-      '<button type="button" class="m-profile-new" data-a="new">+ iniciar con otro perfil</button>';
+      '<button type="button" class="m-profile-new" data-a="new">Iniciar con otro perfil</button>';
     if (profilesEl.innerHTML !== html) profilesEl.innerHTML = html;
     profilesEl.hidden = false;
   };

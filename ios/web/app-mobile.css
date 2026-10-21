@@ -1,163 +1,108 @@
-/*
- * App de iOS: la vista tui (agenda, cursos, miyu, calificaciones) en el
- * teléfono. Un panel a la vez: lista → (actividades) → detalle, con las
- * vistas como pestañas arriba. app-mobile.js lleva la pila (data-m-stack).
- */
-
+/* La agenda comparte datos y navegación con escritorio, con composición de iOS. */
 html.bte-app {
+  --m-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
 }
-
 html.bte-app body {
   display: flex;
   flex-direction: column;
-  font-size: 16px;
-  line-height: 1.5;
+  font: 16px/1.5 var(--m-font);
+  text-shadow: none;
   -webkit-user-select: none;
   user-select: none;
 }
+html.bte-app :is(button, input) { font-family: inherit; }
+html.bte-app :is(input, .detail, .rich) { -webkit-user-select: text; user-select: text; }
+html.bte-app :is(.brand, .clock, .views kbd, .pane-title) { display: none; }
 
-/* Controles en sans de sistema; filas y datos usan la mono del tema. */
-html.bte-app :is(.topbar, .filter, .m-back, .btn, .statusline, .m-dash-head, .splash-box) {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-}
-
-html.bte-app input {
-  -webkit-user-select: text;
-  user-select: text;
-}
-
-html.bte-app .detail,
-html.bte-app .rich {
-  -webkit-user-select: text;
-  user-select: text;
-}
-
-/* ─────────────── pestañas ─────────────── */
-
+html.bte-app .topbar,
 html.bte-app.embedded .topbar {
   display: flex;
   flex: none;
-  height: 46px;
-  padding: 0 max(4px, env(safe-area-inset-right)) 0 max(4px, env(safe-area-inset-left));
-  gap: 4px;
-  align-items: center;
+  flex-direction: column;
+  height: auto;
+  padding: 20px 20px 0;
+  background: var(--bte-bg);
+  border-bottom: 1px solid var(--bte-border);
+  white-space: normal;
 }
-
-html.bte-app .brand,
-html.bte-app .clock,
-html.bte-app .views kbd {
-  display: none;
+.m-page-date {
+  color: var(--bte-dim);
+  font-size: 13px;
+  font-weight: 500;
 }
-
-html.bte-app .views {
-  flex: 1;
-  min-width: 0;
-  gap: 4px;
-  overflow-x: auto;
-  scrollbar-width: none;
+.m-page-date::first-letter { text-transform: uppercase; }
+.m-page-title { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.m-page-title h1 {
+  margin: 0;
+  color: var(--bte-fg-strong);
+  font: 700 32px/1.25 var(--m-font);
+  letter-spacing: -0.8px;
 }
-
-html.bte-app .views::-webkit-scrollbar {
-  display: none;
-}
-
+.m-page-summary { margin: 6px 0 12px; color: var(--bte-dim); font-size: 14px; }
+.m-page-summary::first-letter { text-transform: uppercase; }
+html.bte-app body:has(main:is([data-m-stack="mid"], [data-m-stack="detail"])) .m-page-heading { display: none; }
+html.bte-app body:has(main:is([data-m-stack="mid"], [data-m-stack="detail"])) .topbar { padding-top: 0; }
+html.bte-app .views { display: flex; flex-wrap: wrap; width: 100%; gap: 0 8px; }
 html.bte-app .views button {
-  display: flex;
-  flex: none;
-  align-items: center;
-  height: 44px;
-  padding: 0 12px;
+  flex: 1 0 64px;
+  min-width: 64px;
+  height: 48px;
+  padding: 0;
   border: 0;
   border-bottom: 2px solid transparent;
   border-radius: 0;
   background: none;
-  font-size: 15px;
   color: var(--bte-dim);
-  touch-action: manipulation;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
 }
-
-html.bte-app .views button:hover {
-  background: none;
-  color: var(--bte-dim);
-}
-
 html.bte-app .views button[aria-current="page"] {
+  background: none;
   border-bottom-color: var(--bte-accent);
   color: var(--bte-fg-strong);
   font-weight: 700;
-  text-shadow: none;
 }
-
-html.bte-app .m-tools {
-  display: flex;
-  flex: none;
-  gap: 4px;
-}
-
-html.bte-app .m-tools button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.m-tools { display: flex; flex: none; margin-left: auto; }
+.m-tools button {
+  display: grid;
+  place-items: center;
   width: 44px;
   height: 44px;
+  padding: 0;
   border: 0;
   border-radius: 4px;
   background: none;
   color: var(--bte-dim);
-  touch-action: manipulation;
 }
-
-html.bte-app .m-tools button[aria-pressed="true"] {
-  color: var(--bte-accent);
-  background: var(--bte-bg1);
-}
-
-html.bte-app .m-tools svg {
-  flex: none;
+.m-tools button[aria-pressed="true"] { color: var(--bte-accent); background: var(--bte-bg2); }
+.m-tools svg {
   width: 21px;
   height: 21px;
   stroke: currentColor;
-  stroke-width: 1.8;
+  stroke-width: 1.7;
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-
-html.bte-app .m-tools button.m-spin svg {
-  animation: m-spin 0.9s linear infinite;
-}
-
-@keyframes m-spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Filtro: bajo las pestañas (el teclado taparía la barra de abajo). */
+.m-tools button.m-spin svg { animation: m-spin 0.9s linear infinite; }
+@keyframes m-spin { to { transform: rotate(360deg); } }
 html.bte-app .filter {
   display: flex;
   flex: none;
   align-items: center;
   gap: 8px;
-  height: 48px;
+  height: 56px;
+  padding: 4px 20px;
   margin: 0;
-  padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
   border-bottom: 1px solid var(--bte-border);
   background: var(--bte-bg0);
 }
-
-html.bte-app .filter[hidden] {
-  display: none;
-}
-
-html.bte-app .filter input {
-  flex: 1;
-  width: auto;
-  font-size: 16px;
-  height: 40px;
-}
-
-/* ─────────────── paneles ─────────────── */
+html.bte-app .filter[hidden] { display: none; }
+html.bte-app .filter > span { display: none; }
+html.bte-app .filter input { flex: 1; min-width: 0; width: auto; height: 44px; font-size: 16px; }
 
 html.bte-app main,
 html.bte-app main.view-courses,
@@ -167,384 +112,163 @@ html.bte-app main.view-miyu {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  padding: 16px max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left));
+  padding: 0 20px 24px;
 }
-
-html.bte-app .pane {
-  margin-bottom: 18px;
-}
-
-html.bte-app .pane-body {
-  overflow: visible;
-  padding: 10px 0 6px;
-}
-
-html.bte-app .pane.focused {
-  border-color: var(--bte-border);
-}
-
-html.bte-app .pane.focused .pane-title {
-  color: var(--bte-dim);
-}
-
-/* Una sola cosa a la vez. */
+html.bte-app .pane { margin: 0; border: 0; }
+html.bte-app .pane-body { padding: 0; overflow: visible; }
 html.bte-app main[data-m-stack="list"] #pane-mid,
-html.bte-app main[data-m-stack="mid"] #pane-list,
-html.bte-app main[data-m-stack="mid"] #pane-dash,
-html.bte-app main #pane-detail {
-  display: none;
-}
-
-html.bte-app main.view-courses[data-m-stack="mid"] #pane-mid {
+html.bte-app main[data-m-stack="mid"] :is(#pane-list, #pane-dash),
+html.bte-app main[data-m-stack="detail"] :is(#pane-list, #pane-dash, #pane-mid),
+html.bte-app main #pane-detail { display: none; }
+html.bte-app main.view-courses[data-m-stack="mid"] #pane-mid { display: flex; }
+html.bte-app main.view-miyu[data-m-stack="list"] #pane-dash:not([hidden]) { display: flex; }
+html.bte-app main[data-m-stack="detail"] { padding: 0; overflow: hidden; }
+html.bte-app main[data-m-stack="detail"] #pane-detail { display: flex; height: 100%; }
+html.bte-app main[data-m-stack="detail"] .detail { overflow-y: auto; overscroll-behavior: contain; padding: 0 0 24px; }
+html.bte-app .group {
   display: flex;
-}
-
-/* El detalle se desliza encima de la lista. */
-html.bte-app main[data-m-stack="detail"] #pane-detail {
-  display: flex;
-  position: fixed;
-  inset: 46px 0 calc(32px + env(safe-area-inset-bottom, 0px)) 0;
-  z-index: 8;
+  align-items: baseline;
+  gap: 8px;
   margin: 0;
-  border: 0;
-  background: var(--bte-bg);
-  animation: m-slide-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  padding: 24px 0 8px;
+  color: var(--bte-fg-strong);
+  font-size: 17px;
+  font-weight: 650;
+  white-space: normal;
 }
-
-html.bte-app main[data-m-stack="detail"] #pane-detail .pane-title {
-  display: none;
+html.bte-app .group::first-letter { text-transform: uppercase; }
+html.bte-app :is(.group, .dash-label, .section-label)::before { content: none; }
+html.bte-app .group::after { content: attr(data-count); color: var(--bte-dim); font-size: 13px; font-weight: 400; }
+html.bte-app .grade-group { display: block; font-size: 15px; }
+html.bte-app .grade-group::after { content: " · " attr(data-count); }
+html.bte-app .row,
+html.bte-app .row.act-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 12px;
+  grid-template-areas: "st title arrow" ". course arrow" ". due arrow";
+  align-items: start;
+  gap: 4px 12px;
+  min-height: 92px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--bte-border);
+  white-space: normal;
+  touch-action: manipulation;
 }
-
-html.bte-app main[data-m-stack="detail"] #pane-detail .pane-body {
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  padding: 0 0 24px;
+html.bte-app .row.act-row { grid-template-areas: "st title arrow" ". due arrow"; min-height: 80px; }
+html.bte-app .row::after {
+  content: "›";
+  grid-area: arrow;
+  align-self: center;
+  color: var(--bte-dim);
+  font: 400 24px/1 var(--m-font);
 }
-
-@keyframes m-slide-in {
-  from { transform: translateX(30%); opacity: 0.4; }
+html.bte-app .row .st {
+  grid-area: st;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border: 1.5px solid var(--bte-dim);
+  border-radius: 50%;
+  font-size: 0;
 }
-
-/* Barra de volver (panel de actividades y detalle). */
+html.bte-app .row.u-done .st { color: var(--bte-green) !important; border-color: var(--bte-green); font-size: 13px; }
+html.bte-app .row.u-overdue .st { color: var(--bte-red) !important; border-color: var(--bte-red); font: 700 13px/1 var(--m-font); }
+html.bte-app .row .title {
+  grid-area: title;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--bte-fg-strong);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+html.bte-app .row .course { display: block; grid-area: course; font-size: 14px; line-height: 1.4; }
+html.bte-app .row .due { grid-area: due; font-size: 13px; line-height: 1.4; }
+html.bte-app .pane .row[aria-selected="true"] :is(.course, .meta, .bar),
+html.bte-app .row :is(.course, .meta, .bar) { color: var(--bte-dim) !important; }
+html.bte-app .pane .row[aria-selected="true"] .due,
+html.bte-app .row .due { color: var(--bte-dim) !important; }
+html.bte-app .pane .row.u-overdue .due { color: var(--bte-red) !important; font-weight: 600; }
+html.bte-app .pane .row.u-imminent .due { color: var(--bte-orange) !important; font-weight: 600; }
+html.bte-app .pane .row.u-done .title { color: var(--bte-dim); }
+html.bte-app .pane .row:hover,
+html.bte-app .pane .row[aria-selected="true"] { background: none; color: inherit; }
+html.bte-app .pane .row.m-press[aria-selected],
+html.bte-app .row.m-press { background: var(--bte-bg1); }
+html.bte-app .row.course-row { grid-template-areas: "title arrow" "meta arrow"; grid-template-columns: minmax(0, 1fr) 12px; gap: 12px; padding: 20px 0; }
+html.bte-app .row.course-row .title { font-size: 18px; }
+html.bte-app .row.course-row > :is(.bar, .meta) { grid-area: meta; }
+html.bte-app .bar[data-mobile] { display: grid; gap: 8px; width: 100%; color: var(--bte-dim); font-size: 13px; letter-spacing: 0; }
+html.bte-app progress { appearance: none; -webkit-appearance: none; width: 100%; height: 4px; border: 0; border-radius: 2px; overflow: hidden; background: var(--bte-bg2); color: var(--bte-accent); }
+html.bte-app progress::-webkit-progress-bar { background: var(--bte-bg2); border-radius: 2px; }
+html.bte-app progress::-webkit-progress-value { background: var(--bte-accent); border-radius: 2px; }
+html.bte-app progress::-moz-progress-bar { background: var(--bte-accent); }
+html.bte-app .empty-note { padding: 32px 0 20px; font-size: 16px; line-height: 1.6; }
+html.bte-app .m-empty-actions { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 24px; }
+html.bte-app .btn { min-height: 48px; padding: 12px 16px; border-radius: 4px; font-size: 16px; font-weight: 600; }
+html.bte-app .btn::before,
+html.bte-app .btn::after { content: none; }
 html.bte-app .m-back {
   position: sticky;
   top: 0;
   z-index: 2;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
-  min-height: 48px;
-  padding: 0 max(16px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left));
+  min-height: 52px;
+  padding: 8px 20px;
   border: 0;
   border-bottom: 1px solid var(--bte-border);
-  background: var(--bte-bg0);
+  background: var(--bte-bg);
   color: var(--bte-accent);
-  font: inherit;
-  font-size: 16px;
-  font-weight: 700;
+  font: 16px/1.4 var(--m-font);
   text-align: left;
 }
-
-html.bte-app .m-back span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--bte-dim);
-  font-weight: 400;
-}
-
-html.bte-app .m-back span:empty {
-  display: none;
-}
-
-html.bte-app #pane-mid .m-back {
-  margin-top: -10px;
-}
-
-/* ─────────────── filas ─────────────── */
-
-html.bte-app .group {
-  padding: 14px 16px 6px;
-  font-size: 13px;
-}
-
-html.bte-app .row,
-html.bte-app .row.act-row {
-  grid-template-columns: 2ch minmax(0, 1fr) auto;
-  grid-template-areas:
-    "st title title"
-    "st due course";
-  gap: 2px 10px;
-  align-items: baseline;
-  min-height: 56px;
-  padding: 10px 16px;
-  white-space: normal;
-  touch-action: manipulation;
-}
-
-html.bte-app .row .st { grid-area: st; align-self: start; }
-html.bte-app .row .due { grid-area: due; font-size: 13.5px; white-space: nowrap; }
-html.bte-app .row .course {
-  display: block;
-  grid-area: course;
-  min-width: 0;
-  font-size: 13.5px;
-  text-align: right;
-  white-space: nowrap;
-}
-
-/* La fecha suma negrita al color: no depende sólo del color. */
-html.bte-app .row:is(.u-overdue, .u-imminent, .u-urgent) .due {
-  font-weight: 700;
-}
-
-html.bte-app .row .title {
-  grid-area: title;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.4;
-  color: var(--bte-fg-strong);
-}
-
-html.bte-app .row.u-done .title {
-  color: var(--bte-dim);
-}
-
-html.bte-app .row.course-row {
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "title" "meta";
-}
-
-html.bte-app .row.course-row > :not(.title) {
-  grid-area: meta;
-  font-size: 13.5px;
-}
-
-html.bte-app .row + .row {
-  border-top: 1px dashed color-mix(in oklab, var(--bte-border) 60%, transparent);
-}
-
-/* Sin hover ni selección que seguir: sólo el toque. */
-html.bte-app .row:hover,
-html.bte-app .row[aria-selected="true"],
-html.bte-app .pane.focused .row[aria-selected="true"] {
-  background: none;
-  color: inherit;
-}
-
-/* app.css pinta la fila seleccionada con el acento y sus partes heredan el
-   color; aquí la selección no se ve, así que vuelven sus colores. */
-html.bte-app .pane.focused .row[aria-selected="true"] :is(.due, .meta) { color: var(--bte-dim) !important; }
-html.bte-app .pane.focused .row[aria-selected="true"] .course { color: var(--bte-aqua) !important; }
-html.bte-app .pane.focused .row[aria-selected="true"] .bar { color: var(--bte-green) !important; }
-html.bte-app .pane.focused .row[aria-selected="true"].u-normal .st { color: var(--bte-blue) !important; }
-html.bte-app .pane.focused .row[aria-selected="true"].u-future .st { color: var(--bte-purple) !important; }
-html.bte-app .pane.focused .row[aria-selected="true"].u-done .st { color: var(--bte-green) !important; }
-html.bte-app .pane.focused .row[aria-selected="true"].u-overdue :is(.st, .due) { color: var(--bte-red) !important; }
-html.bte-app .pane.focused .row[aria-selected="true"].u-imminent :is(.st, .due) { color: var(--bte-orange) !important; }
-html.bte-app .pane.focused .row[aria-selected="true"].u-urgent :is(.st, .due) { color: var(--bte-yellow) !important; }
-html.bte-app .pane.focused .row[aria-selected="true"] mark { color: var(--bte-accent); }
-
-html.bte-app .row.m-press,
-html.bte-app .pane .row.m-press[aria-selected="true"] {
-  background: var(--bte-bg2);
-}
-
-html.bte-app .empty-note {
-  padding: 18px 16px;
-  line-height: 1.6;
-}
-
-html.bte-app .m-empty-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 0 16px 16px;
-}
-
-html.bte-app .m-empty-actions .btn {
-  flex: 1 1 auto;
-  text-align: center;
-}
-
-/* ─────────────── detalle ─────────────── */
-
-html.bte-app .detail {
-  font-size: 16px;
-  line-height: 1.6;
-}
-
-html.bte-app .detail > :not(.m-back) {
-  margin-left: max(16px, env(safe-area-inset-left));
-  margin-right: max(16px, env(safe-area-inset-right));
-}
-
-html.bte-app .detail h3 {
-  margin-top: 16px;
-  font-size: 1.25em;
-  line-height: 1.35;
-}
-
-html.bte-app .Detail .sub {
-  margin-bottom: 12px;
-}
-
-html.bte-app .kv {
-  grid-template-columns: 14ch minmax(0, 1fr);
-  gap: 6px 12px;
-  margin-bottom: 14px;
-}
-
-html.bte-app .rich {
-  font-size: 16px;
-  line-height: 1.65;
-}
-
-html.bte-app .rich a {
-  text-decoration: underline;
-}
-
-html.bte-app .rich table {
-  display: block;
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-html.bte-app .actions {
-  flex-direction: column;
-  gap: 10px;
-}
-
-html.bte-app .btn {
-  min-height: 48px;
-  padding: 8px 14px;
-  font-size: 16px;
-  font-weight: 700;
-  touch-action: manipulation;
-}
-
-html.bte-app .actions .btn:first-child {
-  background: var(--bte-accent);
-  border-color: var(--bte-accent);
-  color: var(--bte-accent-fg);
-}
-
-html.bte-app .btn:hover {
-  background: none;
-  border-color: var(--bte-border);
-  color: inherit;
-}
-
-html.bte-app .actions .btn:first-child:hover {
-  background: var(--bte-accent);
-  color: var(--bte-accent-fg);
-}
-
-/* ─────────────── resumen (miyu) ─────────────── */
-
-html.bte-app .dash {
-  padding: 12px 16px 8px;
-}
-
-/* Fecha y pendientes arriba del resumen (los pone app-mobile.js). */
-html.bte-app .m-dash-head {
-  margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--bte-border);
-}
-
-html.bte-app .m-dash-date {
-  color: var(--bte-fg-strong);
-  font-size: 15px;
-  font-weight: 700;
-}
-
-html.bte-app .m-dash-counts {
-  color: var(--bte-dim);
-  font-size: 14px;
-}
-
-html.bte-app .countdown {
-  font-size: 1.6em;
-}
-
-html.bte-app .dash-block {
-  margin-bottom: 16px;
-}
-
-html.bte-app .load-row,
-html.bte-app .feed-row,
-html.bte-app .course-progress {
-  min-height: 30px;
-}
-
-html.bte-app .next-title {
-  white-space: normal;
-}
-
-/* ─────────────── barra de abajo ─────────────── */
-
-html.bte-app .statusline {
-  flex: none;
-  height: calc(32px + env(safe-area-inset-bottom, 0px));
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  font-size: 13px;
-}
-
-/* El error se lee en la línea de estado, en rojo además del modo. */
-html.bte-app .statusline:has(.mode[data-mode="error"]) .msg {
-  color: var(--bte-red);
-}
-
-html.bte-app .statusline :is(.back, .hints, .theme) {
-  display: none;
-}
-
-html.bte-app .counters {
-  gap: 12px;
-  border-left: 0;
-  margin-left: auto;
-}
-
-html.bte-app .counters :is(.c-soon, .c-week) {
-  display: none;
-}
-
-html.bte-app .splash {
-  inset: 0;
-  padding: 24px 16px;
-}
-
-html.bte-app .splash-box p {
-  line-height: 1.6;
-}
-
-html.bte-app .splash-box .actions .btn {
-  text-align: center;
-}
-
-/* Dibujo con caracteres de caja: siempre en monoespaciada. */
-html.bte-app .splash-box pre {
-  font-family: ui-monospace, Menlo, monospace;
-  font-size: 10px;
-}
-
-html.bte-app :is(.btn, .views button, .m-tools button, .m-back, a, input):focus-visible {
-  outline: 2px solid var(--bte-accent);
-  outline-offset: 1px;
-}
-
+html.bte-app .m-back b { font-weight: 500; }
+html.bte-app .m-back span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--bte-dim); font-size: 14px; }
+html.bte-app .m-back span:empty { display: none; }
+html.bte-app #pane-mid .m-back { width: calc(100% + 40px); margin-left: -20px; }
+html.bte-app .detail { font-size: 16px; line-height: 1.6; }
+html.bte-app .detail > :not(.m-back) { margin-left: 20px; margin-right: 20px; }
+html.bte-app .detail h3 { margin-top: 24px; margin-bottom: 8px; font-size: 26px; line-height: 1.25; letter-spacing: -0.4px; }
+html.bte-app .detail .sub { margin-bottom: 24px; color: var(--bte-dim); font-size: 15px; }
+html.bte-app .kv { grid-template-columns: minmax(90px, 34%) minmax(0, 1fr); gap: 10px 16px; padding-bottom: 24px; border-bottom: 1px solid var(--bte-border); font-size: 14px; }
+html.bte-app .kv dd { overflow-wrap: anywhere; }
+html.bte-app .section-label { margin-top: 24px; margin-bottom: 12px; color: var(--bte-fg-strong); font-size: 18px; font-weight: 650; }
+html.bte-app .rich { font-size: 16px; line-height: 1.65; }
+html.bte-app .rich a { text-decoration: underline; }
+html.bte-app .rich table { display: block; max-width: 100%; overflow-x: auto; }
+html.bte-app .rich :is(img, video, iframe) { max-width: 100%; }
+html.bte-app .actions { flex-direction: column; gap: 10px; margin-top: 24px; border-top-style: solid; }
+html.bte-app .actions .btn:first-child { background: var(--bte-accent); border-color: var(--bte-accent); color: var(--bte-accent-fg); }
+html.bte-app .dash { padding: 24px 0 0; }
+html.bte-app .dash-block { margin-bottom: 32px; }
+html.bte-app .dash-label { margin-bottom: 12px; color: var(--bte-fg-strong); font-size: 17px; font-weight: 650; }
+html.bte-app .dash-label::after { content: none; }
+html.bte-app :is(.dash-label, .section-label, .kv dt, .detail .sub)::first-letter { text-transform: uppercase; }
+html.bte-app .next { padding: 16px 0 20px; border: 0; border-bottom: 1px solid var(--bte-border); background: none; }
+html.bte-app .next-title { white-space: normal; font-size: 20px; line-height: 1.35; }
+html.bte-app .next-course { margin-top: 6px; color: var(--bte-dim); font-size: 14px; }
+html.bte-app .countdown { margin: 20px 0 8px; font-size: 36px; letter-spacing: -1px; }
+html.bte-app .next .dim { font-size: 13px; }
+html.bte-app .next > .bar { display: none; }
+html.bte-app .load-row { align-items: center; min-height: 36px; font-size: 14px; }
+html.bte-app .load-row .blocks { display: flex; align-items: center; }
+html.bte-app .course-progress { grid-template-columns: 1fr; gap: 8px; padding: 16px 0; border-bottom: 1px solid var(--bte-border); font-size: 15px; }
+html.bte-app .feed-row { grid-template-columns: 16px 72px minmax(0, 1fr); padding: 12px 0; font-size: 13px; }
+html.bte-app .statusline { flex: none; min-height: 28px; height: auto; padding: 4px 20px; border: 0; background: var(--bte-bg); color: var(--bte-dim); font-size: 11px; }
+html.bte-app .statusline .seg { border: 0; padding: 0; }
+html.bte-app .statusline :is(.back, .hints, .theme, .counters) { display: none; }
+html.bte-app .statusline:has(.mode[data-mode="error"]) .msg { color: var(--bte-red); }
+html.bte-app .splash { inset: 0; padding: 24px 20px; }
+html.bte-app .splash-box pre { font: 10px/1.4 ui-monospace, Menlo, monospace; }
+html.bte-app :is(button, a, input):focus-visible { outline: 2px solid var(--bte-accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
-  html.bte-app main[data-m-stack="detail"] #pane-detail {
-    animation: none;
-  }
-  html.bte-app .m-tools button.m-spin svg {
-    animation: none;
-  }
+  html.bte-app .m-tools button.m-spin svg { animation: none; }
 }

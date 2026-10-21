@@ -3,11 +3,10 @@
   const bte = globalThis.bte;
   const native = globalThis.__bteNative;
   if (!bte || !bte.STYLES) return;
-  // En el teléfono sólo queda el estilo tui, que es el que mejor funciona;
-  // cualquier otro guardado (p. ej. desde la extensión) cae en él.
+  // La estructura compartida mantiene un único estilo en iOS.
   bte.STYLES = bte.STYLES.filter((style) => style.id === "tui");
-  // La app trae ABC Areal empaquetada.
-  bte.DEFAULTS.font = "areal-mono";
+  bte.STYLES[0].font = '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif';
+  bte.DEFAULTS.font = "system";
 
   // La fuente elegida se pide a la app (bytes en base64) y se registra en
   // este documento con FontFace; sólo la familia en uso, una vez.

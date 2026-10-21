@@ -1,118 +1,46 @@
-/*
- * App de iOS: los ajustes (popup de la extensión) dentro de una hoja. La
- * hoja ya tiene título, así que se quita la barra; filas de 44px y letra
- * del teléfono.
- */
-
-html.bte-app {
-  -webkit-text-size-adjust: 100%;
-  -webkit-tap-highlight-color: transparent;
-}
-
+html.bte-app { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
 html.bte-app body {
   width: auto;
-  font-size: 16px;
-  line-height: 1.5;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-  -webkit-user-select: none;
-  user-select: none;
+  font: 16px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  text-shadow: none;
 }
-
-/* En el teléfono sólo hay estilo tui: sin selector de estilo. */
-html.bte-app .bar,
-html.bte-app kbd,
-html.bte-app .keys,
-html.bte-app section:has(#styles) {
-  display: none;
-}
-
-html.bte-app main {
-  padding: 4px max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));
-}
-
-html.bte-app section {
-  padding: 14px 0 12px;
-}
-
-html.bte-app h2 {
-  margin-bottom: 8px;
-  font-size: 13px;
-}
-
-html.bte-app .row {
-  min-height: 44px;
-  gap: 12px;
-}
-
-html.bte-app .toggle {
-  min-height: 48px;
-}
-
-html.bte-app .themes li {
-  min-height: 46px;
-  padding: 6px 12px;
-  touch-action: manipulation;
-}
-
-html.bte-app .themes li.group {
-  min-height: 0;
-  padding-top: 12px;
-}
-
-html.bte-app .themes .swatch i {
-  width: 18px;
-  height: 18px;
-}
-
-html.bte-app button {
-  min-height: 44px;
-  padding: 0 12px;
-  font-size: 16px;
-  touch-action: manipulation;
-}
-
-html.bte-app .open-app {
-  width: 100%;
-  min-height: 50px;
-}
-
-html.bte-app select {
-  width: 100%;
-  min-height: 44px;
-  font-size: 16px;
-}
-
-html.bte-app input[type="range"] {
-  flex: 1;
-  height: 36px;
-}
-
-html.bte-app .lbl {
-  min-width: 7ch;
-}
-
-html.bte-app output {
-  min-width: 4.5ch;
-  text-align: right;
-}
-
-html.bte-app .thumb {
-  width: 64px;
-  height: 64px;
-}
-
-html.bte-app .frame-btns {
-  flex-wrap: wrap;
-}
-
-html.bte-app .zoom button {
+html.bte-app :is(.bar, kbd, .keys, section:has(#styles), section:has(#brackets), .row:has(#font)) { display: none; }
+html.bte-app main { padding: 0 20px 24px; }
+html.bte-app section { padding: 24px 0; border-bottom: 1px solid var(--bte-border); }
+html.bte-app h2 { margin: 0 0 16px; color: var(--bte-fg-strong); font-size: 20px; font-weight: 650; text-transform: none; }
+html.bte-app h2::before { content: none; }
+html.bte-app .note { font-size: 13px; font-weight: 400; color: var(--bte-dim); }
+html.bte-app .row { min-height: 48px; gap: 12px; }
+html.bte-app .toggle { min-height: 48px; }
+html.bte-app .toggle input {
+  position: static;
+  order: 2;
   flex: none;
-  white-space: nowrap;
-  padding: 0 8px;
+  width: 22px;
+  height: 22px;
+  margin: 0 0 0 auto;
+  opacity: 1;
+  pointer-events: auto;
+  accent-color: var(--bte-accent);
 }
-
-html.bte-app .zoom output {
-  flex: 1;
-  text-align: center;
-}
+html.bte-app .toggle .box { display: none; }
+html.bte-app .themes { border: 0; }
+html.bte-app .themes li { min-height: 52px; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--bte-border); touch-action: manipulation; }
+html.bte-app .themes li.group { min-height: 0; margin-top: 12px; padding: 12px 0 4px; border: 0; font-size: 14px; font-weight: 500; }
+html.bte-app .themes li[aria-selected="true"] { background: none; color: var(--bte-fg-strong); }
+html.bte-app .themes li[data-id] > span:first-child { font-size: 0; }
+html.bte-app .themes li[aria-selected="true"] > span:first-child::after { content: "✓"; color: var(--bte-accent); font-size: 18px; }
+html.bte-app .themes .swatch { gap: 4px; border: 0; }
+html.bte-app .themes .swatch i { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--bte-border); }
+html.bte-app button { min-height: 44px; padding: 8px 12px; border: 1px solid var(--bte-border); border-radius: 4px; background: none; font: inherit; touch-action: manipulation; }
+html.bte-app .open-app { width: 100%; min-height: 50px; background: var(--bte-accent); border-color: var(--bte-accent); color: var(--bte-accent-fg); font-weight: 600; }
+html.bte-app input[type="range"] { flex: 1; min-width: 0; height: 36px; accent-color: var(--bte-accent); }
+html.bte-app .lbl { min-width: 80px; font-size: 14px; }
+html.bte-app output { min-width: 42px; text-align: right; font-variant-numeric: tabular-nums; }
+html.bte-app .thumb { width: 64px; height: 64px; border-radius: 4px; font-size: 12px; }
+html.bte-app .frame-btns { flex-wrap: wrap; }
+html.bte-app .zoom { gap: 8px; }
+html.bte-app .zoom button { flex: none; min-width: 44px; white-space: nowrap; padding: 0 8px; }
+html.bte-app .zoom output { flex: 1; text-align: center; }
+html.bte-app :is(button, input, li):focus-visible { outline: 2px solid var(--bte-accent); outline-offset: 2px; }

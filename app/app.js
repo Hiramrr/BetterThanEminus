@@ -486,9 +486,9 @@
   };
 
   const progressBar = (done, total, width = 10) => {
-    if (!total) return `<span class="bar"><span class="empty">${"░".repeat(width)}</span> 0/0</span>`;
+    if (!total) return `<span class="bar" data-done="0" data-total="0"><span class="empty">${"░".repeat(width)}</span> 0/0</span>`;
     const filled = Math.round((done / total) * width);
-    return `<span class="bar">${"█".repeat(filled)}<span class="empty">${"░".repeat(width - filled)}</span> ${done}/${total}</span>`;
+    return `<span class="bar" data-done="${done}" data-total="${total}">${"█".repeat(filled)}<span class="empty">${"░".repeat(width - filled)}</span> ${done}/${total}</span>`;
   };
 
   const renderAgenda = () => {
@@ -700,7 +700,7 @@
         ? progressBar(acts.filter((a) => a.delivered).length, acts.length, 8)
         : `<span class="meta">${state.actsLoading.has(c.id) ? "…" : c.current ? "" : new Date(c.end * 1000).getFullYear()}</span>`;
       html += `<div class="row course-row" role="option" data-index="${i}" aria-selected="${i === state.sel.courses}">
-        <span class="title">${c.favorite ? "★ " : ""}${highlight(c.name.toLowerCase())}</span>${meta}
+        <span class="title">${c.favorite ? "★ " : ""}${highlight(c.name)}</span>${meta}
       </div>`;
     });
     els.list.innerHTML = html || `<div class="empty-note">${state.filter ? "nada coincide" : "sin cursos"}</div>`;

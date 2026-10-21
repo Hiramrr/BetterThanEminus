@@ -29,6 +29,27 @@ html.bte-app body {
   overscroll-behavior-x: none;
 }
 
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) :where(m-pages, m-auth, app-root, .cdk-overlay-container) {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif !important;
+  font-size: 16px;
+  text-shadow: none !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) :where(m-pages, m-auth, app-root) :is(h1, h2, h3, h4, h5, h6)::before,
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) :where(m-pages, m-auth, app-root) :is(button, .btn, .mat-button, .mat-stroked-button)::before,
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) :where(m-pages, m-auth, app-root) :is(button, .btn, .mat-button, .mat-stroked-button)::after {
+  content: none !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) :where(m-pages, m-auth, app-root) .mat-button-wrapper::before,
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) :where(m-pages, m-auth, app-root) .mat-button-wrapper::after {
+  content: none !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) :where(m-pages, m-auth, app-root) :is(button, .btn, .mat-button, .mat-button-wrapper, h1, h2, h3, h4) {
+  text-transform: none !important;
+}
+
 html.bte.bte-app.bte-top:not(#bte-z):not(#bte-y):not(#bte-x) body {
   padding-bottom: var(--m-bottom) !important;
 }
@@ -110,8 +131,10 @@ html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header .m-brand__tools > 
 /* La marca dice el nombre de la app; en la lista de cursos la ruta
    («cursos») sobra a su lado. */
 html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-header a.m-brand__logo-wrapper::before {
-  content: "better than eminus";
+  content: "Eminus";
   padding: 0 12px;
+  font-size: 18px;
+  font-weight: 650;
   white-space: nowrap;
 }
 
@@ -413,12 +436,10 @@ html.bte.bte-app:not(#bte-z):not(#bte-y) :where(m-pages, app-root, .cdk-overlay-
   align-items: stretch;
   height: var(--m-bottom);
   padding: 0 var(--m-safe-r) var(--m-safe-b) var(--m-safe-l);
-  background: color-mix(in oklab, var(--bte-bg0, #1d2021) 94%, transparent);
+  background: var(--bte-bg0, #1d2021);
   border-top: 1px solid var(--bte-border, #504945);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   color: var(--bte-dim, #a89984);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
 }
 
 html:not(.bte) #bte-dock {
@@ -442,7 +463,7 @@ html:not(.bte) #bte-dock {
   color: inherit;
   font: 600 11px/1.1 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   letter-spacing: 0.01em;
-  text-transform: lowercase;
+  text-transform: capitalize;
   cursor: pointer;
 }
 
@@ -466,9 +487,7 @@ html:not(.bte) #bte-dock {
   color: var(--bte-accent, #fabd2f);
 }
 
-#bte-dock button:active {
-  transform: scale(0.94);
-}
+#bte-dock button:active { background: var(--bte-bg1, #32302f); }
 
 #bte-dock .m-badge {
   position: absolute;
@@ -609,12 +628,12 @@ html.bte-app .bte-titlebar > span:first-child {
 
 html.bte-app .m-close {
   flex: none;
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   margin-left: 8px;
   border: 0;
-  border-radius: 17px;
-  background: color-mix(in oklab, currentColor 18%, transparent);
+  border-radius: 4px;
+  background: none;
   color: inherit;
   font: 700 16px/1 system-ui, sans-serif;
   cursor: pointer;
@@ -775,10 +794,9 @@ html.bte-app .bte-help p {
   width: 100%;
   max-width: 640px;
   height: min(92vh, calc(var(--m-vvh) - 8px));
-  border-radius: 16px 16px 0 0;
+  border-radius: 4px 4px 0 0;
   overflow: hidden;
   background: var(--bte-bg, #1d2021);
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.35);
   animation: m-sheet-up 0.24s cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
 
@@ -786,12 +804,12 @@ html.bte-app .bte-help p {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 50px;
-  padding: 10px 8px 6px 16px;
+  min-height: 56px;
+  padding: 6px 8px 6px 20px;
   background: var(--bte-bg0, #1d2021);
   color: var(--bte-fg, #ebdbb2);
   border-bottom: 1px solid var(--bte-border, #504945);
-  font: 700 14px/1.2 var(--bte-mono, ui-monospace, monospace);
+  font: 650 20px/1.2 var(--bte-font, system-ui, sans-serif);
 }
 
 #bte-settings iframe {
@@ -971,11 +989,12 @@ html.bte-app .bte-bg-edit-hint {
 
 html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .m-login__wrapper {
   min-height: calc(100dvh - var(--m-bottom));
-  padding: 24px 16px !important;
+  justify-content: flex-start;
+  padding: 48px 24px 24px !important;
 }
 
 html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth m-login {
-  padding: 20px 18px 18px !important;
+  padding: 0 !important;
 }
 
 /* Sin la barra que imita una ventana: una caja simple del tema. */
@@ -985,19 +1004,42 @@ html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .m-login__body::befo
 }
 
 html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .m-login__body {
-  border: 1px solid var(--bte-border) !important;
+  border: 0 !important;
+  background: transparent !important;
 }
 
 /* El rótulo dibujado con caracteres de caja sólo cuadra en monoespaciada
    (se rompía con ABC Areal): aquí es el nombre de la app, en texto. */
 html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .m-login__title_system::before {
-  content: "better than eminus";
+  content: "Eminus";
   white-space: normal;
-  font-size: 26px;
+  color: var(--bte-fg-strong);
+  font-size: 36px;
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.01em;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .m-login__title h1 {
+  font-size: 18px !important;
+  line-height: 1.5;
+  margin-bottom: 32px !important;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .m-login__title h1::after {
+  content: none !important;
+  animation: none;
+}
+
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .mat-stroked-button {
+  min-height: 50px !important;
+  margin-top: 20px;
+  border-radius: 4px !important;
+  background: var(--bte-accent) !important;
+  color: var(--bte-accent-fg) !important;
+  font-size: 16px !important;
+  font-weight: 600;
 }
 
 /* El aviso de derechos de Eminus queda suelto sobre el fondo. */
@@ -1005,9 +1047,12 @@ html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .bottom_banner_login
   display: none !important;
 }
 
-html.bte.bte-app:not(#bte-z):not(#bte-y) m-auth .mat-stroked-button {
-  min-height: 46px;
-  font-size: 15px !important;
+html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth a.mat-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px !important;
+  font-size: 14px !important;
 }
 
 /* ─────────────────── perfiles ─────────────────── */
@@ -1018,10 +1063,10 @@ html.bte.bte-app:not(#bte-z):not(#bte-y) m-auth .mat-stroked-button {
   z-index: 2147482130;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 10px;
   overflow-y: auto;
-  padding: 24px calc(18px + var(--m-safe-r)) 24px calc(18px + var(--m-safe-l));
+  padding: 48px calc(24px + var(--m-safe-r)) 24px calc(24px + var(--m-safe-l));
   color: var(--bte-fg, #ebdbb2);
   font: 15px/1.3 var(--bte-font, ui-monospace, monospace);
 }
@@ -1037,8 +1082,8 @@ html.bte.bte-app.m-pick:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .m-login__wra
 }
 
 #bte-profiles .m-profiles-brand {
-  color: var(--bte-accent, #fabd2f);
-  font-size: 26px;
+  color: var(--bte-fg-strong, #fbf1c7);
+  font-size: 32px;
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.01em;
@@ -1051,8 +1096,7 @@ html.bte.bte-app.m-pick:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .m-login__wra
 }
 
 #bte-profiles .m-profiles-title::before {
-  content: "$ ";
-  color: var(--bte-green, #b8bb26);
+  content: none;
 }
 
 #bte-profiles .m-profile {
@@ -1061,9 +1105,10 @@ html.bte.bte-app.m-pick:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .m-login__wra
   gap: 14px;
   width: 100%;
   min-height: 76px;
-  padding: 10px 14px;
-  border: 1px solid var(--bte-border, #504945);
-  background: color-mix(in oklab, var(--bte-bg0, #1d2021) 88%, transparent);
+  padding: 16px 0;
+  border: 0;
+  border-bottom: 1px solid var(--bte-border, #504945);
+  background: none;
   color: inherit;
   font: inherit;
   text-align: left;
@@ -1134,7 +1179,8 @@ html.bte.bte-app.m-pick:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .m-login__wra
 #bte-profiles .m-profile-new {
   min-height: 50px;
   margin-top: 6px;
-  border: 1px dashed var(--bte-border, #504945);
+  border: 1px solid var(--bte-border, #504945);
+  border-radius: 4px;
   background: none;
   color: var(--bte-dim, #a89984);
   font: inherit;
@@ -1225,7 +1271,10 @@ html.bte-app :is(.m-close, #bte-settings button, #bte-profiles button, #bte-prof
 }
 
 html.bte.bte-app:not(#bte-z) m-auth m-login::after {
-  content: "guarda tu perfil para renovar la sesión automáticamente. tus borradores se conservan si necesitas volver a entrar.";
+  content: "Guarda tu perfil para renovar la sesión automáticamente. Tus borradores se conservan si necesitas volver a entrar.";
+  margin-top: 32px;
+  text-align: left;
+  font-size: 14px;
 }
 
 @media (prefers-reduced-motion: reduce) {
