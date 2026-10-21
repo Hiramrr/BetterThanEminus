@@ -263,11 +263,12 @@ html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) #m_ver_menu .m-menu__link {
   align-items: center !important;
   justify-content: center !important;
   gap: 6px;
-  height: 34px !important;
-  min-height: 34px !important;
+  height: 38px !important;
+  min-height: 38px !important;
   width: auto !important;
   padding: 0 12px !important;
   border: 1px solid var(--bte-border) !important;
+  border-radius: 4px !important;
   white-space: nowrap;
 }
 
@@ -287,7 +288,7 @@ html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) #m_ver_menu .m-menu__link-t
   align-items: center;
   height: auto !important;
   min-height: 0 !important;
-  font-size: 13.5px !important;
+  font-size: 14px !important;
   overflow: visible;
   white-space: nowrap;
 }
@@ -328,13 +329,13 @@ html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) #m_ver_menu .m-menu__nav {
 
 /* Cabecera del curso compacta: nombre y buscador en columna. */
 html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) .EMINUSPleca :where(.PlecaOverlay, .PlecaOverlayChange) {
-  padding: 10px 14px !important;
+  padding: 12px 16px !important;
 }
 
 html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) :where(m-pages, app-root) .container,
 html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) :where(m-pages, app-root) .container-fluid {
-  padding-left: 12px !important;
-  padding-right: 12px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
   max-width: 100% !important;
 }
 
@@ -414,7 +415,7 @@ html.bte.bte-app:not(#bte-z):not(#bte-y) :where(m-pages, app-root, .cdk-overlay-
   padding: 0 var(--m-safe-r) var(--m-safe-b) var(--m-safe-l);
   background: color-mix(in oklab, var(--bte-bg0, #1d2021) 94%, transparent);
   border-top: 1px solid var(--bte-border, #504945);
-  font-family: var(--bte-font, ui-monospace, monospace);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   color: var(--bte-dim, #a89984);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
@@ -439,10 +440,15 @@ html:not(.bte) #bte-dock {
   border: 0;
   background: none;
   color: inherit;
-  font: 600 10.5px/1.1 var(--bte-font, ui-monospace, monospace);
+  font: 600 11px/1.1 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   letter-spacing: 0.01em;
   text-transform: lowercase;
   cursor: pointer;
+}
+
+#bte-dock button:focus-visible {
+  outline: 2px solid var(--bte-accent, #fabd2f);
+  outline-offset: -2px;
 }
 
 #bte-dock button svg {
@@ -489,7 +495,7 @@ html:not(.bte) #bte-dock {
   bottom: calc(var(--m-bottom) + 8px);
   z-index: 2147482140;
   padding: 5px 10px;
-  border-radius: 999px;
+  border-radius: 4px;
   font: 700 12px/1.3 var(--bte-mono, ui-monospace, monospace);
   background: var(--bte-yellow, #fabd2f);
   color: var(--bte-bg, #1d2021);
@@ -516,7 +522,7 @@ html:not(.bte) #bte-session-m {
   max-width: calc(100vw - 32px);
   padding: 9px 14px;
   border: 1px solid var(--bte-accent, #fabd2f);
-  border-radius: 12px;
+  border-radius: 4px;
   background: var(--bte-bg1, #32302f);
   color: var(--bte-fg, #ebdbb2);
   font: 13px/1.4 var(--bte-font, ui-monospace, monospace);
@@ -643,7 +649,7 @@ html.bte-app .bte-item {
   grid-template-columns: 2ch minmax(0, 1fr) auto;
   min-height: 48px;
   padding: 6px 16px;
-  font-size: 15px;
+  font-size: 16px;
   white-space: normal;
 }
 
@@ -726,7 +732,7 @@ html.bte-app .bte-footer {
 /* Ayuda táctil */
 html.bte-app .bte-help {
   padding: 8px 16px 24px;
-  font-size: 14px;
+  font-size: 15px;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
@@ -895,11 +901,11 @@ html.bte-app #bte-draft-chip {
   right: 8px;
   max-width: none;
   padding: 8px 8px 8px 12px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 html.bte-app #bte-draft-chip button {
-  min-height: 34px;
+  min-height: 40px;
   padding: 4px 12px;
 }
 
@@ -913,7 +919,7 @@ html.bte-app #bte-draft-chip button {
   min-height: 40px;
   padding: 0 18px;
   border: 1px solid var(--bte-accent, #fabd2f);
-  border-radius: 20px;
+  border-radius: 4px;
   background: var(--bte-bg1, #32302f);
   color: var(--bte-accent, #fabd2f);
   font: 700 13px/1 var(--bte-font, ui-monospace, monospace);
@@ -965,7 +971,7 @@ html.bte-app .bte-bg-edit-hint {
 
 html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth .m-login__wrapper {
   min-height: calc(100dvh - var(--m-bottom));
-  padding: 24px 14px !important;
+  padding: 24px 16px !important;
 }
 
 html.bte.bte-app:not(#bte-z):not(#bte-y):not(#bte-x) m-auth m-login {
@@ -1213,9 +1219,21 @@ html.m-keyboard #bte-profiles-back {
   color: var(--bte-accent-fg, #1d2021);
 }
 
+html.bte-app :is(.m-close, #bte-settings button, #bte-profiles button, #bte-profile-save button, #bte-reading-exit, #bte-profiles-back, #m_ver_menu .m-menu__link):focus-visible {
+  outline: 2px solid var(--bte-accent, #fabd2f);
+  outline-offset: 1px;
+}
+
+html.bte.bte-app:not(#bte-z) m-auth m-login::after {
+  content: "guarda tu perfil para renovar la sesión automáticamente. tus borradores se conservan si necesitas volver a entrar.";
+}
+
 @media (prefers-reduced-motion: reduce) {
   html.bte-app :where(#bte-overlay, .bte-window, #bte-settings, .m-sheet, #bte-toast-m, #bte-app-host) {
     animation: none !important;
     transition: none !important;
+  }
+  #bte-dock button:active {
+    transform: none;
   }
 }

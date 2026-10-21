@@ -18,6 +18,12 @@ final class EminusViewController: UIViewController {
     private var downloads: [WKDownload: URL] = [:]
     private var dev: DevBridge?
     private var stash: Stash?
+    private var routeObserver: NSObjectProtocol?
+    private var sessionChange = 0
+    private let loading = UIStackView()
+    private let loadingText = UILabel()
+    private let spinner = UIActivityIndicatorView(style: .medium)
+    private let retry = UIButton(type: .system)
 
     override var preferredStatusBarStyle: UIStatusBarStyle { darkTheme ? .lightContent : .darkContent }
 
@@ -52,12 +58,40 @@ final class EminusViewController: UIViewController {
             webView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
 
+        loading.axis = .vertical
+        loading.spacing = 16
+        loading.alignment = .center
+        loading.translatesAutoresizingMaskIntoConstraints = false
+        loadingText.text = "Conectando con Eminus…"
+        loadingText.textColor = .white
+        loadingText.font = .preferredFont(forTextStyle: .body)
+        loadingText.adjustsFontForContentSizeCategory = true
+        loadingText.numberOfLines = 0
+        loadingText.textAlignment = .center
+        spinner.color = .white
+        spinner.startAnimating()
+        retry.setTitle("Volver a intentar", for: .normal)
+        retry.isHidden = true
+        retry.addAction(UIAction { [weak self] _ in
+            self?.retry.isHidden = true
+            self?.loadingText.text = "Conectando con Eminus…"
+            self?.spinner.startAnimating()
+            self?.webView.load(URLRequest(url: Self.home))
+        }, for: .touchUpInside)
+        [spinner, loadingText, retry].forEach(loading.addArrangedSubview)
+        view.addSubview(loading)
+        NSLayoutConstraint.activate([
+            loading.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loading.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            loading.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 24),
+            loading.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -24)
+        ])
+
         refresh.addTarget(self, action: #selector(pullToRefresh), for: .valueChanged)
         webView.scrollView.refreshControl = refresh
 
-        NotificationCenter.default.addObserver(forName: .bteOpenTarget, object: nil, queue: .main) { [weak self] note in
-            guard let target = note.object as? String else { return }
-            self?.openTarget(target)
+        routeObserver = NotificationCenter.default.addObserver(forName: .bteOpenTarget, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in await self?.openPendingTarget() }
         }
 
         Task { await start() }
@@ -95,9 +129,33 @@ final class EminusViewController: UIViewController {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { self.refresh.endRefreshing() }
     }
 
-    private func openTarget(_ json: String) {
-        let js = "window.bte && bte.goToTarget && bte.goToTarget(\(json));"
-        webView.evaluateJavaScript(js)
+    deinit {
+        if let routeObserver { NotificationCenter.default.removeObserver(routeObserver) }
+    }
+
+    private func openPendingTarget() async {
+        guard let pending = AppRoute.pending else { return }
+        let js = """
+        if (!window.bte || !localStorage.getItem('accessToken') || document.querySelector('m-auth')) return false;
+        if (agenda) {
+          if (!bte.showApp) return false;
+          bte.showApp('agenda');
+        } else {
+          if (!bte.goToTarget) return false;
+          bte.goToTarget(target);
+        }
+        return true;
+        """
+        let target: [String: Any]
+        let agenda: Bool
+        switch pending {
+        case .agenda: target = [:]; agenda = true
+        case .activity(let json):
+            guard let parsed = AppRoute.validatedTarget(json) else { AppRoute.pending = nil; return }
+            target = parsed; agenda = false
+        }
+        let result = try? await webView.callAsyncJavaScript(js, arguments: ["target": target, "agenda": agenda], in: nil, contentWorld: .page)
+        if result as? Bool == true, AppRoute.pending == pending { AppRoute.pending = nil }
     }
 
     fileprivate func openExternal(_ url: URL) {
@@ -123,6 +181,10 @@ final class EminusViewController: UIViewController {
         // Los perfiles sólo se manejan desde la página principal de Eminus,
         // no desde sus iframes.
         if type.hasPrefix("profile.") { return mainFrame ? await handleProfile(type, msg) : nil }
+        if type.hasPrefix("session.") || type.hasPrefix("agenda.") || type == "page.ready" || type == "system.settings" {
+            guard mainFrame else { return nil }
+            return await handleAgenda(type, msg)
+        }
         switch type {
         case "theme":
             if let hex = msg["bg"] as? String, let color = UIColor(hex: hex) {
@@ -130,6 +192,8 @@ final class EminusViewController: UIViewController {
                 webView.backgroundColor = color
                 webView.scrollView.backgroundColor = color
                 refresh.tintColor = (msg["fg"] as? String).flatMap(UIColor.init(hex:))
+                loadingText.textColor = refresh.tintColor
+                spinner.color = refresh.tintColor
             }
             darkTheme = msg["dark"] as? Bool ?? true
             setNeedsStatusBarAppearanceUpdate()
@@ -152,10 +216,16 @@ final class EminusViewController: UIViewController {
             sheet.popoverPresentationController?.sourceView = view
             present(sheet, animated: true)
         case "notify":
-            return await scheduleReminders(msg["items"] as? [[String: Any]] ?? [], ask: msg["ask"] as? Bool ?? false)
+            guard mainFrame else { return nil }
+            let center = UNUserNotificationCenter.current()
+            if msg["ask"] as? Bool == true { _ = try? await center.requestAuthorization(options: [.alert, .sound, .badge]) }
+            ReminderScheduler.enabled = msg["enabled"] as? Bool ?? false
+            let count = await ReminderScheduler.synchronize(tasks: AgendaStore.load()?.tasks ?? [])
+            let status = await center.notificationSettings().authorizationStatus
+            return status == .denied ? "denied" : status == .authorized || status == .provisional ? "on:\(count)" : "off"
         case "notifyStatus":
             let settings = await UNUserNotificationCenter.current().notificationSettings()
-            return settings.authorizationStatus == .authorized ? "on" : settings.authorizationStatus == .denied ? "denied" : "off"
+            return settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional ? "on" : settings.authorizationStatus == .denied ? "denied" : "off"
         case "version":
             return bundle?.version
         case "font":
@@ -171,6 +241,61 @@ final class EminusViewController: UIViewController {
             return AppExpiry.date.map { $0.timeIntervalSince1970 }
         default:
             break
+        }
+        return nil
+    }
+
+    private func handleAgenda(_ type: String, _ msg: [String: Any]) async -> Any? {
+        switch type {
+        case "session.capture":
+            sessionChange += 1
+            let change = sessionChange
+            guard let raw = msg["token"] as? String, let token = SessionService.clean(raw) else { return false }
+            let owner = SessionService.account(of: token)
+            guard !owner.isEmpty else { return false }
+            do {
+                try await SessionService.shared.capture(token: token, user: msg["user"] as? String ?? "")
+                guard change == sessionChange else { return false }
+                await AgendaSync.setAccount(owner)
+                guard change == sessionChange else { return false }
+                if AgendaStore.load() == nil { Task { _ = await AgendaSync.refresh() } }
+                return true
+            } catch { return false }
+        case "session.refresh":
+            do { return ["token": try await SessionService.shared.validToken(forceRefresh: msg["force"] as? Bool ?? false, rejectedToken: msg["rejected"] as? String)] }
+            catch { return nil }
+        case "session.clear":
+            sessionChange += 1
+            let change = sessionChange
+            await SessionService.shared.clear()
+            guard change == sessionChange else { return false }
+            await AgendaSync.clear()
+            AppRoute.pending = nil
+            return true
+        case "agenda.sync":
+            guard let owner = msg["account"] as? String, owner == AgendaSync.account,
+                  let raw = msg["tasks"] as? [[String: Any]], raw.count <= 5000,
+                  let updatedAt = msg["updatedAt"] as? Double, updatedAt.isFinite, updatedAt > 0, updatedAt <= Date().timeIntervalSince1970 + 60 else { return false }
+            let tasks = raw.compactMap { item -> AgendaTask? in
+                guard let id = item["id"] as? String, !id.isEmpty, id.count <= 200,
+                      let title = item["title"] as? String, title.count <= 1000,
+                      let course = item["course"] as? String, course.count <= 500,
+                      let deadline = item["deadline"] as? Double, deadline.isFinite, deadline > 0,
+                      let target = item["target"] as? String, AppRoute.validatedTarget(target) != nil else { return nil }
+                return AgendaTask(id: id, title: title, course: course, deadline: Date(timeIntervalSince1970: deadline), target: target)
+            }
+            guard tasks.count == raw.count else { return false }
+            return await AgendaSync.accept(AgendaSnapshot(tasks: tasks, updatedAt: Date(timeIntervalSince1970: updatedAt), account: owner))
+        case "page.ready":
+            await openPendingTarget()
+        case "system.settings":
+            let settings = ReminderSettingsController(style: .insetGrouped)
+            settings.onChange = { [weak self] in
+                let enabled = ReminderScheduler.enabled
+                self?.webView.evaluateJavaScript("localStorage.setItem('bte:m:notify', '\(enabled ? "on" : "off")')")
+            }
+            present(UINavigationController(rootViewController: settings), animated: true)
+        default: break
         }
         return nil
     }
@@ -199,6 +324,7 @@ final class EminusViewController: UIViewController {
             let name = (msg["name"] as? String ?? "").trimmingCharacters(in: .whitespaces)
             let known = ProfileStore.list().first { $0.user == stash.user }?.name
             let ok = ProfileStore.save(user: stash.user, password: stash.password, name: name.isEmpty ? (known ?? stash.user) : name)
+            if ok { await SessionService.shared.credentialsChanged() }
             self.stash = nil
             return ok
         case "profile.discard":
@@ -241,43 +367,27 @@ final class EminusViewController: UIViewController {
         return result as? String ?? "error"
     }
 
-    /// Avisos locales antes de cada entrega pendiente. Se reemplazan todos
-    /// cada vez: la vista tui manda la lista completa al actualizar.
-    private func scheduleReminders(_ items: [[String: Any]], ask: Bool) async -> String {
-        let center = UNUserNotificationCenter.current()
-        var status = await center.notificationSettings().authorizationStatus
-        if status == .notDetermined && ask {
-            _ = try? await center.requestAuthorization(options: [.alert, .sound, .badge])
-            status = await center.notificationSettings().authorizationStatus
-        }
-        guard status == .authorized else { return status == .denied ? "denied" : "off" }
-        // Sólo los de entregas: el aviso de vencimiento de la app se queda.
-        let old = await center.pendingNotificationRequests().map(\.identifier).filter { $0.hasPrefix("bte-") }
-        center.removePendingNotificationRequests(withIdentifiers: old)
-        await AppExpiry.scheduleWarning()
-        var count = 0
-        for item in items.prefix(60) {
-            guard let id = item["id"] as? String, let at = item["at"] as? Double,
-                  let title = item["title"] as? String else { continue }
-            let date = Date(timeIntervalSince1970: at)
-            guard date > Date() else { continue }
-            let content = UNMutableNotificationContent()
-            content.title = title
-            content.body = item["body"] as? String ?? ""
-            content.sound = .default
-            if let target = item["target"] as? String { content.userInfo = ["target": target] }
-            let parts = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
-            let trigger = UNCalendarNotificationTrigger(dateMatching: parts, repeats: false)
-            try? await center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
-            count += 1
-        }
-        return "on:\(count)"
-    }
+
 }
 
 // MARK: navegación
 
 extension EminusViewController: WKNavigationDelegate, WKUIDelegate, WKDownloadDelegate, QLPreviewControllerDataSource {
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        loading.isHidden = true
+        refresh.endRefreshing()
+        Task { await openPendingTarget() }
+    }
+
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        guard (error as NSError).code != NSURLErrorCancelled else { return }
+        loadingText.text = "No se pudo conectar con Eminus. Revisa tu conexión e inténtalo de nuevo."
+        spinner.stopAnimating()
+        retry.isHidden = false
+        loading.isHidden = false
+        refresh.endRefreshing()
+    }
+
     func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, preferences: WKWebpagePreferences) async -> (WKNavigationActionPolicy, WKWebpagePreferences) {
         if action.shouldPerformDownload { return (.download, preferences) }
         let url = action.request.url

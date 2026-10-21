@@ -19,13 +19,22 @@ El código web es el mismo de la raíz del repositorio (`src/`, `app/`,
 - **Actividades** con un solo scroll: el iframe de Eminus crece con su
   contenido.
 - **Fondo con foto**: se acomoda con los dedos (arrastrar, pellizcar, girar).
-- **Avisos de entrega** (más → *avisos de entrega: activar*): notificación
-  local un día y dos horas antes de cada pendiente.
+- Widgets de pendientes para pantalla de inicio y bloqueo, con acceso a cada
+  actividad. La app comparte la agenda con la extensión mediante App Groups.
+- Live Activity con la próxima entrega y su cuenta regresiva en Dynamic
+  Island y pantalla bloqueada, si vence en las siguientes ocho horas.
+- Avisos locales un día, dos horas y diez minutos antes. iOS conserva los
+  avisos programados aunque la app no esté abierta. En *más → widgets,
+  avisos y sesión* puedes activarlos y consultar su estado.
 - **Perfiles**: al iniciar sesión a mano la app ofrece guardar el perfil.
   Después se entra con un toque desde la pantalla de login, se vuelve a
   entrar sola cuando la sesión vence y se cambia de cuenta en *más →
   perfiles*. Usuario y contraseña van al Llavero de iOS (sólo en este
-  dispositivo); la página nunca puede leer una contraseña guardada.
+  dispositivo). La sesión se renueva cinco minutos antes de vencer, al usar
+  la app o cuando iOS permite una actualización en segundo plano. El login
+  nativo usa el mismo cifrado de Eminus que la versión de Rust. Las
+  credenciales quedan disponibles tras el primer desbloqueo del iPhone para
+  que la renovación funcione con la pantalla bloqueada.
 - **Sólo estilo tui** (los demás no se cargan) y **ABC Areal** empaquetada
   como fuente (carpeta `ios/fonts/`, con licencia: no se sube al repositorio).
 - Archivos de Eminus en vista previa con compartir, enlaces externos en una
@@ -40,9 +49,14 @@ El código web es el mismo de la raíz del repositorio (`src/`, `app/`,
 | `BetterThanEminus/EminusViewController.swift` | WKWebView, navegación, descargas, diálogos y puente con la página |
 | `BetterThanEminus/WebBundle.swift` | Lee el código web e inyecta lo que en la extensión son content scripts |
 | `BetterThanEminus/ProfileStore.swift` | Perfiles de Eminus en el Llavero |
+| `BetterThanEminus/SessionService.swift` | Token en el Llavero y renovación de la sesión |
+| `BetterThanEminus/AgendaSync.swift` | Actualización nativa de tareas y ejecución con BGAppRefreshTask |
+| `BetterThanEminus/ReminderScheduler.swift` | Recordatorios locales, cancelación y límite de avisos |
+| `Shared/` · `Widgets/` | Agenda compartida, widgets y Live Activity |
 | `BetterThanEminus/AppExpiry.swift` | Fecha en que vence la firma, para avisar |
 | `BetterThanEminus/DevBridge.swift` | Sólo desarrollo: evalúa JS en la página desde la terminal |
 | `web/shim.js` | Sustituto de `chrome.storage`, `chrome.runtime` y `chrome.tabs` |
+| `web/agenda.js` | Sincronización entre el navegador y la agenda nativa |
 | `web/app-prefs.js` | Sólo estilo tui y carga de ABC Areal |
 | `web/mobile.js` · `web/mobile.css` | Dock, hojas, avisos y diseño de Eminus en el teléfono |
 | `web/app-mobile.js` · `web/app-mobile.css` | La vista tui con el dedo |
@@ -61,6 +75,52 @@ open BetterThanEminus.xcodeproj
 ```
 
 En Xcode elige tu iPhone y pulsa ▶.
+
+Los dos targets necesitan el App Group `group.mx.hiram.BetterThanEminus`
+en su perfil de firma. Consulta [Widgets/README.md](Widgets/README.md) si
+tu equipo de Apple no admite esa capacidad. La actividad en vivo y los
+recordatorios no necesitan compartir un contenedor con la extensión.
+
+## Activar widgets y avisos
+
+1. Inicia sesión y guarda el perfil para permitir la renovación automática.
+2. En *más → widgets, avisos y sesión*, activa los recordatorios y acepta el
+   permiso de iOS. Ahí puedes consultar la última sincronización.
+3. Mantén pulsada la pantalla de inicio o la pantalla bloqueada, añade un
+   widget y busca Eminus. La agenda se carga al iniciar sesión.
+
+La app guarda hasta 60 tareas en el contenedor compartido. Los widgets no
+reciben tokens ni contraseñas. Cerrar sesión o cambiar de cuenta limpia la
+agenda anterior, termina la Live Activity y cancela sus avisos.
+
+iOS decide cuándo concede tiempo de ejecución en segundo plano. Las tareas
+nuevas y los cambios de fecha se detectan al abrir la app o cuando permite
+una actualización. Los avisos locales ya programados no dependen de esa
+actualización. Esta versión no tiene un servidor de notificaciones push.
+
+La Live Activity se inicia con la app abierta y puede seguir visible al
+cerrarla. No se inicia automáticamente con la app cerrada. Su duración
+máxima es de ocho horas. Al tocar un widget, un aviso o la actividad, la app
+conserva el destino hasta que la página y la sesión estén listas.
+
+## Comprobar los cambios
+
+Desde la raíz del repositorio:
+
+```bash
+node --test ios/tests/*.test.cjs
+swiftc -parse-as-library ios/Shared/Agenda.swift ios/Shared/Checks/AgendaChecks.swift -o /tmp/bte-agenda-checks
+/tmp/bte-agenda-checks
+swiftc -parse-as-library ios/Shared/Agenda.swift ios/BetterThanEminus/ReminderScheduler.swift ios/tests/ReminderChecks.swift -o /tmp/bte-reminder-checks
+/tmp/bte-reminder-checks
+swiftc -parse-as-library ios/BetterThanEminus/ProfileStore.swift ios/BetterThanEminus/SessionService.swift ios/tests/session_test.swift -o /tmp/bte-session-checks
+/tmp/bte-session-checks
+```
+
+Las pruebas no usan credenciales reales ni acceden a Eminus. Cubren cuentas
+distintas, respuestas tardías, renovación tras 401, cifrado, selección de
+tareas y planificación de avisos. Los permisos, la entrega real de avisos y
+la frecuencia de actualización necesitan una comprobación en un iPhone.
 
 ## Renovación automática (cuenta gratuita de Apple)
 

@@ -18,9 +18,14 @@
 
   // ───────────── herramientas arriba ─────────────
 
-  // «tareas calificadas» no cabe junto a las demás pestañas.
-  const gradesTab = document.querySelector('.views button[data-view="grades"]');
-  if (gradesTab) gradesTab.lastChild.textContent = " notas";
+  // Nombres cortos y claros en el teléfono; data-view y teclas intactos.
+  const renameTab = (view, label) => {
+    const btn = document.querySelector('.views button[data-view="' + view + '"]');
+    const text = btn && btn.lastChild;
+    if (text && text.nodeType === Node.TEXT_NODE) text.textContent = " " + label;
+  };
+  renameTab("miyu", "resumen");
+  renameTab("grades", "notas");
 
   const ICONS = {
     filter: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',
@@ -35,6 +40,7 @@
     ["refresh", "r", "Actualizar"]
   ].map(([id, k, label]) => `<button type="button" data-k="${k}" data-tool="${id}" aria-label="${label}" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[id]}</svg></button>`).join("");
   document.querySelector(".topbar").appendChild(tools);
+  tools.querySelector('[data-tool="refresh"]').removeAttribute("aria-pressed");
 
   tools.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-k]");
@@ -61,10 +67,13 @@
 
   // Mientras carga, el botón de actualizar gira.
   const mode = $("mode");
-  new MutationObserver(() => {
+  const syncTools = () => {
     tools.querySelector('[data-tool="refresh"]').classList.toggle("m-spin", mode.dataset.mode === "load");
+    tools.querySelector('[data-tool="refresh"]').setAttribute("aria-busy", String(mode.dataset.mode === "load"));
     tools.querySelector('[data-tool="filter"]').setAttribute("aria-pressed", String(!filterWrap.hidden));
-  }).observe(document.body, { attributes: true, subtree: true, attributeFilter: ["data-mode", "hidden"] });
+  };
+  new MutationObserver(syncTools).observe(document.body, { attributes: true, subtree: true, attributeFilter: ["data-mode", "hidden"] });
+  syncTools();
 
   // ───────────── pila de paneles ─────────────
 
@@ -74,6 +83,7 @@
     btn.className = "m-back";
     btn.innerHTML = "‹ <b></b><span></span>";
     btn.querySelector("b").textContent = label;
+    btn.setAttribute("aria-label", "Volver a " + label);
     btn.addEventListener("click", () => {
       haptic();
       onBack();
@@ -81,17 +91,24 @@
     return btn;
   };
 
-  const detailBack = backBar("volver", () => setStack(isCourses() ? "mid" : "list"));
+  const viewName = () => {
+    const view = document.querySelector('.views button[aria-current="page"]');
+    return view ? view.textContent.replace(/^\d\s*/, "").trim() || "lista" : "lista";
+  };
+
+  const detailBack = backBar("lista", () => setStack(isCourses() ? "mid" : "list"));
   const midBack = backBar("cursos", () => setStack("list"));
   $("pane-mid").insertBefore(midBack, $("pane-mid").firstChild);
 
   // app.js reemplaza el contenido del detalle en cada selección: la barra se
-  // vuelve a poner arriba cada vez.
+  // vuelve a poner arriba cada vez, con el destino como título.
   const ensureDetailBar = () => {
     const detail = $("detail");
     if (detail.firstChild !== detailBack) detail.insertBefore(detailBack, detail.firstChild);
-    const view = document.querySelector('.views button[aria-current="page"]');
-    detailBack.querySelector("span").textContent = isCourses() ? $("mid-title").textContent : view ? view.textContent.replace(/^\d\s*/, "").trim() : "";
+    const dest = isCourses() ? ($("mid-title").textContent.trim() || "actividades") : viewName();
+    detailBack.querySelector("b").textContent = dest;
+    detailBack.querySelector("span").textContent = "";
+    detailBack.setAttribute("aria-label", "Volver a " + dest);
     midBack.querySelector("span").textContent = $("mid-title").textContent;
   };
   new MutationObserver(ensureDetailBar).observe($("detail"), { childList: true });
@@ -103,6 +120,9 @@
     if (stack === "list") listScroll = main.scrollTop;
     stack = next;
     main.dataset.mStack = next;
+    for (const [id, visible] of [["pane-list", next === "list"], ["pane-dash", next === "list"], ["pane-mid", next === "mid"], ["pane-detail", next === "detail"]]) {
+      if ($(id)) $(id).inert = !visible;
+    }
     ensureDetailBar();
     if (next === "detail") $("detail").scrollTop = 0;
     else if (next === "list") requestAnimationFrame(() => (main.scrollTop = listScroll));
@@ -164,22 +184,71 @@
   main.addEventListener("touchcancel", release, { passive: true });
 
   // Los textos de ayuda de la lista vacía hablan de teclas: aquí, botones.
-  const fixEmpty = () => {
-    const note = $("list").querySelector(".empty-note");
-    if (!note || !/\n\s+a\s+ver entregadas/.test(note.textContent)) return;
-    note.textContent = "✓ sin pendientes por ahora.";
+  // data-k es la tecla que app.js espera; "Escape" limpia el filtro.
+  const emptyActions = (buttons) => {
     const actions = document.createElement("div");
     actions.className = "m-empty-actions";
-    actions.innerHTML = '<button type="button" class="btn" data-k="a">ver entregadas</button><button type="button" class="btn" data-k="2">explorar cursos</button><button type="button" class="btn" data-k="r">actualizar</button>';
+    actions.innerHTML = buttons.map(([k, label]) => `<button type="button" class="btn" data-k="${k}">${label}</button>`).join("");
     actions.addEventListener("click", (e) => {
       const b = e.target.closest("[data-k]");
       if (!b) return;
+      haptic();
       if (b.dataset.k === "a") tools.querySelector('[data-tool="all"]').setAttribute("aria-pressed", "true");
-      key(b.dataset.k);
+      if (b.dataset.k === "Escape") $("filter").dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+      else key(b.dataset.k);
     });
-    note.after(actions);
+    return actions;
+  };
+  const fixEmpty = () => {
+    const note = $("list").querySelector(".empty-note");
+    if (!note || (note.nextElementSibling && note.nextElementSibling.classList.contains("m-empty-actions"))) return;
+    const text = note.textContent;
+    if (/\n\s+a\s+ver entregadas/.test(text)) {
+      note.textContent = "✓ sin pendientes por ahora.";
+      note.after(emptyActions([["a", "ver entregadas"], ["2", "explorar cursos"], ["r", "actualizar"]]));
+    } else if (/^nada coincide/.test(text.trim())) {
+      note.after(emptyActions([["Escape", "limpiar filtro"]]));
+    } else if (/^✓ todo entregado|^sin cursos/.test(text.trim())) {
+      note.after(emptyActions([["r", "actualizar"]]));
+    }
   };
   new MutationObserver(fixEmpty).observe($("list"), { childList: true });
   fixEmpty();
+
+  // Resumen: fecha de hoy y pendientes. Los números salen de los contadores
+  // que app.js calcula desde la caché, así que no se toca la red ni la
+  // sesión. renderDash reescribe el panel: se vuelve a poner arriba.
+  const dashHead = document.createElement("div");
+  dashHead.className = "m-dash-head";
+  dashHead.innerHTML = '<div class="m-dash-date"></div><div class="m-dash-counts"></div>';
+  const dateFmt = new Intl.DateTimeFormat("es", { weekday: "long", day: "numeric", month: "long" });
+  const ensureDashHead = () => {
+    const dash = $("dash");
+    if (!dash || !dash.childNodes.length) return;
+    if (dash.firstChild !== dashHead) dash.insertBefore(dashHead, dash.firstChild);
+    dashHead.children[0].textContent = dateFmt.format(new Date());
+    const num = (sel) => {
+      const el = document.querySelector("#counters " + sel + " b");
+      return el ? el.textContent.trim() : "";
+    };
+    const parts = [];
+    const overdue = num(".c-overdue");
+    const today = num(".c-today");
+    const week = num(".c-week");
+    if (overdue !== "") parts.push(overdue + " vencidas");
+    if (today !== "") parts.push(today + " hoy");
+    if (week !== "") parts.push(week + " en 7 días");
+    dashHead.children[1].textContent = parts.join(" · ");
+    dashHead.children[1].hidden = !parts.length;
+  };
+  if ($("dash")) {
+    new MutationObserver(ensureDashHead).observe($("dash"), { childList: true });
+    ensureDashHead();
+  }
+  if ($("counters")) new MutationObserver(ensureDashHead).observe($("counters"), { childList: true, subtree: true, characterData: true });
+
+  // La línea de estado lleva carga y errores: se anuncia a VoiceOver.
+  if ($("msg")) $("msg").setAttribute("aria-live", "polite");
+
   ensureDetailBar();
 })();

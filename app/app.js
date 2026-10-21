@@ -228,12 +228,32 @@
 
   class AuthError extends Error {}
 
+  const accountOf = (token) => {
+    try {
+      const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+      const data = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(payload.padEnd(Math.ceil(payload.length / 4) * 4, "=")), c => c.charCodeAt(0))));
+      return ["nameid", "unique_name", "sub", "email", "idPersona", "matricula"].map(k => String(data[k] ?? "").trim()).find(Boolean) || "";
+    } catch (_) { return ""; }
+  };
+
   const api = async (path) => {
     if (!state.token) throw new AuthError("sin sesión");
-    const res = await fetch(API8 + path, { headers: { Authorization: "Bearer " + state.token } });
-    if (res.status === 401 || res.status === 403) throw new AuthError("sesión expirada");
+    const account = accountOf(state.token);
+    const rejected = state.token;
+    let res = await fetch(API8 + path, { headers: { Authorization: "Bearer " + state.token } });
+    if (res.status === 401 && embedded && globalThis.__bteNative) {
+      const token = state.token !== rejected ? state.token : await window.parent.__bteNative?.renewSession?.(true, rejected);
+      if (token) {
+        state.token = token;
+        res = await fetch(API8 + path, { headers: { Authorization: "Bearer " + token } });
+      }
+    }
+    if (res.status === 401) throw new AuthError("sesión expirada");
+    if (res.status === 403) throw new Error("No tienes permiso para consultar esta sección");
     if (!res.ok) throw new Error("HTTP " + res.status);
-    return res.json();
+    const json = await res.json();
+    if (account !== accountOf(state.token)) throw new AuthError("la cuenta cambió");
+    return json;
   };
 
   const rowsOf = (json) => (Array.isArray(json) ? json : Array.isArray(json && json.contenido) ? json.contenido : []);
@@ -281,14 +301,14 @@
 
   const saveCache = () => {
     chrome.storage.session.set({
-      [CACHE_KEY]: { ts: state.loadedAt, courses: state.courses, acts: [...state.acts.entries()] }
+      [CACHE_KEY]: { account: accountOf(state.token), ts: state.loadedAt, courses: state.courses, acts: [...state.acts.entries()] }
     }).catch(() => {});
   };
 
   const restoreCache = async () => {
     try {
       const data = (await chrome.storage.session.get(CACHE_KEY))[CACHE_KEY];
-      if (!data || !Array.isArray(data.courses)) return false;
+      if (!data || !Array.isArray(data.courses) || !data.account || data.account !== accountOf(state.token)) return false;
       state.courses = data.courses;
       state.acts = new Map(data.acts || []);
       state.loadedAt = data.ts || 0;
@@ -301,6 +321,7 @@
   const refresh = async () => {
     if (state.loading) return;
     state.loading = true;
+    const account = accountOf(state.token);
     setMode("load");
     say("consultando cursos…", 0);
     try {
@@ -320,6 +341,7 @@
       say(defaultMsg(), 0);
       msgBusy = false;
     } catch (err) {
+      if (account !== accountOf(state.token)) return;
       if (err instanceof AuthError) {
         showLogin(err.message);
         setMode("error");
@@ -330,6 +352,7 @@
     } finally {
       state.loading = false;
       render();
+      if (state.token && account !== accountOf(state.token)) refresh();
     }
   };
 
@@ -1024,6 +1047,12 @@
     if (area !== "session" || !changes.bteToken) return;
     const token = changes.bteToken.newValue || "";
     if (token && token !== state.token) {
+      if (accountOf(token) !== accountOf(state.token)) {
+        state.courses = [];
+        state.acts.clear();
+        state.loadedAt = 0;
+        chrome.storage.session.remove(CACHE_KEY).catch(() => {});
+      }
       state.token = token;
       state.details.clear();
       refresh();

@@ -3,7 +3,8 @@ import Security
 
 /// Perfiles de Eminus (usuario y contraseña) en el Llavero de iOS: cifrados
 /// por el sistema, sólo en este dispositivo (no viajan a iCloud ni a los
-/// respaldos) y disponibles sólo con el iPhone desbloqueado.
+/// respaldos) y disponibles tras el primer desbloqueo, para renovar la
+/// sesión en segundo plano.
 ///
 /// La página nunca recibe una contraseña guardada: pide «entrar con el perfil
 /// X» y es la app la que llena el formulario (ver EminusViewController).
@@ -43,14 +44,24 @@ enum ProfileStore {
         return String(data: data, encoding: .utf8)
     }
 
+    static func enableBackgroundAccess() {
+        for profile in list() {
+            let attrs = [kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly]
+            SecItemUpdate(query(profile.user) as CFDictionary, attrs as CFDictionary)
+        }
+    }
+
     @discardableResult
     static func save(user: String, password: String, name: String) -> Bool {
         guard !user.isEmpty, !password.isEmpty, let data = password.data(using: .utf8) else { return false }
-        let attrs: [String: Any] = [kSecValueData as String: data, kSecAttrLabel as String: name]
+        let attrs: [String: Any] = [
+            kSecValueData as String: data,
+            kSecAttrLabel as String: name,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+        ]
         if SecItemUpdate(query(user) as CFDictionary, attrs as CFDictionary) == errSecSuccess { return true }
         var add = query(user)
         add.merge(attrs) { _, new in new }
-        add[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
         return SecItemAdd(add as CFDictionary, nil) == errSecSuccess
     }
 

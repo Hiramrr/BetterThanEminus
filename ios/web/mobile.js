@@ -294,26 +294,14 @@
   const notifyOn = () => localStorage.getItem(NOTIFY_KEY) === "on";
   let lastPlan = "";
 
-  // Un aviso un día antes y otro dos horas antes de cada entrega.
+  // Swift conserva y programa los avisos, también con el navegador cerrado.
   const scheduleReminders = async (ask) => {
     if (!notifyOn() && !ask) return;
-    const now = Date.now() / 1000;
-    const items = [];
-    for (const a of pendingActs()) {
-      if (a.deadline <= now || (a.start && a.start > now + 30 * 86400)) continue;
-      const course = String(a.courseName || "").replace(/\s*\(\d+\)\s*$/, "").toLowerCase();
-      const target = JSON.stringify({ course: a.courseName, section: "activities", activity: { id: a.id, courseId: a.courseId } });
-      const when = new Date(a.deadline * 1000).toLocaleString("es-MX", { weekday: "short", hour: "2-digit", minute: "2-digit" });
-      for (const [before, label] of [[86400, "vence mañana"], [7200, "vence en 2 horas"]]) {
-        const at = a.deadline - before;
-        if (at > now + 60) items.push({ id: "bte-" + a.courseId + "-" + a.id + "-" + before, at, title: a.title, body: label + " (" + when + ") · " + course, target });
-      }
-    }
-    items.sort((x, y) => x.at - y.at);
-    const plan = JSON.stringify(items);
+    const cache = readCache();
+    const plan = (cache?.account || "") + ":" + (cache?.ts || 0);
     if (plan === lastPlan && !ask) return;
-    lastPlan = plan;
-    const status = await native.post({ type: "notify", items, ask: !!ask });
+    const status = await native.post({ type: "notify", enabled: !!ask || notifyOn(), ask: !!ask });
+    if (String(status).startsWith("on")) lastPlan = plan;
     if (ask) {
       if (String(status).startsWith("on")) {
         localStorage.setItem(NOTIFY_KEY, "on");
@@ -330,7 +318,7 @@
   const disableReminders = async () => {
     localStorage.removeItem(NOTIFY_KEY);
     lastPlan = "";
-    await native.post({ type: "notify", items: [] });
+    await native.post({ type: "notify", items: [], enabled: false });
     bte.toast("avisos de entrega desactivados");
   };
 
@@ -366,9 +354,10 @@
       const items = opts.items.filter((item) => !/atajos de teclado|scanlines|estilo: elegir/.test(item.label));
       const at = items.findIndex((item) => item.group === "herramientas");
       const extra = [
+        { group: "herramientas", label: "widgets, avisos y sesión", keywords: "dynamic island actividad vivo segundo plano notificaciones", run: () => native.post({ type: "system.settings" }) },
         notifyOn()
           ? { group: "herramientas", label: "avisos de entrega: desactivar", keywords: "notificaciones recordatorios", run: disableReminders }
-          : { group: "herramientas", label: "avisos de entrega: activar", meta: "1 día y 2 h antes", keywords: "notificaciones recordatorios alarma", run: () => scheduleReminders(true) },
+          : { group: "herramientas", label: "avisos de entrega: activar", meta: "1 día, 2 h y 10 min antes", keywords: "notificaciones recordatorios alarma", run: () => scheduleReminders(true) },
         { group: "ayuda", label: "cómo se usa en el teléfono", keywords: "help ayuda gestos", run: () => bte.showHelp() }
       ];
       if (expiry) {
@@ -507,7 +496,8 @@
           <dt>secciones</dt><dd>dentro de un curso, la tira bajo el encabezado se desliza de lado</dd>
         </dl>
         <h4>también</h4>
-        <p>lo que escribes en foros y entregas se guarda como borrador mientras escribes. si la sesión vence (dura 2 horas), vuelve a entrar y aparece «✎ borrador · recuperar».</p>
+        <p>lo que escribes en foros y entregas se guarda como borrador mientras escribes. guarda tu perfil para renovar la sesión automáticamente.</p>
+        <p>en más, abre widgets, avisos y sesión para activar recordatorios y la actividad en vivo. añade los widgets desde la pantalla de inicio o de bloqueo del iPhone.</p>
         <p>los archivos de eminus se abren en vista previa, desde donde puedes guardarlos o compartirlos.</p>
       </div>
     </div>`;
@@ -865,7 +855,7 @@
   const offerSave = async () => {
     const info = await native.post({ type: "profile.stashInfo" });
     if (!info) return;
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ user: info.user, exp: tokenExpiry() }));
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ user: info.user, account: native.accountOf?.(localStorage.getItem("accessToken") || "") || "", exp: tokenExpiry() }));
     if (info.saved) {
       // Ya estaba: si la contraseña cambió, se actualiza sin preguntar.
       if (info.changed) await native.post({ type: "profile.commit", name: "" });
@@ -898,7 +888,8 @@
   };
 
   // Salir sin pasar por el menú de Eminus (lo «bte:» se conserva, ver shim).
-  const logoutLocal = (switchTo) => {
+  const logoutLocal = async (switchTo) => {
+    await native.clearSession?.();
     if (switchTo) localStorage.setItem(SWITCH_KEY, switchTo);
     else localStorage.removeItem(SWITCH_KEY);
     localStorage.removeItem(SESSION_KEY);
@@ -928,22 +919,28 @@
       if (switchTo && profiles.some((p) => p.user === switchTo)) {
         loginWith(switchTo);
       } else if (expired && !recent && profiles.some((p) => p.user === owner)) {
+        const account = session.account || native.accountOf?.(localStorage.getItem("accessToken") || "");
+        if (account && await native.restoreSession?.(account)) {
+          location.assign(location.origin + "/eminus4/page/course/list");
+          return;
+        }
         // La sesión venció sola (no se cerró a mano): se vuelve a entrar.
         loginWith(owner, "sesión vencida");
       } else if (session && !expired) {
+        await native.clearSession?.();
         localStorage.removeItem(SESSION_KEY); // cerró sesión a mano: elige perfil
       }
     } else if (state === "in") {
       renderProfiles();
       if (tryingUser) {
-        localStorage.setItem(SESSION_KEY, JSON.stringify({ user: tryingUser, exp: tokenExpiry() }));
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ user: tryingUser, account: native.accountOf?.(localStorage.getItem("accessToken") || "") || "", exp: tokenExpiry() }));
         tryingUser = "";
       } else {
         await offerSave();
       }
       // Se anota cuándo vence para distinguir después «venció» de «cerró».
       const session = readJson(SESSION_KEY, null) || { user: "" };
-      localStorage.setItem(SESSION_KEY, JSON.stringify({ user: session.user || "", exp: tokenExpiry() }));
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ user: session.user || "", account: native.accountOf?.(localStorage.getItem("accessToken") || "") || session.account || "", exp: tokenExpiry() }));
       if (!profiles.length) await loadProfiles();
       // La foto del perfil en uso se mantiene al día.
       const who = readJson(SESSION_KEY, {}).user;

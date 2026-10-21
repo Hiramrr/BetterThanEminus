@@ -12,9 +12,20 @@ html.bte-app {
 html.bte-app body {
   display: flex;
   flex-direction: column;
-  font-size: 14px;
+  font-size: 16px;
+  line-height: 1.5;
   -webkit-user-select: none;
   user-select: none;
+}
+
+/* Controles en sans de sistema; filas y datos usan la mono del tema. */
+html.bte-app :is(.topbar, .filter, .m-back, .btn, .statusline, .m-dash-head, .splash-box) {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+}
+
+html.bte-app input {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 html.bte-app .detail,
@@ -29,7 +40,7 @@ html.bte-app.embedded .topbar {
   display: flex;
   flex: none;
   height: 46px;
-  padding: 0 4px 0 calc(4px + env(safe-area-inset-left));
+  padding: 0 max(4px, env(safe-area-inset-right)) 0 max(4px, env(safe-area-inset-left));
   gap: 4px;
   align-items: center;
 }
@@ -53,12 +64,16 @@ html.bte-app .views::-webkit-scrollbar {
 }
 
 html.bte-app .views button {
+  display: flex;
   flex: none;
-  height: 34px;
-  padding: 0 9px;
-  border: 1px solid transparent;
-  border-radius: 17px;
-  font-size: 13px;
+  align-items: center;
+  height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  font-size: 15px;
   color: var(--bte-dim);
   touch-action: manipulation;
 }
@@ -69,8 +84,8 @@ html.bte-app .views button:hover {
 }
 
 html.bte-app .views button[aria-current="page"] {
-  background: var(--bte-accent);
-  color: var(--bte-accent-fg);
+  border-bottom-color: var(--bte-accent);
+  color: var(--bte-fg-strong);
   font-weight: 700;
   text-shadow: none;
 }
@@ -78,17 +93,17 @@ html.bte-app .views button[aria-current="page"] {
 html.bte-app .m-tools {
   display: flex;
   flex: none;
-  gap: 2px;
+  gap: 4px;
 }
 
 html.bte-app .m-tools button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border: 0;
-  border-radius: 19px;
+  border-radius: 4px;
   background: none;
   color: var(--bte-dim);
   touch-action: manipulation;
@@ -124,9 +139,9 @@ html.bte-app .filter {
   flex: none;
   align-items: center;
   gap: 8px;
-  height: 46px;
+  height: 48px;
   margin: 0;
-  padding: 0 14px;
+  padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
   border-bottom: 1px solid var(--bte-border);
   background: var(--bte-bg0);
 }
@@ -139,7 +154,7 @@ html.bte-app .filter input {
   flex: 1;
   width: auto;
   font-size: 16px;
-  height: 36px;
+  height: 40px;
 }
 
 /* ─────────────── paneles ─────────────── */
@@ -153,7 +168,7 @@ html.bte-app main.view-miyu {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding: 16px 10px calc(10px + env(safe-area-inset-bottom, 0px) * 0);
+  padding: 16px max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left));
 }
 
 html.bte-app .pane {
@@ -189,7 +204,7 @@ html.bte-app main.view-courses[data-m-stack="mid"] #pane-mid {
 html.bte-app main[data-m-stack="detail"] #pane-detail {
   display: flex;
   position: fixed;
-  inset: 46px 0 30px 0;
+  inset: 46px 0 calc(32px + env(safe-area-inset-bottom, 0px)) 0;
   z-index: 8;
   margin: 0;
   border: 0;
@@ -221,13 +236,14 @@ html.bte-app .m-back {
   align-items: center;
   gap: 6px;
   width: 100%;
-  min-height: 44px;
-  padding: 0 14px 0 8px;
+  min-height: 48px;
+  padding: 0 max(16px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left));
   border: 0;
   border-bottom: 1px solid var(--bte-border);
   background: var(--bte-bg0);
   color: var(--bte-accent);
   font: inherit;
+  font-size: 16px;
   font-weight: 700;
   text-align: left;
 }
@@ -241,6 +257,10 @@ html.bte-app .m-back span {
   font-weight: 400;
 }
 
+html.bte-app .m-back span:empty {
+  display: none;
+}
+
 html.bte-app #pane-mid .m-back {
   margin-top: -10px;
 }
@@ -248,8 +268,8 @@ html.bte-app #pane-mid .m-back {
 /* ─────────────── filas ─────────────── */
 
 html.bte-app .group {
-  padding: 12px 14px 4px;
-  font-size: 12.5px;
+  padding: 14px 16px 6px;
+  font-size: 13px;
 }
 
 html.bte-app .row,
@@ -260,21 +280,26 @@ html.bte-app .row.act-row {
     "st due course";
   gap: 2px 10px;
   align-items: baseline;
-  min-height: 52px;
-  padding: 8px 14px;
+  min-height: 56px;
+  padding: 10px 16px;
   white-space: normal;
   touch-action: manipulation;
 }
 
 html.bte-app .row .st { grid-area: st; align-self: start; }
-html.bte-app .row .due { grid-area: due; font-size: 12.5px; white-space: nowrap; }
+html.bte-app .row .due { grid-area: due; font-size: 13.5px; white-space: nowrap; }
 html.bte-app .row .course {
   display: block;
   grid-area: course;
   min-width: 0;
-  font-size: 12.5px;
+  font-size: 13.5px;
   text-align: right;
   white-space: nowrap;
+}
+
+/* La fecha suma negrita al color: no depende sólo del color. */
+html.bte-app .row:is(.u-overdue, .u-imminent, .u-urgent) .due {
+  font-weight: 700;
 }
 
 html.bte-app .row .title {
@@ -282,7 +307,8 @@ html.bte-app .row .title {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  line-height: 1.35;
+  overflow: hidden;
+  line-height: 1.4;
   color: var(--bte-fg-strong);
 }
 
@@ -297,7 +323,7 @@ html.bte-app .row.course-row {
 
 html.bte-app .row.course-row > :not(.title) {
   grid-area: meta;
-  font-size: 12.5px;
+  font-size: 13.5px;
 }
 
 html.bte-app .row + .row {
@@ -342,31 +368,46 @@ html.bte-app .m-empty-actions {
   padding: 0 16px 16px;
 }
 
+html.bte-app .m-empty-actions .btn {
+  flex: 1 1 auto;
+  text-align: center;
+}
+
 /* ─────────────── detalle ─────────────── */
 
 html.bte-app .detail {
-  font-size: 15px;
+  font-size: 16px;
+  line-height: 1.6;
 }
 
 html.bte-app .detail > :not(.m-back) {
-  margin-left: 16px;
-  margin-right: 16px;
+  margin-left: max(16px, env(safe-area-inset-left));
+  margin-right: max(16px, env(safe-area-inset-right));
 }
 
 html.bte-app .detail h3 {
-  margin-top: 14px;
-  font-size: 1.15em;
+  margin-top: 16px;
+  font-size: 1.25em;
   line-height: 1.35;
 }
 
+html.bte-app .Detail .sub {
+  margin-bottom: 12px;
+}
+
 html.bte-app .kv {
-  grid-template-columns: 12.5ch minmax(0, 1fr);
-  gap: 4px 10px;
+  grid-template-columns: 14ch minmax(0, 1fr);
+  gap: 6px 12px;
+  margin-bottom: 14px;
 }
 
 html.bte-app .rich {
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.65;
+}
+
+html.bte-app .rich a {
+  text-decoration: underline;
 }
 
 html.bte-app .rich table {
@@ -381,9 +422,9 @@ html.bte-app .actions {
 }
 
 html.bte-app .btn {
-  min-height: 46px;
+  min-height: 48px;
   padding: 8px 14px;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   touch-action: manipulation;
 }
@@ -408,11 +449,39 @@ html.bte-app .actions .btn:first-child:hover {
 /* ─────────────── resumen (miyu) ─────────────── */
 
 html.bte-app .dash {
-  padding: 10px 14px 6px;
+  padding: 12px 16px 8px;
+}
+
+/* Fecha y pendientes arriba del resumen (los pone app-mobile.js). */
+html.bte-app .m-dash-head {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--bte-border);
+}
+
+html.bte-app .m-dash-date {
+  color: var(--bte-fg-strong);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+html.bte-app .m-dash-counts {
+  color: var(--bte-dim);
+  font-size: 14px;
 }
 
 html.bte-app .countdown {
-  font-size: 2.1em;
+  font-size: 1.6em;
+}
+
+html.bte-app .dash-block {
+  margin-bottom: 16px;
+}
+
+html.bte-app .load-row,
+html.bte-app .feed-row,
+html.bte-app .course-progress {
+  min-height: 30px;
 }
 
 html.bte-app .next-title {
@@ -423,8 +492,14 @@ html.bte-app .next-title {
 
 html.bte-app .statusline {
   flex: none;
-  height: 30px;
-  font-size: 12px;
+  height: calc(32px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  font-size: 13px;
+}
+
+/* El error se lee en la línea de estado, en rojo además del modo. */
+html.bte-app .statusline:has(.mode[data-mode="error"]) .msg {
+  color: var(--bte-red);
 }
 
 html.bte-app .statusline :is(.back, .hints, .theme) {
@@ -443,7 +518,15 @@ html.bte-app .counters :is(.c-soon, .c-week) {
 
 html.bte-app .splash {
   inset: 0;
-  padding: 16px;
+  padding: 24px 16px;
+}
+
+html.bte-app .splash-box p {
+  line-height: 1.6;
+}
+
+html.bte-app .splash-box .actions .btn {
+  text-align: center;
 }
 
 /* Dibujo con caracteres de caja: siempre en monoespaciada. */
@@ -452,8 +535,16 @@ html.bte-app .splash-box pre {
   font-size: 10px;
 }
 
+html.bte-app :is(.btn, .views button, .m-tools button, .m-back, a, input):focus-visible {
+  outline: 2px solid var(--bte-accent);
+  outline-offset: 1px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html.bte-app main[data-m-stack="detail"] #pane-detail {
+    animation: none;
+  }
+  html.bte-app .m-tools button.m-spin svg {
     animation: none;
   }
 }

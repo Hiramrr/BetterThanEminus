@@ -8,33 +8,88 @@
 
 /* Begin PBXBuildFile section */
 		173813FE5D25BA203EE9103F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 703083DC60E0BBB1D3C990BB /* Assets.xcassets */; };
+		1EA93333A198C7C451C6289F /* DeliveryActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D9D7F9148D5F4B44F229F5 /* DeliveryActivity.swift */; };
+		23D9A164F541DAF95880F7FB /* ReminderSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87AC58A4F407AC9A5DD722C4 /* ReminderSettingsController.swift */; };
+		269FCE7D4729426730982E88 /* WidgetStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7AB255F5155EFBDC67FCBC /* WidgetStyle.swift */; };
+		28DF90B2E51966D255177F40 /* DeliveryLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B1EAEC787F789CCDAC90230 /* DeliveryLiveActivity.swift */; };
+		2E062E30409ADC657D7C3FA2 /* AgendaWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C560CE5C60E9C00E8731E7B /* AgendaWidget.swift */; };
 		324360C7A2B4849803FCBEA6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112A541369CE850E93F37E84 /* AppDelegate.swift */; };
+		399C5A1480B87654D59C06D9 /* EminusWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D7E16949521316B30C95632F /* EminusWidgets.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4184789CE6CC6D9FCD7EC66D /* LiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EF6B97FB435BF2FE12E2E80 /* LiveActivityManager.swift */; };
+		4705F85CE53A9503610D0F2C /* Agenda.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CC1E1DBD98E10EA89F58630 /* Agenda.swift */; };
 		5199FB1A1911610058D76F46 /* ProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1164D736C3E1185FD34D03 /* ProfileStore.swift */; };
 		59848FEFDC74241FBC5F841C /* app in Resources */ = {isa = PBXBuildFile; fileRef = 387BD4FFA30911FC1EC8FFEA /* app */; };
 		664A83E0A29C7AF0A623ECC6 /* DevBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29ADC23227809CFD1B38EAD9 /* DevBridge.swift */; };
+		74F31042695BF373CB2408C3 /* AgendaSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C52FE1EC985D7D3CB6997B /* AgendaSync.swift */; };
 		80DCCF15C50259D84AF02F52 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = 77DB4AF4A88AF25153275896 /* fonts */; };
 		827E96C9E72FA91166A32454 /* EminusViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62B29A652701E87366BA2C56 /* EminusViewController.swift */; };
 		89BA04CD567E05FD107F846C /* AppExpiry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40A01309942DDA3616EFC189 /* AppExpiry.swift */; };
 		A91B950360038D8DE2FFB100 /* popup in Resources */ = {isa = PBXBuildFile; fileRef = FF294CDDEB91A80585BFDB9D /* popup */; };
+		B8501E753D5088F071880A48 /* DeliveryActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D9D7F9148D5F4B44F229F5 /* DeliveryActivity.swift */; };
 		BDF32D3D00722C6220506BA3 /* src in Resources */ = {isa = PBXBuildFile; fileRef = 8E3B9392D0EBCEC6537577C5 /* src */; };
 		CAB7C7BE81C6CEDBB9DFF7A6 /* WebBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5510D904843B65BF95AC952E /* WebBundle.swift */; };
+		CE0CF14EA2A3AAE87AE60BD0 /* ReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2082115BFB7120571F13491D /* ReminderScheduler.swift */; };
+		D267DE71F285FB4F2730EA3C /* Agenda.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CC1E1DBD98E10EA89F58630 /* Agenda.swift */; };
+		DF125AD1E4562C3B319D27C7 /* AgendaProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A01420D4028946B4840416 /* AgendaProvider.swift */; };
 		F9DACFA504A75F2BEA410042 /* web in Resources */ = {isa = PBXBuildFile; fileRef = 43E775548C5814242236F771 /* web */; };
+		FCB24570613BCFB99898D1AA /* SessionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 400DC443F14664179340D3AE /* SessionService.swift */; };
+		FE16C5AA844DCCE9DC6776CE /* EminusWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6804B1951530486C3B1CB7F2 /* EminusWidgets.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		BF117CCC3A83498938D7D2B2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 85054DDB99864F51360A734C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EEFDE398BCBB2AE441C8EA78;
+			remoteInfo = EminusWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		E18A34F4457903DA9D3346F1 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				399C5A1480B87654D59C06D9 /* EminusWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		01D9D7F9148D5F4B44F229F5 /* DeliveryActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryActivity.swift; sourceTree = "<group>"; };
+		05E19D9862DE31909A945360 /* BetterThanEminus.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BetterThanEminus.entitlements; sourceTree = "<group>"; };
 		0F9B74D091B580DB135D3776 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		112A541369CE850E93F37E84 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		2082115BFB7120571F13491D /* ReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderScheduler.swift; sourceTree = "<group>"; };
+		27C52FE1EC985D7D3CB6997B /* AgendaSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgendaSync.swift; sourceTree = "<group>"; };
 		29ADC23227809CFD1B38EAD9 /* DevBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevBridge.swift; sourceTree = "<group>"; };
 		387BD4FFA30911FC1EC8FFEA /* app */ = {isa = PBXFileReference; lastKnownFileType = folder; name = app; path = ../app; sourceTree = SOURCE_ROOT; };
+		3CC1E1DBD98E10EA89F58630 /* Agenda.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Agenda.swift; sourceTree = "<group>"; };
+		400DC443F14664179340D3AE /* SessionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionService.swift; sourceTree = "<group>"; };
 		40A01309942DDA3616EFC189 /* AppExpiry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppExpiry.swift; sourceTree = "<group>"; };
 		43E775548C5814242236F771 /* web */ = {isa = PBXFileReference; lastKnownFileType = folder; path = web; sourceTree = SOURCE_ROOT; };
+		4B1EAEC787F789CCDAC90230 /* DeliveryLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryLiveActivity.swift; sourceTree = "<group>"; };
 		4C1164D736C3E1185FD34D03 /* ProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileStore.swift; sourceTree = "<group>"; };
+		4E566EB769974860E99F6B6F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		4EF6B97FB435BF2FE12E2E80 /* LiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
 		5510D904843B65BF95AC952E /* WebBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebBundle.swift; sourceTree = "<group>"; };
 		62B29A652701E87366BA2C56 /* EminusViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EminusViewController.swift; sourceTree = "<group>"; };
+		6804B1951530486C3B1CB7F2 /* EminusWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EminusWidgets.swift; sourceTree = "<group>"; };
+		6B7AB255F5155EFBDC67FCBC /* WidgetStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStyle.swift; sourceTree = "<group>"; };
 		703083DC60E0BBB1D3C990BB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		77DB4AF4A88AF25153275896 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fonts; sourceTree = SOURCE_ROOT; };
+		7C560CE5C60E9C00E8731E7B /* AgendaWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgendaWidget.swift; sourceTree = "<group>"; };
+		87AC58A4F407AC9A5DD722C4 /* ReminderSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderSettingsController.swift; sourceTree = "<group>"; };
 		8E3B9392D0EBCEC6537577C5 /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; name = src; path = ../src; sourceTree = SOURCE_ROOT; };
 		A3168155E04CB68B7E8DD9B0 /* BetterThanEminus.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BetterThanEminus.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D7E16949521316B30C95632F /* EminusWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = EminusWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1EB445738ECA6897076A428 /* EminusWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EminusWidgets.entitlements; sourceTree = "<group>"; };
+		F4A01420D4028946B4840416 /* AgendaProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgendaProvider.swift; sourceTree = "<group>"; };
 		FF294CDDEB91A80585BFDB9D /* popup */ = {isa = PBXFileReference; lastKnownFileType = folder; name = popup; path = ../popup; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -43,6 +98,7 @@
 			isa = PBXGroup;
 			children = (
 				A3168155E04CB68B7E8DD9B0 /* BetterThanEminus.app */,
+				D7E16949521316B30C95632F /* EminusWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -65,6 +121,8 @@
 				43E775548C5814242236F771 /* web */,
 				A4569C742694AA64470F167D /* BetterThanEminus */,
 				7097FACACDE068A1D13EC780 /* BetterThanEminus */,
+				E6A499E23941CBFBDE35C0F3 /* Shared */,
+				BF3F6BC3400586C51020ECD7 /* Widgets */,
 				0A2CE5AE700D54C4489ACF27 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -72,16 +130,45 @@
 		A4569C742694AA64470F167D /* BetterThanEminus */ = {
 			isa = PBXGroup;
 			children = (
+				27C52FE1EC985D7D3CB6997B /* AgendaSync.swift */,
 				112A541369CE850E93F37E84 /* AppDelegate.swift */,
 				40A01309942DDA3616EFC189 /* AppExpiry.swift */,
 				703083DC60E0BBB1D3C990BB /* Assets.xcassets */,
+				05E19D9862DE31909A945360 /* BetterThanEminus.entitlements */,
 				29ADC23227809CFD1B38EAD9 /* DevBridge.swift */,
 				62B29A652701E87366BA2C56 /* EminusViewController.swift */,
 				0F9B74D091B580DB135D3776 /* Info.plist */,
+				4EF6B97FB435BF2FE12E2E80 /* LiveActivityManager.swift */,
 				4C1164D736C3E1185FD34D03 /* ProfileStore.swift */,
+				2082115BFB7120571F13491D /* ReminderScheduler.swift */,
+				87AC58A4F407AC9A5DD722C4 /* ReminderSettingsController.swift */,
+				400DC443F14664179340D3AE /* SessionService.swift */,
 				5510D904843B65BF95AC952E /* WebBundle.swift */,
 			);
 			path = BetterThanEminus;
+			sourceTree = "<group>";
+		};
+		BF3F6BC3400586C51020ECD7 /* Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				F4A01420D4028946B4840416 /* AgendaProvider.swift */,
+				7C560CE5C60E9C00E8731E7B /* AgendaWidget.swift */,
+				4B1EAEC787F789CCDAC90230 /* DeliveryLiveActivity.swift */,
+				E1EB445738ECA6897076A428 /* EminusWidgets.entitlements */,
+				6804B1951530486C3B1CB7F2 /* EminusWidgets.swift */,
+				4E566EB769974860E99F6B6F /* Info.plist */,
+				6B7AB255F5155EFBDC67FCBC /* WidgetStyle.swift */,
+			);
+			path = Widgets;
+			sourceTree = "<group>";
+		};
+		E6A499E23941CBFBDE35C0F3 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				3CC1E1DBD98E10EA89F58630 /* Agenda.swift */,
+				01D9D7F9148D5F4B44F229F5 /* DeliveryActivity.swift */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -93,10 +180,12 @@
 			buildPhases = (
 				1AB2F583EC5D82B32F9B2D26 /* Sources */,
 				60113EE9B30D97EF3F8EA402 /* Resources */,
+				E18A34F4457903DA9D3346F1 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				4B44E63B0652F855DAEE112D /* PBXTargetDependency */,
 			);
 			name = BetterThanEminus;
 			packageProductDependencies = (
@@ -104,6 +193,23 @@
 			productName = BetterThanEminus;
 			productReference = A3168155E04CB68B7E8DD9B0 /* BetterThanEminus.app */;
 			productType = "com.apple.product-type.application";
+		};
+		EEFDE398BCBB2AE441C8EA78 /* EminusWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CB8B0AC0E14002C914F15D33 /* Build configuration list for PBXNativeTarget "EminusWidgets" */;
+			buildPhases = (
+				56FF9D317C37CA79C87D2224 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = EminusWidgets;
+			packageProductDependencies = (
+			);
+			productName = EminusWidgets;
+			productReference = D7E16949521316B30C95632F /* EminusWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -115,6 +221,10 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					A1CB17C6B505F134A9C72014 = {
+						DevelopmentTeam = 4993MQR6C9;
+						ProvisioningStyle = Automatic;
+					};
+					EEFDE398BCBB2AE441C8EA78 = {
 						DevelopmentTeam = 4993MQR6C9;
 						ProvisioningStyle = Automatic;
 					};
@@ -135,6 +245,7 @@
 			projectRoot = "";
 			targets = (
 				A1CB17C6B505F134A9C72014 /* BetterThanEminus */,
+				EEFDE398BCBB2AE441C8EA78 /* EminusWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -160,18 +271,85 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D267DE71F285FB4F2730EA3C /* Agenda.swift in Sources */,
+				74F31042695BF373CB2408C3 /* AgendaSync.swift in Sources */,
 				324360C7A2B4849803FCBEA6 /* AppDelegate.swift in Sources */,
 				89BA04CD567E05FD107F846C /* AppExpiry.swift in Sources */,
+				1EA93333A198C7C451C6289F /* DeliveryActivity.swift in Sources */,
 				664A83E0A29C7AF0A623ECC6 /* DevBridge.swift in Sources */,
 				827E96C9E72FA91166A32454 /* EminusViewController.swift in Sources */,
+				4184789CE6CC6D9FCD7EC66D /* LiveActivityManager.swift in Sources */,
 				5199FB1A1911610058D76F46 /* ProfileStore.swift in Sources */,
+				CE0CF14EA2A3AAE87AE60BD0 /* ReminderScheduler.swift in Sources */,
+				23D9A164F541DAF95880F7FB /* ReminderSettingsController.swift in Sources */,
+				FCB24570613BCFB99898D1AA /* SessionService.swift in Sources */,
 				CAB7C7BE81C6CEDBB9DFF7A6 /* WebBundle.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		56FF9D317C37CA79C87D2224 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4705F85CE53A9503610D0F2C /* Agenda.swift in Sources */,
+				DF125AD1E4562C3B319D27C7 /* AgendaProvider.swift in Sources */,
+				2E062E30409ADC657D7C3FA2 /* AgendaWidget.swift in Sources */,
+				B8501E753D5088F071880A48 /* DeliveryActivity.swift in Sources */,
+				28DF90B2E51966D255177F40 /* DeliveryLiveActivity.swift in Sources */,
+				FE16C5AA844DCCE9DC6776CE /* EminusWidgets.swift in Sources */,
+				269FCE7D4729426730982E88 /* WidgetStyle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		4B44E63B0652F855DAEE112D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EEFDE398BCBB2AE441C8EA78 /* EminusWidgets */;
+			targetProxy = BF117CCC3A83498938D7D2B2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		1682B51E9A2743BDA7B4D5CB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Widgets/EminusWidgets.entitlements;
+				INFOPLIST_FILE = Widgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = mx.hiram.BetterThanEminus.Widgets;
+				PRODUCT_NAME = EminusWidgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		30B6E893A59F7C66576922CB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Widgets/EminusWidgets.entitlements;
+				INFOPLIST_FILE = Widgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = mx.hiram.BetterThanEminus.Widgets;
+				PRODUCT_NAME = EminusWidgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 		45351D3E2D0D114E4E64DEEF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -207,7 +385,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 4993MQR6C9;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -227,7 +405,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.2.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -244,6 +422,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = BetterThanEminus/BetterThanEminus.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = BetterThanEminus/Info.plist;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleLightContent;
@@ -292,7 +471,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4993MQR6C9;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -306,7 +485,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.2.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -322,6 +501,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = BetterThanEminus/BetterThanEminus.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = BetterThanEminus/Info.plist;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleLightContent;
@@ -352,6 +532,15 @@
 			buildConfigurations = (
 				45351D3E2D0D114E4E64DEEF /* Debug */,
 				969E1904C71F35C36FCFAB5B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CB8B0AC0E14002C914F15D33 /* Build configuration list for PBXNativeTarget "EminusWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				30B6E893A59F7C66576922CB /* Debug */,
+				1682B51E9A2743BDA7B4D5CB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

@@ -9,7 +9,7 @@ struct WebBundle {
     static let startScripts = ["web/shim.js", "src/prefs.js", "web/app-prefs.js", "src/boot.js", "src/bg.js"]
     /// Sin src/styles.css: en el teléfono sólo se usa el estilo tui.
     static let styles = ["src/themes.css", "src/tui.css", "src/bg.css", "web/mobile.css"]
-    static let endScripts = ["src/nav.js", "src/palette.js", "src/drafts.js", "src/app.js", "web/mobile.js"]
+    static let endScripts = ["src/nav.js", "src/palette.js", "src/drafts.js", "src/app.js", "web/agenda.js", "web/mobile.js"]
     /// Documentos que se arman dentro de Eminus (vista tui y ajustes).
     static let documentFiles = [
         "app/app.html", "app/app.css", "app/app.js",
