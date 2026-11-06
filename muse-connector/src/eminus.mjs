@@ -107,6 +107,29 @@ export function htmlToText(html) {
     .trim();
 }
 
+/** Conserva enlaces que desaparecen al quitar etiquetas, incluidos videos incrustados. */
+export function contentLinks(html) {
+  const out = new Map();
+  const clean = String(html || "").replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, "");
+  for (const tag of clean.matchAll(/<(a|iframe|video|source)\b[^>]*>/gi)) {
+    const attr = tag[0].match(/\b(?:href|src)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+    if (!attr) continue;
+    try {
+      const source = new URL(htmlToText(attr[1] ?? attr[2] ?? attr[3]), "https://eminus.uv.mx");
+      if (!["https:", "http:"].includes(source.protocol) || source.username || source.password) continue;
+      const host = source.hostname.replace(/^www\./, "");
+      let videoId = null;
+      if (host === "youtu.be") videoId = source.pathname.slice(1);
+      if (["youtube.com", "youtube-nocookie.com"].includes(host)) videoId = source.pathname.match(/^\/(?:embed|shorts)\/([^/]+)/)?.[1] ?? source.searchParams.get("v");
+      const youtube = videoId && /^[\w-]{11}$/.test(videoId);
+      const url = youtube ? "https://www.youtube.com/watch?v=" + videoId : source.href;
+      const type = youtube || ["video", "source"].includes(tag[1].toLowerCase()) ? "video" : tag[1].toLowerCase() === "iframe" ? "embed" : "link";
+      out.set(url, { type, url, ...(youtube ? { provider: "youtube" } : {}) });
+    } catch {}
+  }
+  return [...out.values()];
+}
+
 // ───────────── normalización (igual criterio que EminusAPI.swift) ─────────────
 
 export function normalizeCourse(row, nowSec = Date.now() / 1000) {
@@ -388,6 +411,7 @@ export class EminusClient {
             id: str(e.idElemento),
             title: str(e.nombre) || "Recurso " + str(e.idElemento),
             text: htmlToText(e.texto) || null,
+            links: contentLinks(e.texto),
             published_at: iso(epoch(e.fechaEpoch)),
             required_reading: e.lecturaObligatoria === 1,
             files: (e.archivosElementosConTamano ?? [])
@@ -430,7 +454,7 @@ export class EminusClient {
       const type = String(res.headers?.get?.("content-type") || "");
       if (type.includes("text/html")) throw new EminusError("upstream_error", "Eminus devolvió una página en lugar del archivo");
       const bytes = res.bytes ? await res.bytes() : Buffer.from(await res.arrayBuffer());
-      return { bytes, contentType: type || "application/octet-stream" };
+      return { bytes, contentType: type || "application/octet-stream", contentDisposition: res.headers?.get?.("content-disposition") || "" };
     }
   }
 }

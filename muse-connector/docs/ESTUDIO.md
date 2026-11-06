@@ -8,13 +8,18 @@ Usa el conector `eminus-uv` (ver `CONNECTOR.md`). Todo es de solo lectura.
 2. **Material de clase:** `GET /courses/{id}/content`. Está organizado en unidades, y cada unidad tiene recursos con su texto y sus archivos. `required_reading: true` indica una lectura obligatoria.
 3. **Material de una tarea:** `GET /tasks/{id}` → `attachments`. Muchos docentes no usan el módulo Contenido y suben ahí los PDFs. Si `/content` responde `units: 0`, búscalo en las tareas del curso (`GET /tasks?status=all&course_id={id}`).
 
+## Videos y enlaces
+
+Los recursos traen `links`. Abre el enlace con `type: "video"` para acceder al video original. YouTube llega como una URL `watch`, no como un iframe. Eminus no entrega transcripciones. Si tus herramientas no pueden leer el video, explica ese límite sin inventar su contenido. No envíes la API key del conector a YouTube ni a otros sitios externos.
+
 ## Leer un archivo
 
+- Los `.docx`, `.pptx` y `.xlsx` también se leen con `text_url`. Word devuelve texto y tablas, PowerPoint devuelve texto de diapositivas y Excel devuelve celdas y valores guardados. No incluye texto de imágenes ni recalcula fórmulas.
 - Cada archivo trae `text_url`: **haz GET a esa dirección** y recibirás su texto en JSON (`pages[].text`). Si `next_from` no es `null`, pide `text_url?from=<next_from>` para seguir.
 - En `GET /tasks/{id}` y `GET /tasks/{id}/submission` los archivos ya traen su texto en el campo `text` (las primeras 30 páginas); revisa `text_status`.
 - Para un PDF largo, lee primero las páginas 1 a 3 para ver el índice y luego solo las secciones que necesites. No hace falta leerlo entero para cada pregunta.
 - Si responde `has_text: false`, el PDF es escaneado. Si puedes leer PDFs o imágenes, descárgalo con su `download_url` (máximo 4 MB); si no, díselo al usuario.
-- Para `docx` y `pptx` (`415 unsupported_type`), usa `download_url` si puedes leer ese formato.
+- Para formatos antiguos como `.doc`, `.ppt` y `.xls` que respondan `415 unsupported_type`, usa `download_url` si puedes leerlos.
 
 ## Las entregas del usuario
 

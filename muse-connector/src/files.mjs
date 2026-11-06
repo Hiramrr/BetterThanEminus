@@ -2,17 +2,17 @@
 //   PDF    → texto por página (unpdf / pdf.js). Un PDF escaneado no trae texto: `has_text: false`.
 //   .ipynb → celdas de markdown y código, en orden (sin las salidas).
 //   texto  → csv, txt, md, py, json, html… tal cual (html convertido a texto).
-// Lo demás (docx, pptx, imágenes…) responde `unsupported_type`: usa la descarga binaria.
+// Office → texto de Word, diapositivas de PowerPoint y valores guardados de Excel.
 import { extOf, htmlToText } from "./eminus.mjs";
 
 const TEXT_TYPES = new Set(["txt", "md", "csv", "tsv", "py", "r", "java", "c", "cpp", "h", "js", "ts", "sql", "json", "xml", "yml", "yaml", "tex", "html", "htm"]);
 export const MAX_CHARS = 120_000; // por respuesta
 
-export const canExtract = (name) => ["pdf", "ipynb"].includes(extOf(name)) || TEXT_TYPES.has(extOf(name));
+export const canExtract = (name) => ["pdf", "ipynb", "docx", "pptx", "xlsx"].includes(extOf(name)) || TEXT_TYPES.has(extOf(name));
 
 /**
  * @returns {Promise<{ format: string, total_pages: number, from: number, to: number, pages: {page: number, text: string}[], has_text: boolean, truncated: boolean, next_from: number|null }>}
- * `from`/`to` son páginas (PDF), celdas (ipynb) o bloques de 20 000 caracteres (texto).
+ * `from`/`to` son páginas (PDF), celdas (ipynb), diapositivas/bloques (Office) o bloques de texto.
  */
 export async function extractText(bytes, name, { from = 1, to } = {}) {
   const ext = extOf(name);
@@ -40,6 +40,15 @@ export async function extractText(bytes, name, { from = 1, to } = {}) {
       return c.cell_type === "code" ? "```python\n" + src.trim() + "\n```" : src.trim();
     }).filter(Boolean);
     parts = { total: cells.length, get: async (n) => cells[n - 1], last: Math.min(cells.length, to ?? from + 49) };
+  } else if (["docx", "pptx", "xlsx"].includes(ext)) {
+    format = ext;
+    try {
+      const { officeParts } = await import("./office.mjs");
+      const sections = officeParts(bytes, ext);
+      parts = { total: sections.length, get: async (n) => sections[n - 1], last: Math.min(sections.length, to ?? from + 19) };
+    } catch {
+      throw Object.assign(new Error("documento de Office ilegible o demasiado grande"), { code: "unreadable_file" });
+    }
   } else if (TEXT_TYPES.has(ext)) {
     format = "text";
     let text = Buffer.from(bytes).toString("utf8");

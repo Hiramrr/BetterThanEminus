@@ -46,6 +46,7 @@ function guessName(bytes, contentType, disposition) {
   if (m) { try { return decodeURIComponent(m[1]); } catch { return m[1]; } }
   const head = Buffer.from(bytes.subarray(0, 64)).toString("latin1");
   if (head.startsWith("%PDF-")) return "archivo.pdf";
+  for (const ext of ["docx", "pptx", "xlsx"]) if (String(contentType).split(";")[0] === mimeOf("archivo." + ext)) return "archivo." + ext;
   if (head.startsWith("PK")) return "archivo.zip";
   const t = String(contentType);
   if (/json/.test(t) || /^\s*\{/.test(head)) {
@@ -150,8 +151,8 @@ export function createHandler({ client, apiKeyHash, cacheTtlSeconds = 300, rateL
     if (hit && Date.now() - hit.at < 600_000) return hit;
     const course = /^[caer](\d+)-/.exec(fileId)?.[1];
     if (!course || !(await ownCourse(course))) throw new EminusError("not_found", "archivo no encontrado", 404);
-    const { bytes, contentType } = await client.download(fileId);
-    const name = knownName(fileId) || guessName(bytes, contentType, null);
+    const { bytes, contentType, contentDisposition } = await client.download(fileId);
+    const name = knownName(fileId) || guessName(bytes, contentType, contentDisposition);
     const v = { at: Date.now(), bytes, name, contentType };
     fileCache.set(fileId, v);
     let total = 0;
@@ -305,6 +306,7 @@ export function createHandler({ client, apiKeyHash, cacheTtlSeconds = 300, rateL
             for (const e of u.elements) items.push({
               kind: "resource", id: c.id + ":" + u.id + ":" + e.id, title: e.title, course_id: c.id, course: c.name,
               published_at: e.published_at, files: e.files.length,
+              attachments: linkFiles(e.files, url.origin), links: e.links || [],
               version: sha256(JSON.stringify(e)), url: url.origin + "/courses/" + c.id + "/content"
             });
           }
@@ -399,7 +401,8 @@ export function createHandler({ client, apiKeyHash, cacheTtlSeconds = 300, rateL
         try {
           const result = await extractText(file.bytes, file.name, { from, to });
           if (from > result.total_pages && result.total_pages > 0) return fail(400, "invalid_parameter", `el archivo tiene ${result.total_pages} páginas`);
-          return send(200, { id: fm[1], name: file.name, type: extOf(file.name) || null, size_bytes: file.bytes.length, ...result });
+          const linked = linkFiles([{ id: fm[1], name: file.name }], url.origin)[0];
+          return send(200, { ...linked, type: extOf(file.name) || null, size_bytes: file.bytes.length, ...result });
         } catch (err) {
           if (err.code === "unsupported_type") return fail(415, "unsupported_type", err.message + ": " + url.origin + "/files/" + fm[1] + "/download");
           return fail(422, "unreadable_file", "no se pudo leer el texto del archivo; descárgalo");

@@ -41,7 +41,7 @@ Eminus solo acepta usuario y contraseña, y Muse no acepta ni contraseña ni ses
 1. Primera consulta sin parámetros. Guarda `version` y los `items` como referencia inicial. No anuncies todo lo existente como nuevo.
 2. Cada 30 minutos pide `GET /updates?since=<version guardada>`.
 3. Si `changed` es `false`, no hay cambios en los datos observados. La respuesta omite `items`.
-4. Si `changed` es `true`, compara cada par `kind` e `id` con la referencia. Un identificador ausente antes es nuevo. Un identificador conocido con otra `version` cambió. Cada elemento trae `title`, `course` y `url` para consultar el detalle. Una tarea también trae su fecha y estado. Un recurso trae su número de archivos.
+4. Si `changed` es `true`, compara cada par `kind` e `id` con la referencia. Un identificador ausente antes es nuevo. Un identificador conocido con otra `version` cambió. Cada elemento trae `title`, `course` y `url` para consultar el detalle. Una tarea también trae su fecha y estado. Un recurso trae su número de archivos en `files`, su lista en `attachments` con `text_url` y `download_url`, y sus enlaces en `links`.
 5. Tras procesar los cambios, guarda la versión y la referencia nuevas. Usa `kind:id:version` para evitar notificar dos veces el mismo cambio.
 
 Si `partial` o `stale` son `true`, `version` es `null`. Conserva la referencia anterior y reintenta después. `failed_courses` indica qué cursos no se pudieron leer. No anuncies eliminaciones basándote en elementos ausentes.
@@ -122,6 +122,12 @@ Material que el docente publicó en el módulo **Contenido** del curso: unidades
 }
 ```
 
+### Videos y enlaces del contenido
+
+Cada recurso de `GET /courses/{course_id}/content` trae `links`, una lista de enlaces HTTP o HTTPS extraídos del HTML original. Los videos de YouTube tienen `type: "video"`, `provider: "youtube"` y una `url` para abrir el video, aunque `text` sea `null`. También hay enlaces normales con `type: "link"` y otros elementos incrustados con `type: "embed"`.
+
+Eminus proporciona el enlace de los videos, no su transcripción. No inventes un resumen a partir del título. Usa el enlace con las capacidades de video o transcripción que tengas disponibles. No envíes la API key del conector a los sitios externos.
+
 ### `GET /files/{file_id}` (texto)
 **Devuelve el TEXTO del archivo en JSON, no el binario.** Cada archivo del conector trae esta dirección completa en `text_url`; basta con hacer GET a `text_url`. `GET /files/{file_id}/text` es un alias.
 
@@ -152,7 +158,12 @@ Cada respuesta trae como máximo unos 120 000 caracteres. Si `next_from` no es `
 - **PDF**: texto por página. `has_text: false` indica un PDF escaneado (imágenes); en ese caso usa `download_url` si puedes leer imágenes o PDFs.
 - **`.ipynb`**: celdas de markdown y de código (estas en bloques de código ```` ```python ````), sin las salidas.
 - **Texto** (`csv`, `txt`, `md`, `py`, `json`, `html`, `tex`, `sql`…): tal cual, en bloques de 20 000 caracteres.
-- **Otros** (`docx`, `pptx`, `xlsx`, imágenes, `zip`): `415 unsupported_type`; usa `download_url`.
+- **Word `.docx`**: texto principal y tablas, en bloques de 20 000 caracteres. No conserva el diseño ni incluye encabezados, pies, imágenes o comentarios.
+- **PowerPoint `.pptx`**: texto de las diapositivas en el orden de la presentación. Cada bloque indica su diapositiva. No incluye notas del presentador ni texto dentro de imágenes.
+- **Excel `.xlsx`**: nombre de la hoja, referencias de celda y valores guardados. Usa texto compartido y texto en línea. No recalcula fórmulas ni aplica formatos de fechas o monedas. Si una fórmula no tiene valor guardado, muestra la fórmula.
+- **Otros** (`doc`, `ppt`, `xls`, imágenes, `zip`): `415 unsupported_type`; usa `download_url`.
+
+En Office `from` y `to` seleccionan bloques, con hasta 20 por defecto. Sigue `next_from` para continuar. Los archivos cifrados, dañados o con XML que exceda 8 MB por entrada o 32 MB en total responden `422 unreadable_file`. La conversión ocurre en este servidor, sin enviar el documento a otro servicio.
 
 ### `GET /files/{file_id}/download`
 El archivo original en binario (`download_url`), con su `Content-Type` y su nombre en `Content-Disposition`. Límite de **4 MB**: si pesa más, responde `413 file_too_large`; lee el texto con `text_url`.

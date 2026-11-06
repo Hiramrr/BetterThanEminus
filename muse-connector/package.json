@@ -16,6 +16,8 @@
     "deploy:vercel": "node scripts/instalar.mjs"
   },
   "dependencies": {
+    "@xmldom/xmldom": "0.9.12",
+    "fflate": "0.8.3",
     "unpdf": "1.9.1"
   }
 }

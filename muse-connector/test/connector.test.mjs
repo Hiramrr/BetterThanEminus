@@ -4,7 +4,8 @@ import tls from "node:tls";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { computeAlerts } from "../src/alerts.mjs";
-import { EminusClient, authRecord, htmlToText, normalizeTask, seal } from "../src/eminus.mjs";
+import { EminusClient, authRecord, htmlToText, contentLinks, normalizeTask, seal } from "../src/eminus.mjs";
+import { zipSync, strToU8 } from "fflate";
 import { GODADDY_R1 } from "../src/http.mjs";
 import { createApp, sha256 } from "../src/node-server.mjs";
 
@@ -167,7 +168,57 @@ test("extractText: notebook por celdas y texto por bloques", async () => {
   assert.equal(t.total_pages, 3);
   assert.equal(t.pages[0].text.length, 20000);
   assert.equal(t.next_from, 3);
-  await assert.rejects(extractText(Buffer.from("x"), "tarea.docx"), (e) => e.code === "unsupported_type");
+  await assert.rejects(extractText(Buffer.from("x"), "tarea.docx"), (e) => e.code === "unreadable_file");
+  await assert.rejects(extractText(Buffer.from("x"), "tarea.doc"), (e) => e.code === "unsupported_type");
+});
+
+test("contentLinks conserva videos y enlaces sin ejecutar HTML", () => {
+  const html = '<iframe src="https://www.youtube.com/embed/abcdefghijk?si=tracking"></iframe>' +
+    '<a href="https://youtu.be/abcdefghijk">Video repetido</a>' +
+    '<a href="https://example.org/?a=1&amp;b=2">Libro</a>' +
+    '<a href="javascript:alert(1)">No</a><script><iframe src="https://evil.example"></iframe></script>';
+  assert.deepEqual(contentLinks(html), [
+    { type: "video", url: "https://www.youtube.com/watch?v=abcdefghijk", provider: "youtube" },
+    { type: "link", url: "https://example.org/?a=1&b=2" }
+  ]);
+});
+
+test("Office: texto de Word, orden de diapositivas y celdas de Excel", async () => {
+  const zip = (files) => zipSync(Object.fromEntries(Object.entries(files).map(([name, xml]) => [name, strToU8(xml)])));
+  const word = zip({ "word/document.xml": '<w:document xmlns:w="urn:w"><w:body><w:p><w:r><w:t>Hola &amp; mundo</w:t><w:tab/><w:t>dato</w:t></w:r></w:p></w:body></w:document>' });
+  assert.equal((await extractText(word, "tarea.docx")).pages[0].text, "Hola & mundo\tdato");
+  await withServer({
+    ...fakeClient([]), async courses() { return [course]; },
+    async download() { return { bytes: word, contentType: "application/octet-stream", contentDisposition: 'attachment; filename="tarea.docx"' }; }
+  }, async (base, key) => {
+    const response = await fetch(base + "/files/c123-5-7", { headers: { Authorization: "Bearer " + key } });
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.format, "docx");
+    assert.equal(body.pages[0].text, "Hola & mundo\tdato");
+    assert.equal(body.text_url, base + "/files/c123-5-7");
+  });
+  const ppt = zip({
+    "ppt/presentation.xml": '<p:presentation xmlns:p="urn:p" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><p:sldIdLst><p:sldId id="256" r:id="r2"/><p:sldId id="257" r:id="r1"/></p:sldIdLst></p:presentation>',
+    "ppt/_rels/presentation.xml.rels": '<Relationships><Relationship Id="r1" Target="slides/slide1.xml"/><Relationship Id="r2" Target="slides/slide2.xml"/></Relationships>',
+    "ppt/slides/slide1.xml": '<slide xmlns:a="urn:a"><a:p><a:r><a:t>Segundo</a:t></a:r></a:p></slide>',
+    "ppt/slides/slide2.xml": '<slide xmlns:a="urn:a"><a:p><a:r><a:t>Primero</a:t></a:r></a:p></slide>'
+  });
+  const slides = await extractText(ppt, "clase.pptx", { from: 1, to: 1 });
+  assert.match(slides.pages[0].text, /Primero/);
+  assert.equal(slides.total_pages, 2);
+  assert.equal(slides.next_from, 2);
+  const xlsx = zip({
+    "xl/workbook.xml": '<workbook xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Datos" r:id="r1"/></sheets></workbook>',
+    "xl/_rels/workbook.xml.rels": '<Relationships><Relationship Id="r1" Target="/xl/worksheets/sheet1.xml"/></Relationships>',
+    "xl/sharedStrings.xml": '<sst><si><t>Etiqueta</t></si></sst>',
+    "xl/worksheets/sheet1.xml": '<worksheet><sheetData><row><c r="A1" t="s"><v>0</v></c><c r="C1"><v>42</v></c><c r="D1"><f>C1*2</f><v>84</v></c></row><row><c r="B2" t="inlineStr"><is><t>Texto</t></is></c></row></sheetData></worksheet>'
+  });
+  assert.equal((await extractText(xlsx, "datos.xlsx")).pages[0].text, "Hoja: Datos\nA1=Etiqueta\tC1=42\tD1=84\nB2=Texto");
+  const dtd = zip({ "word/document.xml": '<!DOCTYPE x [<!ENTITY a "boom">]><x>&a;</x>' });
+  await assert.rejects(extractText(dtd, "tarea.docx"), (e) => e.code === "unreadable_file");
+  const oversized = zip({ "word/document.xml": "x".repeat(8 * 1024 * 1024 + 1) });
+  await assert.rejects(extractText(oversized, "tarea.docx"), (e) => e.code === "unreadable_file");
 });
 
 test("servidor: archivos sólo de cursos propios y con API key", async () => {
@@ -251,7 +302,7 @@ test("Vercel: los documentos pasan por la función antes de servir archivos est�
 
 test("updates: versiones estables entre instancias, tareas nuevas y contenido modificado", async () => {
   const tasks = [normalizeTask({ idActividad: 1, titulo: "Tarea", idEstado: 0 }, course, now)];
-  const units = [{ id: "10", title: "Unidad", elements: [{ id: "20", title: "Lectura", text: "original", files: [] }] }];
+  const units = [{ id: "10", title: "Unidad", elements: [{ id: "20", title: "Lectura", text: "original", links: [{ type: "video", url: "https://example.org/video" }], files: [{ id: "c123-20-30", name: "apuntes.docx" }] }] }];
   const client = { ...fakeClient(tasks), async content() { return units; } };
   const read = async (since) => {
     let result;
@@ -268,6 +319,10 @@ test("updates: versiones estables entre instancias, tareas nuevas y contenido mo
   const first = await read();
   assert.equal(first.baseline, true);
   assert.equal(first.items.length, 3);
+  const resource = first.items.find((i) => i.kind === "resource");
+  assert.match(resource.attachments[0].text_url, /\/files\/c123-20-30$/);
+  assert.equal(resource.attachments[0].readable_as_text, true);
+  assert.equal(resource.links[0].type, "video");
   assert.ok(first.version);
   const same = await read(first.version);
   assert.equal(same.changed, false);

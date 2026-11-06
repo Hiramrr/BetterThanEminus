@@ -46,6 +46,14 @@ En macOS el instalador muestra un comando para copiar la clave del Llavero al po
 
 No compartas tu clave ni tu URL configurada como si fuera un conector común. Tus compañeros deben usar su propio despliegue y sus propias credenciales. Puedes compartir este README.
 
+En PowerShell de Windows puedes generar y copiar una clave nueva sin mostrarla. Necesitas Node.js.
+
+```powershell
+node -e "process.stdout.write('mec_' + require('crypto').randomBytes(32).toString('base64url'))" | Set-Clipboard
+```
+
+Guárdala en tu gestor de contraseñas y pega la misma clave en `MUSE_API_KEY` de Vercel y en la credencial de Muse. Ejecutar de nuevo el comando crea otra clave diferente.
+
 ## Comprobar y actualizar
 
 Para una prueba de lectura contra tu conector, ejecuta lo siguiente. La API key se pide sin mostrarla.
