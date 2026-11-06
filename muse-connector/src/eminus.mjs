@@ -380,9 +380,7 @@ export class EminusClient {
     const worker = async () => {
       while (queue.length) {
         const [u, i] = queue.shift();
-        let rows = [];
-        try { rows = rowsOf(await this.get("/Contenido/getElementos/" + courseId + "/" + u.idUnidad, { base: API, missingIsEmpty: true })); }
-        catch (err) { if (err.code === "signed_out" || err.code === "credentials_rejected") throw err; }
+        const rows = rowsOf(await this.get("/Contenido/getElementos/" + courseId + "/" + u.idUnidad, { base: API, missingIsEmpty: true }));
         const elements = rows
           .filter((e) => id(e?.idElemento) && e.visible !== 0)
           .sort((a, b) => (num(a.posicion) ?? 0) - (num(b.posicion) ?? 0))

@@ -2,6 +2,10 @@
 
 Implementación de referencia: `src/alerts.mjs` (`computeAlerts`), probada en `test/connector.test.mjs`. Para simularla con tus datos reales sin enviar nada, ejecuta `node scripts/alerts-dry-run.mjs`.
 
+## Consultar novedades
+
+Puedes usar `/updates?since=<version>` para detectar tareas y contenido nuevos sin volver a leer todos los detalles. Guarda la referencia inicial y compara `kind`, `id` y `version` cuando haya cambios. Ver `CONNECTOR.md`. Los avisos por fecha requieren evaluar el reloj aunque no haya cambios. Conserva la deduplicación de avisos descrita aquí.
+
 ## Ciclo
 
 Cada **30 minutos**:

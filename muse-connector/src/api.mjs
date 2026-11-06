@@ -5,6 +5,7 @@
 //   GET /health             sin autenticación, sin datos
 //   GET /docs               sin autenticación: instrucciones para Muse con la URL de este conector
 //   GET /tasks              lista paginada de tareas
+//   GET /updates            resumen de cambios, ?since=<version> evita repetir datos
 //   GET /tasks/{id}         una tarea, con su descripción
 //   GET /tasks/{id}/submission  tu entrega: texto, archivos subidos y revisión
 //   GET /courses            cursos vigentes (?scope=all incluye los pasados)
@@ -281,6 +282,50 @@ export function createHandler({ client, apiKeyHash, cacheTtlSeconds = 300, rateL
     return send(200, { data: { ...task, description: detail.text || null, attachments }, fetched_at: new Date(snap.fetchedAt).toISOString(), stale: snap.stale });
   }
 
+  async function updates(url) {
+    const since = url.searchParams.get("since");
+    if (since !== null && !/^[0-9a-f]{64}$/.test(since)) return fail(400, "invalid_parameter", "since debe ser una versión devuelta por /updates");
+    const snap = await snapshot();
+    const items = snap.tasks.map((t) => ({
+      kind: "task", id: t.id, title: t.title, course_id: t.course_id, course: t.course,
+      due_at: t.due_at, status: t.status, submitted: t.submitted,
+      version: sha256(JSON.stringify(t)), url: url.origin + "/tasks/" + t.id
+    }));
+    const failed = [...snap.failedCourses];
+    // Limita la concurrencia para no multiplicar las lecturas de unidades de Eminus.
+    const queue = [...snap.courses];
+    await Promise.all(Array.from({ length: Math.min(3, queue.length) }, async () => {
+      while (queue.length) {
+        const c = queue.shift();
+        try {
+          const content = await courseContent(c.id);
+          for (const u of content.data) {
+            items.push({ kind: "unit", id: c.id + ":" + u.id, title: u.title, course_id: c.id, course: c.name,
+              version: sha256(JSON.stringify([u.id, u.title, u.published_at])), url: url.origin + "/courses/" + c.id + "/content" });
+            for (const e of u.elements) items.push({
+              kind: "resource", id: c.id + ":" + u.id + ":" + e.id, title: e.title, course_id: c.id, course: c.name,
+              published_at: e.published_at, files: e.files.length,
+              version: sha256(JSON.stringify(e)), url: url.origin + "/courses/" + c.id + "/content"
+            });
+          }
+        } catch (err) {
+          if (["signed_out", "credentials_rejected", "password_change_required"].includes(err.code)) throw err;
+          failed.push(c.id);
+        }
+      }
+    }));
+    items.sort((a, b) => a.kind.localeCompare(b.kind) || a.id.localeCompare(b.id));
+    const partial = failed.length > 0;
+    // No publicar una versión incompleta que Muse pueda confundir con eliminaciones.
+    const version = partial || snap.stale ? null : sha256(JSON.stringify(items.map(({ kind, id, version }) => [kind, id, version])));
+    const changed = version === null || version !== since;
+    return send(200, {
+      changed, version, baseline: since === null, partial, stale: snap.stale,
+      failed_courses: [...new Set(failed)], checked_at: new Date().toISOString(),
+      poll_after_seconds: 1800, ...(changed ? { items } : {})
+    });
+  }
+
   async function handle(request, ip = "?") {
     const url = new URL(request.url);
     const req = request;
@@ -302,6 +347,7 @@ export function createHandler({ client, apiKeyHash, cacheTtlSeconds = 300, rateL
     }
     if (limited(ip)) return fail(429, "rate_limited", "demasiadas solicitudes; espera un minuto", { "Retry-After": "60" });
     try {
+      if (path === "/updates") return await updates(url);
       if (path === "/tasks") return await listTasks(url);
       const sm = path.match(/^\/tasks\/(\d{1,19}-\d{1,19})\/submission$/);
       if (sm) {

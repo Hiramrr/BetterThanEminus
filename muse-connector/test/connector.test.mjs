@@ -248,3 +248,50 @@ test("Vercel: los documentos pasan por la función antes de servir archivos est�
     else process.env.MUSE_API_KEY_SHA256 = originalKey;
   }
 });
+
+test("updates: versiones estables entre instancias, tareas nuevas y contenido modificado", async () => {
+  const tasks = [normalizeTask({ idActividad: 1, titulo: "Tarea", idEstado: 0 }, course, now)];
+  const units = [{ id: "10", title: "Unidad", elements: [{ id: "20", title: "Lectura", text: "original", files: [] }] }];
+  const client = { ...fakeClient(tasks), async content() { return units; } };
+  const read = async (since) => {
+    let result;
+    await withServer(client, async (base, key) => {
+      assert.equal((await fetch(base + "/updates")).status, 401);
+      const headers = { Authorization: "Bearer " + key };
+      assert.equal((await fetch(base + "/updates?since=mal", { headers })).status, 400);
+      const r = await fetch(base + "/updates" + (since ? "?since=" + since : ""), { headers });
+      assert.equal(r.status, 200);
+      result = await r.json();
+    });
+    return result;
+  };
+  const first = await read();
+  assert.equal(first.baseline, true);
+  assert.equal(first.items.length, 3);
+  assert.ok(first.version);
+  const same = await read(first.version);
+  assert.equal(same.changed, false);
+  assert.equal(same.items, undefined);
+  tasks.push(normalizeTask({ idActividad: 2, titulo: "Nueva", idEstado: 0 }, course, now));
+  const added = await read(first.version);
+  assert.equal(added.changed, true);
+  assert.equal(added.items.filter((i) => i.kind === "task").length, 2);
+  units[0].elements[0].text = "modificado";
+  const edited = await read(added.version);
+  assert.notEqual(edited.version, added.version);
+  assert.notEqual(edited.items.find((i) => i.kind === "resource").version, added.items.find((i) => i.kind === "resource").version);
+  client.content = async () => { throw new Error("no disponible"); };
+  const partial = await read(edited.version);
+  assert.equal(partial.partial, true);
+  assert.equal(partial.version, null);
+  assert.ok(partial.failed_courses.includes(course.id));
+});
+
+test("content: una unidad fallida no parece una unidad vacía", async () => {
+  const client = new EminusClient({ getCredentials: async () => ({ user: "test", password: FAKE_PASSWORD }) });
+  client.get = async (path) => {
+    if (path.includes("getUnidades")) return { contenido: [{ idUnidad: 10 }] };
+    throw new Error("falló la unidad");
+  };
+  await assert.rejects(client.content("123"), /falló la unidad/);
+});

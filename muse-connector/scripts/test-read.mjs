@@ -8,6 +8,7 @@
 //        La API key se pide sin eco (o se toma de MUSE_API_KEY en el entorno).
 import { eminusFetch } from "../src/http.mjs";
 import readline from "node:readline";
+import assert from "node:assert/strict";
 import { EminusClient } from "../src/eminus.mjs";
 import { loadEminusCredentials } from "../src/credentials.mjs";
 
@@ -59,6 +60,15 @@ async function viaServer(base) {
   }
   const courses = await get("/courses");
   console.log("GET /courses →", courses.status, "cursos:", courses.body?.data?.length);
+  const updates = await get("/updates");
+  assert.equal(updates.status, 200, "lectura de novedades");
+  assert.equal(updates.body.partial, false, "novedades completas");
+  assert.ok(updates.body.version, "versión de referencia");
+  console.log("GET /updates →", updates.status, "elementos:", updates.body.items.length);
+  const unchanged = await get("/updates?since=" + updates.body.version);
+  assert.equal(unchanged.status, 200);
+  assert.equal(unchanged.body.changed, false, "sin cambios entre lecturas consecutivas");
+  console.log("GET /updates?since=… →", unchanged.status, "changed:", unchanged.body.changed);
 }
 
 async function direct() {

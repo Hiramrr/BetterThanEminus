@@ -34,6 +34,24 @@ Eminus solo acepta usuario y contraseña, y Muse no acepta ni contraseña ni ses
 | **Permisos** | Solo `GET`. Cualquier otro método responde `405` |
 | **Formato** | JSON UTF-8. Fechas en ISO 8601 UTC (`Z`). Zona horaria del usuario: `America/Mexico_City` |
 
+## Consultar novedades con menos lecturas
+
+`GET /updates` usa la misma API key. Resume tareas de los cursos vigentes y unidades y recursos del módulo Contenido. No descarga PDFs ni incluye sus textos.
+
+1. Primera consulta sin parámetros. Guarda `version` y los `items` como referencia inicial. No anuncies todo lo existente como nuevo.
+2. Cada 30 minutos pide `GET /updates?since=<version guardada>`.
+3. Si `changed` es `false`, no hay cambios en los datos observados. La respuesta omite `items`.
+4. Si `changed` es `true`, compara cada par `kind` e `id` con la referencia. Un identificador ausente antes es nuevo. Un identificador conocido con otra `version` cambió. Cada elemento trae `title`, `course` y `url` para consultar el detalle. Una tarea también trae su fecha y estado. Un recurso trae su número de archivos.
+5. Tras procesar los cambios, guarda la versión y la referencia nuevas. Usa `kind:id:version` para evitar notificar dos veces el mismo cambio.
+
+Si `partial` o `stale` son `true`, `version` es `null`. Conserva la referencia anterior y reintenta después. `failed_courses` indica qué cursos no se pudieron leer. No anuncies eliminaciones basándote en elementos ausentes.
+
+`baseline: true` identifica una petición sin `since`. `poll_after_seconds` recomienda el intervalo. No hay paginación en este resumen.
+
+Los avisos de vencimiento siguen las reglas de `AVISOS.md`. Evalúalos con las fechas guardadas cada 30 minutos, aunque `changed` sea `false`. Si llega la fecha y no puedes confirmar si la tarea se entregó, consulta `/tasks` antes de avisar.
+
+La caché de tareas dura 5 minutos y la de contenido, 10 minutos. Detecta tareas nuevas y cambios en los campos de su lista, además de cambios en títulos, texto y metadatos de recursos. No detecta un cambio exclusivo del enunciado o adjuntos de una tarea, ni una sustitución del binario de un archivo que conserve sus metadatos. No marca recursos como leídos. No envía avisos por sí mismo.
+
 ## Endpoints verificados
 
 Todos se probaron con llamadas reales a `{{BASE_URL}}` el 2026-11-05 (`node scripts/test-read.mjs --server …`): 5 cursos vigentes y 38 tareas.

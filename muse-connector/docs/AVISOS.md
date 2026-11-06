@@ -2,6 +2,10 @@
 
 Reglas para avisarle al usuario de sus tareas de Eminus usando el conector `eminus-uv` (ver `CONNECTOR.md`). Hay una implementación de referencia probada (`computeAlerts` en `src/alerts.mjs` del repositorio del conector).
 
+## Consultar novedades
+
+Puedes usar `/updates?since=<version>` para detectar tareas y contenido nuevos sin volver a leer todos los detalles. Guarda la referencia inicial y compara `kind`, `id` y `version` cuando haya cambios. Ver `CONNECTOR.md`. Los avisos por fecha requieren evaluar el reloj aunque no haya cambios. Conserva la deduplicación de avisos descrita aquí.
+
 ## Ciclo
 
 Cada **30 minutos**:

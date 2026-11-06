@@ -58,6 +58,8 @@ Para volver a desplegar, ejecuta `npm run instalar`. Si cambiaste la contraseña
 
 Si instalaste desde el botón, cambia las variables en tu proyecto de Vercel y vuelve a desplegar. No compartas capturas de sus valores.
 
+La ruta `GET /updates?since=<version>` permite a Muse comprobar novedades de tareas y contenido con una respuesta breve cuando nada cambió. Las instrucciones de `/docs` explican cómo guardar y comparar las versiones.
+
 Las reglas de avisos están en [AVISOS.md](docs/AVISOS.md). Muse debe ejecutarlas periódicamente y guardar qué avisos envió. El conector por sí solo no envía notificaciones.
 
 ## Verificación del código
