@@ -1,0 +1,35 @@
+{
+  "_nota": "Forma real (anonimizada) de lo que devuelve Eminus al conector. Muse NO llama a esto; es referencia.",
+  "GET https://eminus.uv.mx/eminusapi8/api/Course/getAllCourses": {
+    "contenido": [
+      {
+        "curso": {
+          "idCurso": 100006, "nombre": "MATERIA G", "descripcion": "…", "fechaInicio": "2026-08-11T00:00:00", "fechaTermino": "2026-12-12T00:00:00",
+          "idUsuario": "docente-anon", "codigoHexa": "#1697A6", "ruta": null, "esFavorito": 0, "archivado": 0, "visible": 1,
+          "actividades": 9, "examenes": 0, "foros": 1, "integrantes": 30,
+          "fechaInicioEpoch": 1786428000, "fechaTerminoEpoch": 1796968800, "fechaCreacionEpoch": 1785000000
+        },
+        "listaMetadatos": []
+      }
+    ]
+  },
+  "GET https://eminus.uv.mx/eminusapi8/api/Activity/getActividadesEstudiante/{idCurso}": {
+    "contenido": [
+      {
+        "idActividad": 900000, "titulo": "Actividad de ejemplo 1", "visible": 1, "valor": 0, "porEquipos": 0, "idRubrica": null,
+        "fechaInicio": "2026-11-05T00:00:00", "fechaTermino": "2026-11-06T23:45:00", "fechaProrroga": null,
+        "fechaInicioEpoch": 1793858400, "fechaTerminoEpoch": 1794030300, "fechaProrrogaEpoch": null,
+        "estadoAct": 2, "idEstado": 0, "estadoEntrega": 0, "estado": 0,
+        "fechaEntrega": null, "fechaEntregaEpoch": null, "calificacion": null, "fechaRevisionEpoch": null
+      }
+    ]
+  },
+  "GET https://eminus.uv.mx/eminusapi8/api/Activity/getActividadEstudiante/{idCurso}/{idActividad}": {
+    "codigo": 200, "salida": "…", "mensaje": null, "mensajeError": null,
+    "contenido": [
+      { "idActividad": 900000, "idCurso": 100006, "titulo": "Actividad de ejemplo 1", "descripcion": "<p>Instrucciones en HTML…</p>",
+        "archivosActsConTamano": [{ "nombreOriginal": "archivo-de-ejemplo.pdf" }], "idEquipo": null, "idRubricaUtilizada": null }
+    ]
+  },
+  "Curso sin actividades (404 que se trata como lista vacía)": { "codigo": 404, "salida": "No se encontraron actividades" }
+}

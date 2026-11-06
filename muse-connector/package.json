@@ -1,0 +1,21 @@
+{
+  "name": "muse-connector-eminus",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Conector de solo lectura entre Eminus (UV) y Muse, con API key propia",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "start": "node src/local.mjs",
+    "test": "node --test test/*.test.mjs",
+    "smoke": "node scripts/test-read.mjs",
+    "instalar": "node scripts/instalar.mjs",
+    "deploy:vercel": "node scripts/instalar.mjs"
+  },
+  "dependencies": {
+    "unpdf": "1.9.1"
+  }
+}

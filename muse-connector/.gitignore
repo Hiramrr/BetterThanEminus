@@ -1,0 +1,9 @@
+# Nunca subir secretos ni estado local
+.env
+*.secret
+credentials*.json
+state/
+.vercel
+node_modules/
+.wrangler/
+.env.*

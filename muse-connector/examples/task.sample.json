@@ -1,0 +1,24 @@
+{
+  "data": {
+    "id": "100006-900000",
+    "activity_id": "900000",
+    "course_id": "100006",
+    "course": "MATERIA G",
+    "title": "Actividad de ejemplo 1",
+    "status": "pending",
+    "submitted": false,
+    "opens_at": "2026-11-05T06:00:00.000Z",
+    "due_at": "2026-11-07T05:45:00.000Z",
+    "original_due_at": "2026-11-07T05:45:00.000Z",
+    "has_extension": false,
+    "submitted_at": null,
+    "reviewed_at": null,
+    "grade": null,
+    "max_grade": null,
+    "description": "Texto plano de las instrucciones del docente (el HTML de Eminus se convierte a texto).",
+    "attachments": ["archivo-de-ejemplo.pdf"],
+    "url": "https://eminus.uv.mx/eminus4/page/course/list"
+  },
+  "fetched_at": "2026-11-06T03:46:35.056Z",
+  "stale": false
+}

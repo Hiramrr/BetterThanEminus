@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Copia a ~/Library/LaunchAgents/ y ajusta las dos rutas. No pongas secretos aquí:
+     el conector los lee del Llavero. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>mx.hiram.muse-connector</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/RUTA/A/node</string>
+    <string>/RUTA/A/BetterThanEminus/muse-connector/src/local.mjs</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOST</key><string>127.0.0.1</string>
+    <key>PORT</key><string>8787</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>/tmp/muse-connector.log</string>
+  <key>StandardErrorPath</key><string>/tmp/muse-connector.log</string>
+</dict>
+</plist>
